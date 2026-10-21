@@ -475,18 +475,27 @@
     }
     return out;
   };
-  // rough metres needed per fabric (pieces packed across the roll width)
+  // metres needed per fabric: lay the pieces like a cutter would — long side along the roll (on grain),
+  // stacked across the width in columns, biggest first — and add a little to spare
   G.fabricNeed = function (j) {
     j = j || G.job;
     const asm = G.geo.build(G.jobDesign(j), G.jobScale(j), false);
-    const need = {};
+    const byFab = {};
     for (const dd of asm.defs) {
-      const slot = dd.slot;
-      const id = j.fabs[slot]; if (!id) continue;
+      const id = j.fabs[dd.slot]; if (!id) continue;
       const b = G.geo.bounds(dd.poly);
-      need[id] = (need[id] || 0) + (b.w * b.h) / (G.fabricWidth(id) * 0.6);
+      (byFab[id] = byFab[id] || []).push({ L: Math.max(b.w, b.h) + 1, S: Math.min(b.w, b.h) + 1 });
     }
-    for (const id in need) need[id] = Math.ceil(need[id] / 10) * 10 + 10;
+    const need = {};
+    for (const id in byFab) {
+      const W = G.fabricWidth(id) - 2, cols = [];
+      for (const p of byFab[id].sort((a, b) => b.L - a.L)) {
+        // first column with room across the width that is long enough; else a new column
+        const col = cols.find((cl) => cl.used + p.S <= W && p.L <= cl.len);
+        if (col) col.used += p.S; else cols.push({ len: p.L, used: Math.min(p.S, W) });
+      }
+      need[id] = Math.ceil((cols.reduce((a, cl) => a + cl.len + 1, 0) + 10) / 10) * 10;
+    }
     return need;
   };
 
