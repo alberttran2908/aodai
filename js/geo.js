@@ -48,7 +48,7 @@ G.geo = (function () {
     trevai: { nx: 15.2, nd: 10.5, band: 0, bare: 'trevai' },
     lechvai:{ nx: 6.5, nd: 2.5, band: 0, bare: 'lechvai' }
   };
-  const LENGTH = { got: 149, chan: 130, goi: 100, ngan: 80, nam: 114, namngan: 102 }; // 'got' sweeps the floor; nam* = men's, below / at the knee
+  const LENGTH = { got: 149, chan: 130, goi: 100, ngan: 80, nam: 114, namngan: 102, ao: 60 }; // ao = an everyday shirt to the hip // 'got' sweeps the floor; nam* = men's, below / at the knee
   // the side slit of a real ao dai opens at the waist, so the panels fall free from there
   // never above the waist (y≈39): the slit must start where the waist is narrowest, or the waist disappears
   const SLIT = { thap: 52, vua: 45, cao: 40 };
@@ -150,6 +150,7 @@ G.geo = (function () {
     const HIP = 56, hipW = W(d, HIP);
     let hw = Math.max(hipW, xs) + (full - Math.max(hipW, xs)) * G.clamp((Lside - HIP) / 93, 0.25, 1);
     if (d.hem === 'xoe') hw += 13;
+    if (d.casual) hw = xs + 0.4; // an everyday shirt: no slit, the side seam runs straight to the hem
     const flap = slitY < HIP - 4 && Lside > HIP + 20
       ? catmull([V(xs, slitY), V(hipW, HIP), V(hipW + (hw - hipW) * 0.42, HIP + (Lside - HIP) * 0.5), V(hw, Lside)], 7)
       : catmull([V(xs, slitY), V(xs + (hw - xs) * 0.2, slitY + (Lside - slitY) * 0.14), V(xs + (hw - xs) * 0.55, slitY + (Lside - slitY) * 0.52), V(hw, Lside)], 6);
@@ -180,7 +181,7 @@ G.geo = (function () {
     else cY = L + 1.5;
     // áo ngũ thân is slit low, from the hip
     const xe = shapeOf(d).xe;
-    const slitY = Math.min(xe !== null ? xe : d.fit === 'nguthan' ? SLIT.thap : SLIT[d.slit] || 54, Math.min(LR, LL) - 14);
+    const slitY = d.casual ? Math.min(LR, LL) - 1 : Math.min(xe !== null ? xe : d.fit === 'nguthan' ? SLIT.thap : SLIT[d.slit] || 54, Math.min(LR, LL) - 14);
     const R = half(d, back, LR, cY, slitY, 'R');
     const Lh = half(d, back, LL, cY, slitY, 'L');
     const left = mirror(Lh.pts).reverse();

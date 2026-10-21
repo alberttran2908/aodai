@@ -398,7 +398,7 @@ G.art = (function () {
       return { x, y };
     };
     // a men's áo dài hangs straight: no godet waves, the back panel stays close behind
-    const mk = asm.male ? 0 : 1;
+    const mk = asm.male || d.casual ? 0 : 1; // an everyday shirt has a plain hem too
     const sw = swF(0, { flare: 0.07, drop: 1.2, wave: 1.3 * mk, wph: 0 });
     const swB0 = swF(1.6, { flare: 0.1, drop: 6, wave: 0.9 * mk, wph: Math.PI, lamK: 1.7 });
     // the back panel peeks just past the front one and pools into a short train (kept slim: the silhouette must stay long and narrow)

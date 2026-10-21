@@ -64,9 +64,27 @@ G.scenes.desk = {
     this.walk = 0; this.t = 0; this.gift = false; this.quote = null;
     G.save();
   },
+  // what a client wears to the shop: everyday clothes (they come to have an áo dài made!). Bà Tư and the
+  // other alley regulars who are tailors or performers in the story keep their áo dài.
+  CASUAL_F: [
+    { neck: 'lasen', sleeve: 'lung', bottom: 'quan', pants: 'den' },     // blouse with a soft collar, dark trousers
+    { neck: 'tron', sleeve: 'ngan', bottom: 'chanvay', pants: 'den' },   // round-neck top, skirt
+    { neck: 'thuyen', sleeve: 'lung', bottom: 'ongrong', pants: 'trang' }, // boat-neck top, wide trousers
+    { neck: 'vuong', sleeve: 'ngan', bottom: 'chanvay', pants: 'trang' }
+  ],
+  CASUAL_M: [{ neck: 'dung', sleeve: 'ngan', bottom: 'quan', pants: 'den' }, { neck: 'tron', sleeve: 'dai', bottom: 'quan', pants: 'den' }],
   clientLook(cl) {
     const fid = Object.keys(G.CAT.FABRICS).find((k) => k.startsWith(cl.outfit[0] + '.' + cl.outfit[1] + '.')) || 'lua.trang.tron';
     const f = G.CAT.FABRICS[fid];
+    if (!cl.npc && G.CAT.CLIENTS.includes(cl)) {
+      let h = 0; for (const ch of cl.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+      const set = cl.male ? this.CASUAL_M : this.CASUAL_F, o = set[h % set.length];
+      const mat = ['gam', 'nhung', 'voan', 'ren'].includes(f.mat) ? f.mat : 'dui'; // everyday cotton unless the client dresses up
+      return {
+        design: Object.assign({ length: 'ao', hem: 'thang', fit: cl.male ? 'nam' : 'om', slit: 'vua', buttons: 'an', accent: 'vang', casual: true, head: !cl.male && cl.hair === 'bun' && !cl.look ? 'hoacai' : 'none', male: !!cl.male, broad: !!cl.broad, look: cl.look }, o),
+        fab: { mat, color: f.color, print: 'tron' }
+      };
+    }
     if (cl.male) return {
       design: { neck: 'dung', sleeve: 'dai', length: 'nam', hem: 'thang', fit: 'nam', slit: 'vua', buttons: 'vang', head: 'none', accent: 'vang', male: true, look: cl.look },
       fab: { mat: f.mat, color: f.color, print: f.print }
