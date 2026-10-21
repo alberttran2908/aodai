@@ -58,11 +58,11 @@ G.scenes.sew = {
   stitchQ(dist) { return G.clamp(1 - Math.max(0, dist - this.dead()) / 1.2, 0, 1); },
   // the shown % is rounded down: 99.6% is still 99%, only a truly clean seam reads 100%
   pct(score) { return Math.floor(score * 100 + 1e-9); },
-  // a seam is judged strictly: 100% perfect, 99% good, 90–98% not good, under 90% badly sewn
+  // a seam is judged: 99%+ perfect, 95%+ good, 90–94% not good, under 90% badly sewn
   grade(score) {
     const sc = this.pct(score);
-    return sc >= 100 ? { key: 'hoanhao', label: 'Hoàn hảo', col: '#2f7a46', good: true }
-      : sc >= 99 ? { key: 'tot', label: 'May tốt', col: '#3f8a52', good: true }
+    return sc >= 99 ? { key: 'hoanhao', label: 'Hoàn hảo', col: '#2f7a46', good: true }
+      : sc >= 95 ? { key: 'tot', label: 'May tốt', col: '#3f8a52', good: true }
       : sc >= 90 ? { key: 'khongtot', label: 'Không tốt', col: '#b8862a' }
       : { key: 'te', label: 'May tệ', col: '#b8323f' };
   },
@@ -321,10 +321,10 @@ G.scenes.sew = {
   },
   stitchPath(c, st, w, tf) {
     c.lineCap = 'round';
-    // stitches off the line get a glow under the thread, by the seam grades: amber = not good (<99%), red = bad (<90%)
+    // stitches off the line get a glow under the thread, by the seam grades: amber = not good (<95%), red = bad (<90%)
     c.lineWidth = w * 2.6;
     for (let k = 1; k < st.length; k++) {
-      if (st[k].q >= 0.99) continue;
+      if (st[k].q >= 0.95) continue;
       const a = tf ? tf(st[k - 1]) : st[k - 1], b = tf ? tf(st[k]) : st[k];
       c.strokeStyle = st[k].q < 0.9 ? 'rgba(217,83,79,0.55)' : 'rgba(224,170,60,0.45)';
       c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();

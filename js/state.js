@@ -494,8 +494,8 @@
   G.scoreJob = function () {
     const j = G.job, com = j.com;
     const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
-    // sewing is judged strictly: each seam's accuracy counts to the 4th power (99% ≈ 96, 95% ≈ 81, 90% ≈ 66)
-    const grain = avg(j.cutScore), sew = avg(j.sew.map((v) => Math.pow(v, 4))), fit = j.fit;
+    // sewing is judged closely: each seam's accuracy counts squared (99% ≈ 98, 95% ≈ 90, 90% ≈ 81)
+    const grain = avg(j.cutScore), sew = avg(j.sew.map((v) => v * v)), fit = j.fit;
     // a pressed dress looks finished: the iron's bonus counts for how much was actually pressed at the board
     const ironed = Math.round((G.tool('iron').bonus || 0) * (j.pressed === undefined ? 1 : j.pressed)) + (G.staff ? G.staff.ironBonus() : 0);
     const quality = Math.min(100, Math.round(100 * (0.3 * grain + 0.2 * fit + 0.5 * sew)) + ironed);
