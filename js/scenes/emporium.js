@@ -105,6 +105,11 @@ G.scenes.emporium = {
         G.button(c, 'buy', `Mua · ${cost} xu`, 884, 548, 352, 50, () => {
           if (G.spend(cost)) { s.roll[f.id] = (s.roll[f.id] || 0) + this.qty; G.toast(`Đã thêm ${(this.qty / 100).toFixed(1)} m ${f.name}`); G.save(); }
         }, { style: 'green', size: 18, r: 25 });
+        // wholesale: cheaper, but the van brings it an hour later (real time)
+        if (G.idle && G.idle.on()) {
+          const bp = G.idle.bulkPrice(f.id), full = G.idle.orders().length >= G.idle.BULK_MAX;
+          G.button(c, 'bulk', full ? 'Đang chờ 3 xe vải' : `Đặt sỉ 10 m · ${bp} xu · giao sau 1 giờ`, 884, 604, 352, 30, () => G.idle.order(f.id), { style: 'ghost', size: 13, r: 15, enabled: !full });
+        }
       }
     }
     U.secondary(c, 'studio', 'Tự thiết kế vải', () => G.go('studio', { back: 'emporium' }));

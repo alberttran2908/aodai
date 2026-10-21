@@ -141,6 +141,14 @@ G.scenes.desk = {
     G.text(c, dn, cx + cw / 2, cy + 58, { size: 38, weight: 800, font: G.GAME, align: 'center', color: G.INK });
     c.restore();
     if (ev) U.ribbon(c, '🎀 ' + ev.name, cx + cw / 2 - 30, cy + 102, { size: 13, h: 24, tail: 14, col: '#c9952e', top: '#e8b955', dark: '#8a6020' });
+    // wholesale cloth on its way: how long until the van arrives
+    const eta = G.idle && G.idle.nextEta();
+    if (eta) {
+      const n = G.idle.orders().length, mins = Math.max(1, Math.ceil((eta - Date.now()) / 60e3)), x = cx - 264, y = 156;
+      G.rr(c, x, y, 190, 30, 15); c.fillStyle = 'rgba(52,30,18,0.85)'; c.fill(); c.strokeStyle = 'rgba(255,225,180,0.35)'; c.lineWidth = 1.5; c.stroke();
+      U.icon(c, 'fabric', x + 17, y + 15, 20);
+      U.fitText(c, `Xe vải${n > 1 ? ` (${n})` : ''}: còn ${mins} phút`, x + 32, y + 16, 150, { size: 13, weight: 700, color: '#fbe9cf' });
+    }
     if (G.econ.on()) {
       // next bill and this month's market, so money pressure is always visible
       const b = G.econ.bill(), m = G.econ.market(), left = G.econ.daysLeft();
@@ -262,7 +270,7 @@ G.scenes.desk = {
       G.wrap(c, 'Tiệm đóng cửa, chưa có ai trông. ' + G.idle.idleTip(), x + 30, ly - 12, w - 60, 20, { size: 14, color: U.T.ink, maxLines: 3 });
     }
     for (const l of P.lines) {
-      U.icon(c, l.icon === 'dress' ? 'album' : 'workshop', x + 44, ly, 28);
+      U.icon(c, l.icon === 'dress' ? 'album' : l.icon === 'fabric' ? 'fabric' : 'workshop', x + 44, ly, 28);
       U.fitText(c, l.text, x + 70, ly, w - 200, { size: 15, weight: 600 });
       if (l.coins) { G.art.coin(c, x + w - 98, ly, 9); G.text(c, `+${l.coins}`, x + w - 84, ly, { size: 16, weight: 800, font: G.GAME, color: U.T.gold }); }
       else G.text(c, l.note || '', x + w - 30, ly, { size: 14, weight: 800, align: 'right', color: U.T.ok });

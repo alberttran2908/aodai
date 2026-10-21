@@ -14,6 +14,11 @@ G.idle = {
     if (away < this.MIN_AWAY) return;
     const s = G.state, hours = Math.min(away, this.CAP) / 3600e3, lines = [];
     let coins = 0;
+    // the cloth van came while you were out (already put on the roll)
+    for (const o of this.deliver(Date.now())) {
+      const f = G.CAT.FABRICS[o.fid];
+      lines.push({ icon: 'fabric', text: `Xe vải giao ${(o.cm / 100).toFixed(0)} m ${f ? f.name : 'vải'}`, coins: 0, note: 'vào kho' });
+    }
     // the helper's alterations: hems, zips, taking in a waist — a share of a day's odd jobs per hour
     if (G.staff.working()) {
       const h = G.staff.current(), n = Math.round((G.staff.side() / 3) * hours);
@@ -74,6 +79,27 @@ G.idle = {
     s.rack.push({ snapId: snap.id, matCost: Math.round(3 * G.econ.price(m.fid)), decorCost: 0, quality: m.quality,
       tags: G.computeTags(design, fabIds, { items: [] }, part), price: 0, age: 0, sold: false });
   },
+  // ---------- wholesale cloth: 10 m at 20% off, delivered by the van an hour later (real time) ----------
+  BULK_CM: 1000, BULK_OFF: 0.2, BULK_ETA: 3600e3, BULK_MAX: 3,
+  orders() { const s = G.state; return (s.orders = s.orders || []); },
+  bulkPrice(fid) { return Math.round(((G.econ.price(fid) * this.BULK_CM) / 100) * (1 - this.BULK_OFF)); },
+  order(fid) {
+    if (this.orders().length >= this.BULK_MAX) { G.toast(`Đang chờ ${this.BULK_MAX} xe vải, đợi xe tới đã`, G.C.red); return false; }
+    if (!G.spend(this.bulkPrice(fid))) return false;
+    this.orders().push({ fid, cm: this.BULK_CM, eta: Date.now() + this.BULK_ETA });
+    G.toast('Đã đặt vải sỉ — xe giao sau 1 giờ'); G.save();
+    return true;
+  },
+  // deliver whatever has arrived; returns the deliveries (the caller decides how to tell the player)
+  deliver(now) {
+    const due = this.orders().filter((o) => o.eta <= now);
+    if (!due.length) return [];
+    for (const o of due) G.state.roll[o.fid] = (G.state.roll[o.fid] || 0) + o.cm;
+    G.state.orders = this.orders().filter((o) => o.eta > now);
+    G.save();
+    return due;
+  },
+  nextEta() { const o = this.orders(); return o.length ? Math.min(...o.map((x) => x.eta)) : 0; },
   awayText(ms) {
     const m = Math.round(ms / 60e3);
     return m < 60 ? `${m} phút` : `${Math.floor(m / 60)} giờ${m % 60 ? ' ' + (m % 60) + ' phút' : ''}`;
@@ -88,6 +114,11 @@ G.idle = {
   init() {
     // keep the "last seen" time fresh, and treat a long-hidden tab like a visit away
     setInterval(() => { if (this.on() && !document.hidden) { this.stamp(); G.save(); } }, 60e3);
+    // the van arriving while you play
+    setInterval(() => {
+      if (!this.on() || document.hidden) return;
+      for (const o of this.deliver(Date.now())) { const f = G.CAT.FABRICS[o.fid]; G.toast(`Xe vải tới! +${(o.cm / 100).toFixed(0)} m ${f ? f.name : ''}`, G.C.green); G.sfx.bell(); }
+    }, 5e3);
     document.addEventListener('visibilitychange', () => {
       if (!this.on()) return;
       if (document.hidden) { this.stamp(); G.save(); this.hiddenAt = Date.now(); }
