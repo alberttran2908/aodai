@@ -19,6 +19,20 @@ G.idle = {
       const h = G.staff.current(), n = Math.round((G.staff.side() / 3) * hours);
       if (n > 0) { coins += n; lines.push({ icon: 'needle', text: `${h.name} nhận sửa đồ lặt vặt`, coins: n }); }
     }
+    // the helper also sews plain ready-to-wear áo dài from cloth on the roll (3 m each, one every 3 hours)
+    // while the fair rack has room; they hang on the rack when you come back
+    const made = [];
+    if (G.staff.working()) {
+      const h = G.staff.current(), C = G.CAT, left = Object.assign({}, s.roll);
+      let n = Math.min(G.fair.rackSize() - s.rack.filter((it) => !it.sold).length, Math.floor(hours / 3));
+      while (n-- > 0) {
+        const fid = Object.keys(left).filter((id) => C.FABRICS[id] && C.FABRICS[id].print === 'tron' && left[id] >= 320).sort((a, b) => left[b] - left[a])[0];
+        if (!fid) break;
+        left[fid] -= 300;
+        made.push({ fid, quality: Math.round(h.skill * 100 - 6 + Math.random() * 6), by: h.name });
+      }
+      if (made.length) lines.push({ icon: 'dress', text: `${h.name} may ${made.length} áo bán sẵn, treo lên sạp`, coins: 0, note: 'lên sạp' });
+    }
     // the window: each dress on the rack has a small chance per hour of catching a passer-by's eye
     const sold = [];
     for (const it of s.rack) {
@@ -29,16 +43,36 @@ G.idle = {
     // an empty report ("nobody minded the shop") is a tip, shown at most once a day
     if (!lines.length) { if (Date.now() - (s.idleTipAt || 0) < 24 * 3600e3) return; s.idleTipAt = Date.now(); }
     // kept in the save until collected, so closing the tab again does not lose it
-    s.idlePending = { away, capped: away > this.CAP, lines, coins, sold: sold.map((x) => ({ i: s.rack.indexOf(x.it), p: x.p })) };
+    s.idlePending = { away, capped: away > this.CAP, lines, coins, made, sold: sold.map((x) => ({ i: s.rack.indexOf(x.it), p: x.p })) };
   },
   get pending() { return G.state && G.state.idlePending; },
   set pending(v) { if (G.state) G.state.idlePending = v; },
   collect() {
     const P = this.pending; if (!P) return;
     for (const x of P.sold) { const it = G.state.rack[x.i]; if (it && !it.sold) { it.sold = true; it.soldFor = x.p; it.price = x.p; } }
+    for (const m of P.made || []) this.hangMade(m);
     if (P.coins) { G.addCoins(P.coins); G.sfx.coin(); }
     if (G.staff.current() && G.state.staff) G.state.staff.earned += P.lines.filter((l) => l.icon === 'needle').reduce((a, l) => a + l.coins, 0);
     this.pending = null; this.stamp(); G.save();
+  },
+  // a helper-made dress: a simple áo dài (stand collar, long sleeves, floor-length) in one plain cloth,
+  // into the album (so the fair can show it) and onto the rack
+  hangMade(m) {
+    const s = G.state, C = G.CAT, f = C.FABRICS[m.fid];
+    if (!f || (s.roll[m.fid] || 0) < 300) return;
+    s.roll[m.fid] -= 300; if (s.roll[m.fid] < 10) delete s.roll[m.fid];
+    const part = { co: 'dung', dang: 'om', tay: 'dai', ta: 'dai_thang', quan: 'quan' };
+    const design = Object.assign({}, G.DATA.defaultDesign, { neck: 'dung', fit: 'om', sleeve: 'dai', length: 'got', hem: 'thang', buttons: 'an' });
+    const fab = { mat: f.mat, color: f.color, print: f.print }, quan = C.FABRICS['lua.trang.tron'];
+    const fabIds = { than: m.fid, tay: m.fid, co: m.fid, quan: 'lua.trang.tron' };
+    const snap = {
+      id: (s.snapSeq = (s.snapSeq || 0) + 1), design, fabs: { than: fab, tay: fab, co: fab, quan: { mat: quan.mat, color: quan.color, print: 'tron' } },
+      scale: 1, decorItems: [], name: 'Áo bán sẵn', title: `${m.by} may`, kind: 'rack', success: true, quality: m.quality,
+      part, fabIds, male: false, day: s.day, shop: s.shopName
+    };
+    s.collection.push(snap); if (s.collection.length > 60) s.collection.shift();
+    s.rack.push({ snapId: snap.id, matCost: Math.round(3 * G.econ.price(m.fid)), decorCost: 0, quality: m.quality,
+      tags: G.computeTags(design, fabIds, { items: [] }, part), price: 0, age: 0, sold: false });
   },
   awayText(ms) {
     const m = Math.round(ms / 60e3);
@@ -47,6 +81,7 @@ G.idle = {
   // what to say when nothing happened (no helper, empty rack): point at the ways to earn while away
   idleTip() {
     if (!G.staff.current()) return 'Thuê thợ phụ ở Xưởng để tiệm nhận sửa đồ cả khi bạn vắng.';
+    if (!Object.keys(G.state.roll).some((id) => G.CAT.FABRICS[id] && G.CAT.FABRICS[id].print === 'tron' && G.state.roll[id] >= 320)) return 'Để sẵn vài mét vải trơn trong kho: thợ phụ sẽ may áo bán sẵn khi bạn vắng.';
     if (!G.state.rack.some((it) => !it.sold)) return 'May áo bán sẵn treo sạp: tủ kính có thể bán giúp khi bạn vắng.';
     return '';
   },

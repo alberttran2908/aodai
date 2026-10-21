@@ -264,8 +264,8 @@ G.scenes.desk = {
     for (const l of P.lines) {
       U.icon(c, l.icon === 'dress' ? 'album' : 'workshop', x + 44, ly, 28);
       U.fitText(c, l.text, x + 70, ly, w - 200, { size: 15, weight: 600 });
-      G.art.coin(c, x + w - 98, ly, 9);
-      G.text(c, `+${l.coins}`, x + w - 84, ly, { size: 16, weight: 800, font: G.GAME, color: U.T.gold });
+      if (l.coins) { G.art.coin(c, x + w - 98, ly, 9); G.text(c, `+${l.coins}`, x + w - 84, ly, { size: 16, weight: 800, font: G.GAME, color: U.T.gold }); }
+      else G.text(c, l.note || '', x + w - 30, ly, { size: 14, weight: 800, align: 'right', color: U.T.ok });
       ly += 40;
     }
     if (P.lines.length) { c.fillStyle = U.T.line; c.fillRect(x + 30, ly - 14, w - 60, 1.5); G.text(c, `Tổng: +${P.coins} xu`, x + w - 30, ly + 8, { size: 18, weight: 800, font: G.GAME, align: 'right', color: U.T.gold }); }
