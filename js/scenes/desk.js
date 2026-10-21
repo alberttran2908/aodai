@@ -236,6 +236,43 @@ G.scenes.desk = {
     if (this.quote && com) this.quotePanel(c);
     if (this.challenges) this.challengePanel(c);
     U.topbar(c, s.isDaily ? 'Đơn ngày ' + G.daily.label(s.dailyKey) : 'Quầy tiếp khách');
+    if (G.idle && G.idle.pending && !(G.Dialog && G.Dialog.active)) this.awayCard(c);
+    // collected coins arc up into the purse in the top bar
+    if (this.coinFx && this.coinFx.length) {
+      const tx = G.W - 330, ty = 28;
+      for (const f of this.coinFx) {
+        f.t += G.ui.dt || 0.016; const k = G.clamp(f.t / 0.7, 0, 1); if (f.t < 0) continue;
+        G.art.coin(c, G.lerp(f.sx, tx, k * k), G.lerp(f.sy, ty, k) - Math.sin(k * Math.PI) * 140, 11 - k * 3);
+        if (k >= 1 && !f.done) { f.done = true; G.sfx.click(); }
+      }
+      this.coinFx = this.coinFx.filter((f) => !f.done);
+    }
+  },
+  // "while you were away": what the shop did in real time, collected with a shower of coins
+  awayCard(c) {
+    const U = G.UI, P = G.idle.pending, w = 520, x = (G.W - w) / 2;
+    const n = Math.max(1, P.lines.length), h = 190 + n * 40, y = (G.H - h) / 2;
+    c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'away_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => {} });
+    U.card(c, x, y, w, h);
+    U.ribbon(c, 'Trong lúc bạn đi vắng', G.W / 2, y + 4, { size: 17 });
+    G.text(c, `Bạn vắng ${G.idle.awayText(P.away)}${P.capped ? ' (tiệm tính tối đa 8 giờ)' : ''}`, G.W / 2, y + 48, { size: 14, align: 'center', color: U.T.soft });
+    let ly = y + 86;
+    if (!P.lines.length) {
+      G.wrap(c, 'Tiệm đóng cửa, chưa có ai trông. ' + G.idle.idleTip(), x + 30, ly - 12, w - 60, 20, { size: 14, color: U.T.ink, maxLines: 3 });
+    }
+    for (const l of P.lines) {
+      U.icon(c, l.icon === 'dress' ? 'album' : 'workshop', x + 44, ly, 28);
+      U.fitText(c, l.text, x + 70, ly, w - 200, { size: 15, weight: 600 });
+      G.art.coin(c, x + w - 98, ly, 9);
+      G.text(c, `+${l.coins}`, x + w - 84, ly, { size: 16, weight: 800, font: G.GAME, color: U.T.gold });
+      ly += 40;
+    }
+    if (P.lines.length) { c.fillStyle = U.T.line; c.fillRect(x + 30, ly - 14, w - 60, 1.5); G.text(c, `Tổng: +${P.coins} xu`, x + w - 30, ly + 8, { size: 18, weight: 800, font: G.GAME, align: 'right', color: U.T.gold }); }
+    G.button(c, 'away_ok', P.coins ? `Nhận ${P.coins} xu` : 'Mở cửa tiệm', G.W / 2 - 110, y + h - 62, 220, 46, () => {
+      if (P.coins) { this.coinFx = []; for (let k = 0; k < 14; k++) this.coinFx.push({ sx: G.W / 2 + G.rand(-80, 80), sy: y + h - 40 + G.rand(-10, 10), t: -k * 0.05 }); }
+      G.idle.collect();
+    }, { style: P.coins ? 'green' : 'primary', size: 17, r: 23 });
   },
   // Thử thách: the daily order (same client for everyone today) and the weekly 30-day business challenge
   challengePanel(c) {

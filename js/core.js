@@ -294,6 +294,8 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
       G.load();
       try { if (G.net) G.net.init(); } catch (e) { /* offline is fine */ }
       if (G.studio) G.studio.fetchCommunity(); // community bolts (published from GitHub Discussions)
+      // the shop kept going while the player was away (shown at the desk)
+      if (G.idle) { G.idle.arrive(G.state.idleLast); G.idle.stamp(); G.idle.init(); }
       // a shared dress link (#d=…) opens the viewer instead of the title screen
       // a shared fabric link (#f=…) opens the fabric studio with that design
       const fab = /^#f=/.test(location.hash) && G.studio ? G.studio.dec(location.hash.slice(3)) : null;
