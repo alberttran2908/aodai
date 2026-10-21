@@ -17,7 +17,7 @@ G.idle = {
     // the cloth van came while you were out (already put on the roll)
     for (const o of this.deliver(Date.now())) {
       const f = G.CAT.FABRICS[o.fid];
-      lines.push({ icon: 'fabric', text: `Xe vải giao ${(o.cm / 100).toFixed(0)} m ${f ? f.name : 'vải'}`, coins: 0, note: 'vào kho' });
+      lines.push({ icon: 'fabric', text: `${o.kind === 'dye' ? 'Mẻ nhuộm xong' : 'Xe vải giao'} ${(o.cm / 100).toFixed(0)} m ${f ? f.name : 'vải'}`, coins: 0, note: 'vào kho' });
     }
     // the helper's alterations: hems, zips, taking in a waist — a share of a day's odd jobs per hour
     if (G.staff.working()) {
@@ -83,8 +83,24 @@ G.idle = {
   BULK_CM: 1000, BULK_OFF: 0.2, BULK_ETA: 3600e3, BULK_MAX: 3,
   orders() { const s = G.state; return (s.orders = s.orders || []); },
   bulkPrice(fid) { return Math.round(((G.econ.price(fid) * this.BULK_CM) / 100) * (1 - this.BULK_OFF)); },
+  // ---------- dye vats: 3 m of plain white cloth + a little dye → the same cloth in a colour, 2 real hours later ----------
+  DYE_CM: 300, DYE_COST: 15, DYE_ETA: 2 * 3600e3, VATS: 2,
+  dyeing() { return this.orders().filter((o) => o.kind === 'dye'); },
+  // plain white bolts on the roll with enough cloth for a batch
+  dyeSources() { const s = G.state, C = G.CAT; return Object.keys(s.roll).filter((id) => C.FABRICS[id] && C.FABRICS[id].color === 'trang' && C.FABRICS[id].print === 'tron' && s.roll[id] >= this.DYE_CM); },
+  dyeTarget(src, color) { const f = G.CAT.FABRICS[src], id = f && `${f.mat}.${color}.tron`; return id && G.CAT.FABRICS[id] ? id : null; },
+  dye(src, color) {
+    const s = G.state, to = this.dyeTarget(src, color);
+    if (!to || (s.roll[src] || 0) < this.DYE_CM) return false;
+    if (this.dyeing().length >= this.VATS) { G.toast('Cả hai chậu đang nhuộm', G.C.red); return false; }
+    if (!G.spend(this.DYE_COST)) return false;
+    s.roll[src] -= this.DYE_CM; if (s.roll[src] < 10) delete s.roll[src];
+    this.orders().push({ fid: to, cm: this.DYE_CM, eta: Date.now() + this.DYE_ETA, kind: 'dye' });
+    G.toast('Đã ngâm vải vào chậu nhuộm — 2 giờ nữa xong'); G.save();
+    return true;
+  },
   order(fid) {
-    if (this.orders().length >= this.BULK_MAX) { G.toast(`Đang chờ ${this.BULK_MAX} xe vải, đợi xe tới đã`, G.C.red); return false; }
+    if (this.orders().filter((o) => o.kind !== 'dye').length >= this.BULK_MAX) { G.toast(`Đang chờ ${this.BULK_MAX} xe vải, đợi xe tới đã`, G.C.red); return false; }
     if (!G.spend(this.bulkPrice(fid))) return false;
     this.orders().push({ fid, cm: this.BULK_CM, eta: Date.now() + this.BULK_ETA });
     G.toast('Đã đặt vải sỉ — xe giao sau 1 giờ'); G.save();
@@ -142,7 +158,7 @@ G.idle = {
     // the van arriving while you play
     setInterval(() => {
       if (!this.on() || document.hidden) return;
-      for (const o of this.deliver(Date.now())) { const f = G.CAT.FABRICS[o.fid]; G.toast(`Xe vải tới! +${(o.cm / 100).toFixed(0)} m ${f ? f.name : ''}`, G.C.green); G.sfx.bell(); }
+      for (const o of this.deliver(Date.now())) { const f = G.CAT.FABRICS[o.fid]; G.toast(`${o.kind === 'dye' ? 'Nhuộm xong!' : 'Xe vải tới!'} +${(o.cm / 100).toFixed(0)} m ${f ? f.name : ''}`, G.C.green); G.sfx.bell(); }
     }, 5e3);
     document.addEventListener('visibilitychange', () => {
       if (!this.on()) return;

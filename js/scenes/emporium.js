@@ -107,7 +107,7 @@ G.scenes.emporium = {
         }, { style: 'green', size: 18, r: 25 });
         // wholesale: cheaper, but the van brings it an hour later (real time)
         if (G.idle && G.idle.on()) {
-          const bp = G.idle.bulkPrice(f.id), full = G.idle.orders().length >= G.idle.BULK_MAX;
+          const bp = G.idle.bulkPrice(f.id), full = G.idle.orders().filter((o) => o.kind !== 'dye').length >= G.idle.BULK_MAX;
           G.button(c, 'bulk', full ? 'Đang chờ 3 xe vải' : `Đặt sỉ 10 m · ${bp} xu · giao sau 1 giờ`, 884, 604, 352, 30, () => G.idle.order(f.id), { style: 'ghost', size: 13, r: 15, enabled: !full });
         }
       }

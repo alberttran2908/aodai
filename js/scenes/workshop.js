@@ -35,16 +35,77 @@ G.scenes.workshop = {
     }
     c.restore();
   },
-  TABS: [['tools', 'Dụng cụ'], ['front', 'Mặt tiền'], ['staff', 'Thợ phụ'], ['loan', 'Vay vốn']],
+  // Chậu nhuộm: two vats; white cloth from the roll + dye → the same cloth in a colour, ready 2 real hours later
+  drawDye(c) {
+    const U = G.UI, I = G.idle, s = G.state, srcs = I.dyeSources();
+    if (!srcs.includes(this.dyeSrc)) this.dyeSrc = srcs[0] || null;
+    U.card(c, 40, 130, 760, 470);
+    U.title(c, 'Nhuộm vải', 64, 168, { size: 24 });
+    G.wrap(c, `Ngâm ${I.DYE_CM / 100} m vải trắng trơn vào chậu cùng màu nhuộm (${I.DYE_COST} xu). Hai giờ sau — kể cả khi bạn tắt game — được ${I.DYE_CM / 100} m vải màu, rẻ hơn mua sẵn.`, 64, 186, 712, 20, { size: 14, color: U.T.soft, maxLines: 3 });
+    G.text(c, 'Vải trắng trong kho', 64, 262, { size: 15, weight: 800, color: U.T.accent });
+    if (!srcs.length) G.wrap(c, `Chưa có cây vải trắng trơn nào từ ${I.DYE_CM / 100} m. Mua lụa, voan hay đũi trắng ở cửa hàng vải.`, 64, 280, 700, 20, { size: 14, color: U.T.soft, maxLines: 2 });
+    let x = 64;
+    for (const id of srcs) {
+      const f = G.CAT.FABRICS[id];
+      x += U.chip(c, 'ds' + id, `${G.CAT.MATS[f.mat].name} · ${(s.roll[id] / 100).toFixed(1)} m`, x, 276, this.dyeSrc === id, () => { this.dyeSrc = id; }) + 8;
+    }
+    if (this.dyeSrc) {
+      G.text(c, 'Màu nhuộm', 64, 336, { size: 15, weight: 800, color: U.T.accent });
+      const cols = Object.keys(G.DATA.colors).filter((k) => k !== 'trang' && I.dyeTarget(this.dyeSrc, k));
+      if (!cols.includes(this.dyeCol)) this.dyeCol = cols[0];
+      cols.forEach((k, i) => {
+        const cx = 84 + (i % 14) * 50, cy = 372 + Math.floor(i / 14) * 46, sel = this.dyeCol === k;
+        G.ui.hits.push({ id: 'dc' + k, x: cx - 18, y: cy - 18, w: 36, h: 36, enabled: true, cb: () => { this.dyeCol = k; G.sfx.click(); } });
+        c.beginPath(); c.arc(cx, cy, sel ? 17 : 14, 0, 7); c.fillStyle = G.DATA.colors[k].hex; c.fill();
+        c.strokeStyle = sel ? G.INK : 'rgba(61,43,37,0.35)'; c.lineWidth = sel ? 3 : 1.2; c.stroke();
+      });
+      const to = this.dyeCol && I.dyeTarget(this.dyeSrc, this.dyeCol), busy = I.dyeing().length >= I.VATS;
+      if (to) U.fitText(c, `→ ${G.CAT.FABRICS[to].name} (giá mua sẵn ${G.econ.price(to) * 3} xu / 3 m)`, 64, 470, 712, { size: 14, weight: 700 });
+      G.button(c, 'dyego', busy ? 'Cả hai chậu đang nhuộm' : `Nhuộm ${I.DYE_CM / 100} m · ${I.DYE_COST} xu · xong sau 2 giờ`, 64, 520, 420, 52, () => I.dye(this.dyeSrc, this.dyeCol), { style: 'green', size: 17, r: 26, enabled: !!to && !busy });
+    }
+    // the two vats: dye liquid swirling while a batch soaks, a countdown above
+    U.card(c, 820, 130, 420, 470, { fill: '#fffaf0' });
+    U.title(c, 'Chậu', 844, 168, { size: 22 });
+    const batches = I.dyeing();
+    for (let v = 0; v < I.VATS; v++) {
+      const b = batches[v], cx = 1030, cy = 270 + v * 180;
+      c.save();
+      c.beginPath(); c.ellipse(cx, cy + 46, 120, 22, 0, 0, 7); c.fillStyle = 'rgba(40,20,10,0.2)'; c.fill();
+      const tub = c.createLinearGradient(cx - 110, 0, cx + 110, 0); tub.addColorStop(0, '#8a8f96'); tub.addColorStop(0.5, '#d9dde1'); tub.addColorStop(1, '#7c8188');
+      c.beginPath(); c.moveTo(cx - 110, cy - 20); c.lineTo(cx - 92, cy + 44); c.quadraticCurveTo(cx, cy + 62, cx + 92, cy + 44); c.lineTo(cx + 110, cy - 20); c.closePath();
+      c.fillStyle = tub; c.fill(); c.strokeStyle = G.INK; c.lineWidth = 2; c.stroke();
+      c.beginPath(); c.ellipse(cx, cy - 20, 110, 22, 0, 0, 7); c.fillStyle = '#c4c9ce'; c.fill(); c.stroke();
+      const liquid = b ? G.DATA.colors[G.CAT.FABRICS[b.fid].color].hex : '#dfe9ee';
+      c.beginPath(); c.ellipse(cx, cy - 18, 98, 16, 0, 0, 7); c.fillStyle = liquid; c.fill();
+      if (b) {
+        // the cloth's soft fold just under the surface, and slow rings spreading across the dye
+        const t = performance.now() / 1000;
+        c.save(); c.beginPath(); c.ellipse(cx, cy - 18, 98, 16, 0, 0, 7); c.clip();
+        const fold = c.createRadialGradient(cx - 20, cy - 20, 4, cx - 20, cy - 20, 60); fold.addColorStop(0, 'rgba(255,255,255,0.28)'); fold.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = fold; c.fillRect(cx - 100, cy - 36, 200, 36);
+        for (let k = 0; k < 3; k++) {
+          const p = (t * 0.25 + k / 3) % 1;
+          c.beginPath(); c.ellipse(cx + 10, cy - 18, 10 + p * 85, 2 + p * 13, 0, 0, 7);
+          c.strokeStyle = `rgba(255,255,255,${0.35 * (1 - p)})`; c.lineWidth = 2; c.stroke();
+        }
+        c.restore();
+        const mins = Math.max(1, Math.ceil((b.eta - Date.now()) / 60e3));
+        U.fitText(c, `${G.CAT.FABRICS[b.fid].name} · còn ${mins >= 60 ? `${Math.floor(mins / 60)} giờ ${mins % 60} phút` : `${mins} phút`}`, cx, cy - 58, 360, { size: 14, weight: 800, align: 'center', color: U.T.accent });
+      } else G.text(c, 'Chậu trống', cx, cy - 58, { size: 14, weight: 700, align: 'center', color: U.T.soft });
+      c.restore();
+    }
+  },
+  TABS: [['tools', 'Dụng cụ'], ['front', 'Mặt tiền'], ['staff', 'Thợ phụ'], ['dye', 'Chậu nhuộm'], ['loan', 'Vay vốn']],
   draw(c) {
     const U = G.UI;
     U.bg(c);
     this.tab = this.tab || 'tools';
     const tabs = this.TABS.filter(([k]) => k !== 'loan' || G.econ.on());
     tabs.forEach(([k, label], i) => G.button(c, 'wt' + k, label, 40 + i * 170, 64, 160, 38, () => { this.tab = k; }, { style: this.tab === k ? 'primary' : 'ghost', size: 15, r: 19 }));
-    if (G.econ.on()) G.text(c, `Tài sản (đã khấu hao): ${G.econ.assets()} xu · tính vào Giá trị tiệm`, G.W - 40, 83, { size: 13, weight: 700, align: 'right', color: U.T.soft });
+    if (G.econ.on()) G.text(c, `Tài sản (đã khấu hao): ${G.econ.assets()} xu · tính vào Giá trị tiệm`, G.W - 40, 116, { size: 13, weight: 700, align: 'right', color: U.T.soft });
     if (this.tab === 'front') this.drawFront(c);
     else if (this.tab === 'staff') this.drawStaff(c);
+    else if (this.tab === 'dye') this.drawDye(c);
     else if (this.tab === 'loan') this.drawLoan(c);
     else this.drawTools(c);
     U.primary(c, 'back', '← Về quầy', () => G.go('desk'));

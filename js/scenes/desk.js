@@ -147,7 +147,7 @@ G.scenes.desk = {
       const n = G.idle.orders().length, mins = Math.max(1, Math.ceil((eta - Date.now()) / 60e3)), x = cx - 264, y = 156;
       G.rr(c, x, y, 190, 30, 15); c.fillStyle = 'rgba(52,30,18,0.85)'; c.fill(); c.strokeStyle = 'rgba(255,225,180,0.35)'; c.lineWidth = 1.5; c.stroke();
       U.icon(c, 'fabric', x + 17, y + 15, 20);
-      U.fitText(c, `Xe vải${n > 1 ? ` (${n})` : ''}: còn ${mins} phút`, x + 32, y + 16, 150, { size: 13, weight: 700, color: '#fbe9cf' });
+      U.fitText(c, `Vải sắp có${n > 1 ? ` (${n})` : ''}: còn ${mins} phút`, x + 32, y + 16, 150, { size: 13, weight: 700, color: '#fbe9cf' });
     }
     if (G.econ.on()) {
       // next bill and this month's market, so money pressure is always visible
