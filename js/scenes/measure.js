@@ -37,15 +37,27 @@ G.scenes.measure = {
     this.drag = null;
     const l = this.lines[this.cur];
     if (d.x1 - d.x0 < 20) return;
-    const err = (Math.abs(d.x0 - this.sx(l.L)) + Math.abs(d.x1 - this.sx(l.R))) / this.z; // cm
-    const score = G.clamp(1 - Math.max(0, err - 1.5) / 8, 0, 1);
-    this.results.push({ name: l.name, val: G.job.com.measures[l.key], score, x0: d.x0, x1: d.x1, y: l.y });
-    // the tape whips back into its case, leaving two chalk marks and a verdict
+    // what the tape reads: the real size, off by however far the tape fell short or ran past the body
+    // (4 screen px ≈ 1 cm on every line, so the waist is no harder than the hips)
+    const PX = 4, truth = G.job.com.measures[l.key], span = this.sx(l.R) - this.sx(l.L) || 1;
+    const val = truth + Math.round((d.x1 - d.x0 - span) / PX);
+    // the error, in cm: a wrong reading, plus starting off the body's edge
+    const startCm = Math.abs(d.x0 - this.sx(l.L)) / PX;
+    const errCm = Math.abs(val - truth) + startCm * 0.5;
+    const score = G.clamp(1 - Math.max(0, errCm - 2) / 10, 0, 1);
+    const v = this.verdict(errCm);
+    this.results.push({ name: l.name, val, truth, err: Math.round(errCm), score, verdict: v, x0: d.x0, x1: d.x1, y: l.y });
+    // the tape whips back into its case, leaving two chalk marks; the real edges show in green beside them
     this.retract = { x0: d.x0, x1: d.x1, y: this.sy(l.y), t: 0 };
-    this.pop = { x: (d.x0 + d.x1) / 2, y: this.sy(l.y) - 40, t: 0, text: score > 0.85 ? 'Chuẩn!' : score > 0.6 ? 'Hơi lệch' : 'Lệch rồi', col: score > 0.85 ? G.UI.T.ok : score > 0.6 ? G.UI.T.gold : G.UI.T.bad };
+    this.pop = { x: (d.x0 + d.x1) / 2, y: this.sy(l.y) - 40, t: 0, text: v.text + (v.key === 'ok' ? '' : ` · lệch ${Math.round(errCm)} cm`), col: v.col };
     G.sfx.snip(); G.sfx.done();
     this.cur++;
     if (this.cur >= this.lines.length) G.job.fit = this.results.reduce((a, r) => a + r.score, 0) / this.results.length;
+  },
+  // within 2 cm is right on (a few pixels of tape); up to 5 cm is a little off; more is wrong (the dress will not fit)
+  verdict(errCm) {
+    const T = G.UI.T;
+    return errCm <= 2 ? { key: 'ok', text: 'Chuẩn!', col: T.ok } : errCm <= 5 ? { key: 'near', text: 'Hơi lệch', col: T.gold } : { key: 'off', text: 'Lệch rồi', col: T.bad };
   },
   update(dt) {
     this.t += dt;
@@ -69,11 +81,19 @@ G.scenes.measure = {
         const pulse = 1 + Math.sin(this.t * 6) * 0.2;
         c.beginPath(); c.arc(this.sx(l.L), y, 7 * pulse, 0, 7); c.fillStyle = 'rgba(178,50,63,0.6)'; c.fill();
       }
-      if (done && !(this.retract && i === this.cur - 1)) this.chalk(c, this.results[i].x0, this.results[i].x1, y, `${this.results[i].val} cm`);
+      if (done && !(this.retract && i === this.cur - 1)) {
+        const r = this.results[i];
+        // the body's real edges, so the player sees exactly where the tape should have started and stopped
+        c.save(); c.strokeStyle = 'rgba(63,138,82,0.85)'; c.lineWidth = 3; c.lineCap = 'round';
+        for (const ex of [this.sx(l.L), this.sx(l.R)]) { c.beginPath(); c.moveTo(ex, y - 16); c.lineTo(ex, y + 16); c.stroke(); }
+        c.restore();
+        this.chalk(c, r.x0, r.x1, y, `${r.val} cm`);
+      }
     });
     if (this.drag) {
-      const l = this.lines[this.cur], len = (this.drag.x1 - this.drag.x0) / ((this.sx(l.R) - this.sx(l.L)) || 1);
-      this.tape(c, this.drag.x0, this.drag.x1, this.sy(l.y), `${Math.round(G.job.com.measures[l.key] * len)} cm`, true);
+      // the live reading uses the same rule as the result (see up())
+      const l = this.lines[this.cur], span = this.sx(l.R) - this.sx(l.L) || 1;
+      this.tape(c, this.drag.x0, this.drag.x1, this.sy(l.y), `${G.job.com.measures[l.key] + Math.round((this.drag.x1 - this.drag.x0 - span) / 4)} cm`, true);
     }
     if (this.retract) {
       const r = this.retract, k = G.easeOut(r.t / 0.3);
@@ -87,16 +107,18 @@ G.scenes.measure = {
     }
     // side card
     U.commission(c, 24, 70, 340);
-    U.card(c, 880, 70, 376, 250);
+    U.card(c, 880, 70, 376, 330);
     U.title(c, 'Số đo', 904, 104);
     this.lines.forEach((l, i) => {
-      const r = this.results[i];
-      G.text(c, l.name, 904, 150 + i * 44, { size: 16, weight: 600 });
-      G.text(c, r ? `${r.val} cm` : '—', 1150, 150 + i * 44, { size: 18, weight: 800, align: 'right' });
-      if (r) G.text(c, r.score > 0.85 ? 'chuẩn' : r.score > 0.6 ? 'hơi lệch' : 'lệch', 1236, 150 + i * 44, { size: 13, weight: 700, align: 'right', color: r.score > 0.85 ? U.T.ok : r.score > 0.6 ? U.T.gold : U.T.bad });
+      const r = this.results[i], ry = 150 + i * 58;
+      G.text(c, l.name, 904, ry, { size: 16, weight: 600 });
+      G.text(c, r ? `${r.val} cm` : '—', 1236, ry, { size: 18, weight: 800, align: 'right', color: r ? r.verdict.col : U.T.soft });
+      // what was measured against the real size, and the verdict
+      if (r) G.text(c, r.verdict.key === 'ok' ? `✓ chuẩn (thật ${r.truth} cm)` : `${r.verdict.text.toLowerCase()} ${r.err} cm · thật ${r.truth} cm`, 904, ry + 22, { size: 13, weight: 700, color: r.verdict.col });
     });
     const done = this.cur >= this.lines.length;
-    if (done) G.text(c, `Độ vừa vặn: ${Math.round(j.fit * 100)}%`, 904, 294, { size: 17, weight: 800, color: U.T.accent });
+    if (done) G.text(c, `Độ vừa vặn: ${Math.round(j.fit * 100)}%`, 904, 372, { size: 17, weight: 800, color: U.T.accent });
+    else G.wrap(c, 'Kéo thước từ mép trái tới đúng mép phải thân người. Lệch tới 2 cm là chuẩn, tới 5 cm là hơi lệch.', 904, 330, 330, 18, { size: 12, color: U.T.soft, maxLines: 3 });
     U.primary(c, 'next', 'Mở sổ phác thảo', () => G.go('sketch'), done);
     U.secondary(c, 'redo', 'Đo lại', () => this.enter());
     U.hint(c, done ? 'Số đo đã ghi vào sổ' : 'Nhấn ở chấm đỏ rồi kéo thước sang mép phải của áo, thả tay để ghi số đo');

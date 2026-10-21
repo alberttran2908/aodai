@@ -187,7 +187,7 @@ G.geo = (function () {
     const left = mirror(Lh.pts).reverse();
     const poly = R.pts.concat(left.slice(1, -1));
     return {
-      poly, slitY: R.slitY, hemY: Math.max(LR, LL, cY),
+      poly, slitY: R.slitY, hemY: Math.max(LR, LL, cY), Lside: Math.min(LR, LL), cY,
       hemLine: join(R.hem, mirror(Lh.hem).reverse()),
       slitR: R.flap, slitL: mirror(Lh.flap), A: R.A,
       cfgR: R.cfg, cfgL: Lh.cfg,
@@ -336,6 +336,13 @@ G.geo = (function () {
       seams.push({ name: name + sideName, pts: m ? mirror(pts) : pts });
     }
     seams.push({ name: 'Sườn phải', pts: sideR }, { name: 'Sườn trái', pts: mirror(sideR) }, { name: N.bare ? 'Viền cổ' : 'Cổ áo', pts: neckFull });
+    // seams that belong to this design only, so every cut sews differently
+    if (ngu) seams.push({ name: 'Nối thân giữa', pts: line(V(0, N.nd + 0.5), V(0, F.cY - 1), 24) }); // ngũ thân: two front panels joined down the middle
+    for (const [sl, m, side] of [[slR, false, 'phải'], [slL, true, 'trái']]) {
+      if (sl && sl.band) seams.push({ name: 'Bo tay ' + side, pts: m ? mirror(line(sl.band[0], sl.band[1], 6)) : line(sl.band[0], sl.band[1], 6) }); // puff sleeve cuff
+    }
+    // the hem is turned up and stitched all along its shape: straight, a deep U, a V point, knife pleats, a slant…
+    if (!d.casual) seams.push({ name: d.hem === 'kep' ? 'Lai tà ngoài' : 'Lai tà', pts: F.hemLine });
     seams.forEach((sm) => { sm.pts = scA(sm.pts); });
     // buttons along the right opening
     const cR = F.cfgR;
@@ -357,10 +364,25 @@ G.geo = (function () {
       const b = N.band;
       defs.push({ id: 'collar', slot: 'co', name: 'Cổ áo', poly: sc([V(0, 1), V(1, 0), V(33, 0), V(34, 1), V(34, b - 1), V(33, b), V(1, b), V(0, b - 1)]) });
     }
+    // pieces only some designs need
+    if (ngu) {
+      // ngũ thân has a fifth, narrower panel ("vạt con") under the front
+      const L2 = F.Lside - 2;
+      defs.push({ id: 'vatcon', slot: 'than', name: 'Vạt con', poly: sc([V(0, 1), V(W(d, 24) * 0.7, 24), V(W(d, 39) * 0.7, 39), V(W(d, F.slitY) * 0.75, F.slitY), V(W(d, F.slitY) * 0.85, L2), V(0, L2)]) });
+    }
+    if (d.hem === 'kep') {
+      // tà kép: a full-length inner tà under the shorter outer one
+      const top = F.slitY, w0 = W(d, top), bot = F.Lside + 30;
+      defs.push({ id: 'talot', slot: 'than', name: 'Tà lót', poly: sc([V(-w0, top), V(w0, top), V(w0 + 9, bot), V(0, bot + 2), V(-w0 - 9, bot)]) });
+    }
+    if (slR && slR.band) for (const side of ['phải', 'trái']) defs.push({ id: 'cuff' + side, slot: 'tay', name: 'Bo tay ' + side, poly: sc([V(0, 0), V(26, 0), V(26, 4.5), V(0, 4.5)]) });
+    if (d.neck === 'lasen') defs.push({ id: 'lacoc', slot: 'than', name: 'Lá cổ', poly: sc(join(catmull([V(-11, 0), V(-6, 5), V(0, 6.5), V(6, 5), V(11, 0)], 5), catmull([V(11, 0), V(5, 2.6), V(0, 3.4), V(-5, 2.6), V(-11, 0)], 5))) });
+    if (d.neck === 'no') defs.push({ id: 'daino', slot: 'than', name: 'Dây nơ', poly: sc([V(0, 0), V(70, 0), V(72, 2.5), V(70, 5), V(0, 5), V(-2, 2.5)]) });
     // trousers or skirt panels, cut from the "quần" fabric
     if (d.bottom === 'chanvay' || d.bottom === 'tuyn') {
       const sk = [V(-13, 0), V(13, 0), V(30, 104), V(-30, 104)];
       defs.push({ id: 'skirtF', slot: 'quan', name: 'Thân váy trước', poly: sc(sk) }, { id: 'skirtB', slot: 'quan', name: 'Thân váy sau', poly: sc(sk) });
+      if (d.bottom === 'tuyn') defs.push({ id: 'tuyn', slot: 'quan', name: 'Lớp tuyn', poly: sc([V(-16, 0), V(16, 0), V(36, 100), V(-36, 100)]) }); // the tulle overskirt
     } else {
       const L = d.bottom === 'ongrong' ? 88 : 102, wb = d.bottom === 'ongrong' ? 21 : 18;
       const leg = [V(0, 0), V(16, 0), V(17.6, 17), V(wb, L), V(0, L)];

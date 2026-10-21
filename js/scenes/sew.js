@@ -31,6 +31,7 @@ G.scenes.sew = {
     this.oz = Math.min(820 / (b.w + 8), 600 / (bot - top));
     this.ocx = b.x + b.w / 2; this.ocy = (top + bot) / 2;
     this.ovx = 450; this.ovy = 380;
+    this.home = { oz: this.oz, ocx: this.ocx, ocy: this.ocy }; // the upper-body view; seams lower down pan the camera
     this.thread = G.art.isLight(G.jobFabs().than.color) ? '#8c2a37' : '#f6e7c4';
     this.bake();
     // first the cut pieces are pinned onto the dress form, one by one (back, front, sleeves, collar)
@@ -43,7 +44,7 @@ G.scenes.sew = {
   // the assembled dress rendered once, so the zoomed machine view only has to blit it
   bake() {
     const a = this.asm, b = a.bounds, R = 20;
-    const x0 = b.x - 6, y0 = a.topY - 6, x1 = b.x + b.w + 6, y1 = 64 * a.s;
+    const x0 = b.x - 6, y0 = a.topY - 6, x1 = b.x + b.w + 6, y1 = a.hemY + 8 * a.s; // the whole dress: hems are sewn too
     const cv = document.createElement('canvas');
     cv.width = Math.ceil((x1 - x0) * R); cv.height = Math.ceil((y1 - y0) * R);
     const c = cv.getContext('2d');
@@ -52,6 +53,14 @@ G.scenes.sew = {
     this.baked = { cv, x0, y0, R };
   },
   toScreen(p) { return { x: (p.x - this.ocx) * this.oz + this.ovx, y: (p.y - this.ocy) * this.oz + this.ovy }; },
+  // where the form view should look for the selected seam: the upper body, or the seam itself when it runs lower
+  frameFor(i) {
+    const h = this.home, sm = this.asm.seams[i], s = this.asm.s; if (!sm) return h;
+    const b = G.geo.bounds(sm.pts);
+    if (b.y + b.h <= 62 * s) return h;
+    const m = 10 * s, w = b.w + m * 2, hh = b.h + m * 2;
+    return { oz: Math.min(820 / w, 560 / hh, h.oz), ocx: b.x + b.w / 2, ocy: b.y + b.h / 2 };
+  },
   // only the thread's own width is free; faster machines get a hair more slack
   dead() { return 0.03 * Math.pow(G.tool('machine').speed, 0.6); },
   // one stitch: the % says how far off the line it went (straight from the distance, nothing rounded up)
@@ -189,6 +198,11 @@ G.scenes.sew = {
   update(dt) {
     this.t += dt;
     if (this.mode === 'machine') this.updateMachine(dt);
+    else if (this.home) {
+      // glide the camera to the selected seam
+      const f = this.frameFor(this.sel), k = Math.min(1, dt * 6);
+      this.oz += (f.oz - this.oz) * k; this.ocx += (f.ocx - this.ocx) * k; this.ocy += (f.ocy - this.ocy) * k;
+    }
     if (this.stampT !== undefined) this.stampT += dt;
     for (const id in this.pinPop) this.pinPop[id] = Math.min(1, this.pinPop[id] + dt);
     // the seam ripper runs along the seam: stitches pop one after another, little bits of thread fall away
@@ -392,15 +406,17 @@ G.scenes.sew = {
     U.card(c, x, 66, 350, 570);
     U.title(c, 'Đường may', x + 24, 102);
     G.wrap(c, 'Các mảnh đã ghim lên ma-nơ-canh. Chọn một đường may rồi đưa vải qua máy.', x + 24, 130, 300, 21, { size: 14, color: U.T.soft });
-    let y = 196;
+    // rows tighten when a design has many seams, so the list always ends above the buttons
+    const rowH = Math.min(40, 226 / asm.seams.length);
+    let y = 186 + rowH / 2;
     asm.seams.forEach((sm, i) => {
       const d = this.sd[i], on = i === this.sel;
-      G.ui.hits.push({ id: 'seam' + i, x: x + 14, y: y - 18, w: 322, h: 36, enabled: true, cb: () => { this.sel = i; } });
-      if (on) { G.rr(c, x + 14, y - 18, 322, 36, 10); c.fillStyle = '#f6e6d6'; c.fill(); }
-      G.text(c, (d ? '✓ ' : '• ') + sm.name, x + 28, y, { size: 15, weight: on ? 800 : 600, color: d ? U.T.ok : on ? U.T.accent : U.T.ink });
+      G.ui.hits.push({ id: 'seam' + i, x: x + 14, y: y - rowH / 2 + 1, w: 322, h: rowH - 2, enabled: true, cb: () => { this.sel = i; } });
+      if (on) { G.rr(c, x + 14, y - rowH / 2 + 1, 322, rowH - 2, 10); c.fillStyle = '#f6e6d6'; c.fill(); }
+      G.text(c, (d ? '✓ ' : '• ') + sm.name, x + 28, y, { size: rowH < 34 ? 14 : 15, weight: on ? 800 : 600, color: d ? U.T.ok : on ? U.T.accent : U.T.ink });
       const gr = d && this.grade(d.score);
       G.text(c, d ? `${gr.label} · ${this.pct(d.score)}%${d.byHelper ? ' ✋' : ''}` : 'chưa may', x + 322, y, { size: 13, weight: d ? 800 : 500, align: 'right', color: d ? gr.col : U.T.soft });
-      y += 40;
+      y += rowH;
     });
     const sd = this.sd[this.sel];
     if (sd) G.button(c, 'rip', '✂ Tháo chỉ, may lại', x + 24, 432, 302, 46, () => { if (!this.ripAnim) this.ripAnim = { i: this.sel, n: sd.stitches.length, t: 0, popped: 0 }; }, { style: 'ghost', size: 16, r: 23, enabled: !this.ripAnim });

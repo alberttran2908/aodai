@@ -61,9 +61,10 @@ G.scenes.cutting = {
     return null;
   },
   traySlots() {
-    const out = []; let x = 30;
-    for (const p of this.pieces()) { if (p.placed || (this.drag && this.drag.p === p)) continue; out.push({ p, x, y: 572, w: 112, h: 86 }); x += 120; }
-    return out;
+    // tiles shrink when a design has many pieces, so the tray never runs under the tool buttons
+    const left = this.pieces().filter((p) => !p.placed && !(this.drag && this.drag.p === p));
+    const w = Math.min(112, (806 - 8 * Math.max(0, left.length - 1)) / Math.max(1, left.length));
+    return left.map((p, i) => ({ p, x: 30 + i * (w + 8), y: 572, w, h: 86 }));
   },
   down(pt, e) {
     if (this.anim) return;
