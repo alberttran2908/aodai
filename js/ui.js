@@ -46,7 +46,7 @@ G.UI = (function () {
     o = o || {};
     const size = o.size || 18, h = o.h || 34, dark = o.dark || '#7a2330';
     c.save();
-    c.font = `700 ${size}px ${G.GAME}`;
+    c.font = `700 ${G.fs(size)}px ${G.GAME}`;
     const w = c.measureText(text).width + 48, x = cx - w / 2, y = cy - h / 2, drop = 7, tail = o.tail || 26;
     for (const s of [-1, 1]) {
       const ex = s < 0 ? x + 12 : x + w - 12, tx = ex + s * tail;
@@ -66,7 +66,9 @@ G.UI = (function () {
   // text with a light outline, readable on any wall or fabric
   function outlined(c, text, x, y, o) {
     o = Object.assign({ size: 14, weight: 700, font: G.GAME, color: G.INK, halo: '#fff8ec' }, o || {});
-    c.save(); c.font = `${o.weight} ${o.size}px ${o.font}`; c.textAlign = o.align || 'left'; c.textBaseline = 'middle';
+    c.save(); let fz = G.fs(o.size); c.font = `${o.weight} ${fz}px ${o.font}`;
+    if (o.maxW) { const tw = c.measureText(text).width; if (tw > o.maxW) { fz = Math.max(8, (fz * o.maxW) / tw); c.font = `${o.weight} ${fz}px ${o.font}`; } } // shrink to fit
+    c.textAlign = o.align || 'left'; c.textBaseline = 'middle';
     c.lineJoin = 'round'; c.lineWidth = o.lw || 4; c.strokeStyle = o.halo; c.strokeText(text, x, y);
     c.fillStyle = o.color; c.fillText(text, x, y); c.restore();
   }
@@ -159,7 +161,7 @@ G.UI = (function () {
     items.forEach((it, i) => {
       const bx = x + i * (tw + gap);
       G.button(c, it.id, '', bx, y, tw, th, it.cb, { style: 'ghost', r: 14, icon: (cc, ix, iy) => icon(cc, it.icon, ix, iy, 34), enabled: it.enabled });
-      outlined(c, it.label, bx + tw / 2, y + th + 13, { size: 13, align: 'center' });
+      outlined(c, it.label, bx + tw / 2, y + th + 13, { size: 13, align: 'center', maxW: tw + gap - 2 });
       if (it.dot) badge(c, bx + tw - 4, y + 2);
     });
     return items.length * (tw + gap) - gap;
@@ -224,12 +226,14 @@ G.UI = (function () {
 
   function hint(c, text) {
     if (!text) return;
-    c.save(); c.font = `500 14px ${G.FONT}`;
-    const w = c.measureText(text).width + 50;
+    // never runs under the action buttons on the right (long hints are cut short on phones, where text is bigger)
+    const maxW = G.textBoost > 1 ? 560 : G.W - 470 - 52; // phones: keep clear of a third button on the right too
+    c.save(); c.font = `500 ${G.fs(14)}px ${G.FONT}`;
+    const w = Math.min(c.measureText(text).width, maxW) + 50;
     G.rr(c, 16, G.H - 46, w, 32, 16); c.fillStyle = 'rgba(52,30,18,0.88)'; c.fill(); c.strokeStyle = 'rgba(255,225,180,0.3)'; c.lineWidth = 1.5; c.stroke();
     c.beginPath(); c.arc(30, G.H - 30, 15, 0, 7); c.fillStyle = '#f6cd6a'; c.fill(); c.strokeStyle = G.INK; c.lineWidth = 2; c.stroke();
     thimble(c, 30, G.H - 31);
-    G.text(c, text, 52, G.H - 29, { size: 14, color: '#f6ead6', weight: 500 });
+    fitText(c, text, 52, G.H - 29, maxW, { size: 14, color: '#f6ead6', weight: 500 });
     c.restore();
   }
 
@@ -258,7 +262,9 @@ G.UI = (function () {
     const tg = G.CAT.TAGS[key];
     c.beginPath(); c.arc(x - 8, y, 3.5, 0, 7); c.fillStyle = tg.col; c.fill();
     G.text(c, tg.name, x, y, { size: 13, weight: 600, color: T.ink });
-    const bx = x + 92, bw = w - 132;
+    // the bar starts after the label (wider when phones enlarge the text)
+    c.font = `600 ${G.fs(13)}px ${G.FONT}`;
+    const lab = Math.max(92, c.measureText(tg.name).width + 10), bx = x + lab, bw = w - 40 - lab;
     G.rr(c, bx, y - 5, bw, 10, 5); c.fillStyle = '#eadfcd'; c.fill();
     let ok = true;
     if (req) ok = req.type === 'min' ? val >= req.val : val <= req.val;
@@ -293,7 +299,7 @@ G.UI = (function () {
       const th = G.themeRibbon && G.themeRibbon(com.kind); // odd jobs: funeral, alluring, poor-folk costume
       const col = th ? th[0] : { arc: '#d6698a', event: '#c9952e', story: '#b23a48', daily: '#4a86b8', copy: '#6b5bb8' }[com.kind] || T.accent;
       const lab = th ? th[1] : { arc: 'Tâm sự', event: 'Sự kiện', story: 'Truyện', daily: 'Đơn ngày', copy: 'May y chang' }[com.kind] || '';
-      c.font = `800 12px ${G.FONT}`;
+      c.font = `800 ${G.fs(12)}px ${G.FONT}`;
       const tw = Math.min(w - 40, c.measureText(`${lab} · ${com.title}`).width + 24);
       G.rr(c, x + 14, y - 13, tw, 24, 12); c.fillStyle = col; c.fill();
       fitText(c, `${lab} · ${com.title}`, x + 26, y - 1, tw - 22, { size: 12, weight: 800, color: '#fff' });
@@ -335,7 +341,7 @@ G.UI = (function () {
 
   function chip(c, id, label, x, y, active, cb, o) {
     o = o || {};
-    c.font = `600 13px ${G.FONT}`;
+    c.font = `600 ${G.fs(13)}px ${G.FONT}`;
     const w = o.w || c.measureText(label).width + 26;
     G.button(c, id, label, x, y, w, 30, cb, { style: active ? 'primary' : 'ghost', size: 13, r: 15, enabled: o.enabled });
     return w;
@@ -345,12 +351,13 @@ G.UI = (function () {
   const ABBR = { truyenthong: 'TT', thanhlich: 'TL', sangtrong: 'ST', rucro: 'RR', hiendai: 'HĐ' };
   function pills(c, tags, x, y, maxW, mult) {
     const list = Object.keys(tags).map((k) => [k, Math.round(tags[k] * (mult || 1))]).filter((e) => e[1] > 0).sort((a, b) => b[1] - a[1]);
-    c.font = `800 10px ${G.FONT}`;
+    c.font = `800 ${G.fs(10)}px ${G.FONT}`;
+    const ph = Math.max(16, G.fs(10) + 5);
     let px = x;
     for (const [k, v] of list) {
       const label = `${ABBR[k]}+${v}`, w = c.measureText(label).width + 10;
       if (px + w > x + maxW) break;
-      G.rr(c, px, y - 8, w, 16, 8); c.fillStyle = G.CAT.TAGS[k].col; c.fill();
+      G.rr(c, px, y - ph / 2, w, ph, ph / 2); c.fillStyle = G.CAT.TAGS[k].col; c.fill();
       G.text(c, label, px + w / 2, y, { size: 10, weight: 800, align: 'center', color: '#fff' });
       px += w + 4;
     }
@@ -358,18 +365,19 @@ G.UI = (function () {
   // text cut to a width with an ellipsis
   function fitText(c, text, x, y, maxW, o) {
     o = o || {};
-    c.font = `${o.weight || 400} ${o.size || 18}px ${o.font || G.FONT}`;
+    c.font = `${o.weight || 400} ${G.fs(o.size || 18)}px ${o.font || G.FONT}`;
     let t = text;
     if (c.measureText(t).width > maxW) { while (t.length > 1 && c.measureText(t + '…').width > maxW) t = t.slice(0, -1); t += '…'; }
     G.text(c, t, x, y, o);
   }
   // dark tooltip box near the pointer
   function tooltip(c, lines) {
-    c.font = `600 13px ${G.FONT}`;
-    const w = Math.max(...lines.map((l) => c.measureText(l).width)) + 24, h = 10 + lines.length * 19;
+    c.font = `700 ${G.fs(13)}px ${G.FONT}`;
+    const lh = G.fs(13) + 6;
+    const w = Math.max(...lines.map((l) => c.measureText(l).width)) + 24, h = 10 + lines.length * lh;
     const x = G.clamp(G.pointer.x - w / 2, 8, G.W - w - 8), y = Math.max(56, G.pointer.y - h - 16);
     G.rr(c, x, y, w, h, 10); c.fillStyle = 'rgba(52,30,18,0.96)'; c.fill(); c.strokeStyle = '#f6cd6a'; c.lineWidth = 1.5; c.stroke();
-    lines.forEach((l, i) => G.text(c, l, x + 12, y + 15 + i * 19, { size: 13, weight: i ? 500 : 700, color: i ? '#e9dccb' : '#fff' }));
+    lines.forEach((l, i) => G.text(c, l, x + 12, y + 5 + lh / 2 + i * lh, { size: 13, weight: i ? 500 : 700, color: i ? '#e9dccb' : '#fff' }));
   }
 
   return { T, bg, card, tile, title, ribbon, outlined, badge, icon, dock, topbar, hint, primary, secondary, swatch, tagBar, commission, chip, ABBR, pills, fitText, tooltip, needles, thimble };

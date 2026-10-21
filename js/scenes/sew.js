@@ -238,7 +238,7 @@ G.scenes.sew = {
     const x = 910;
     U.card(c, x, 66, 350, 570);
     U.title(c, 'Ghim lên ma-nơ-canh', x + 24, 102, { size: 22 });
-    G.wrap(c, 'Kéo từng mảnh thả lên ma-nơ-canh. Thân sau trước, rồi thân trước, tay và cổ.', x + 24, 126, 300, 20, { size: 13, color: U.T.soft });
+    G.wrap(c, 'Kéo từng mảnh thả lên ma-nơ-canh. Thân sau trước, rồi thân trước, tay và cổ.', x + 24, 126, 300, 20, { size: 13, color: U.T.soft, maxLines: 2 });
     this.pinTiles = [];
     const left = this.pinList.filter((p) => !j.pinned[p.id]);
     left.forEach((p, i) => {

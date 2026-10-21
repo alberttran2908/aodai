@@ -86,7 +86,7 @@ G.tut = (function () {
       c.restore();
     }
     // Bà Tư's bubble, on the side away from the target
-    const bw = 520, bh = 132;
+    const big = G.textBoost > 1, bw = big ? 640 : 520, bh = big ? 182 : 132; // phones: bigger text needs a bigger bubble
     const cx = r ? r.x + r.w / 2 : G.W / 2, cy = r ? r.y + r.h / 2 : G.H / 2;
     let bx = G.clamp(cx < G.W / 2 ? Math.max(cx + (r ? r.w / 2 : 0) + 30, 420) : Math.min(cx - (r ? r.w / 2 : 0) - 30 - bw, G.W - 420 - bw), 16, G.W - bw - 16);
     let by = cy > G.H / 2 ? 70 : G.H - bh - 90;
@@ -96,7 +96,7 @@ G.tut = (function () {
     U.card(c, bx, by, bw, bh, { fill: '#fffaf0' });
     G.Dialog.portrait(c, 'batu', bx + 12, by + 14, 78, 92);
     G.text(c, 'Bà Tư', bx + 51, by + 118, { size: 12, weight: 800, font: G.GAME, align: 'center', color: U.T.accent });
-    G.wrap(c, s.text, bx + 104, by + 14, bw - 120, 19, { size: 14, color: '#3a2c26' });
+    G.wrap(c, s.text, bx + 104, by + 14, bw - 120, 19, { size: 14, color: '#3a2c26', maxLines: big ? 4 : 5 });
     const t = st();
     G.text(c, `${t.idx + 1}/${STEPS.length}`, bx + bw - 14, by + bh - 18, { size: 11, weight: 700, align: 'right', color: U.T.soft });
     if (s.ack) G.button(c, 'tut_ok', s.last ? 'Cảm ơn bà!' : 'Hiểu rồi', bx + bw - 148, by + bh - 50, 100, 34, () => next(), { size: 14, r: 17 });

@@ -29,15 +29,23 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
   G.scale = 1;
 
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const s = Math.min(window.innerWidth / G.W, window.innerHeight / G.H);
+    // phones show the 1280-wide shop at about half size: draw at the full device resolution (sharper small text)
+    const dpr = Math.min(window.devicePixelRatio || 1, s < 0.8 ? 3 : 2);
     const cw = Math.floor(G.W * s), ch = Math.floor(G.H * s);
     cv.style.width = cw + 'px';
     cv.style.height = ch + 'px';
     cv.width = Math.floor(cw * dpr);
     cv.height = Math.floor(ch * dpr);
     G.scale = (cw / G.W) * dpr;
+    G.cssScale = s;
+    // …and small print grows (labels under ~18 px become readable; headings stay as they are)
+    G.textBoost = s < 0.8 ? Math.min(1.4, 0.8 / s) : 1;
   }
+  // about 9 screen px of forgiveness around buttons for a fingertip, in game units
+  G.touchSlop = () => Math.min(28, 9 / (G.cssScale || 1));
+  // effective font size for a design size (see textBoost)
+  G.fs = (size) => (G.textBoost > 1 && size < 18 ? Math.min(18, size * G.textBoost) : size);
   window.addEventListener('resize', resize);
   resize();
 
@@ -78,8 +86,8 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
       document.documentElement.requestFullscreen().then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {});
     }
     const p = toLocal(e);
-    Object.assign(G.pointer, p, { down: true });
-    const hit = G.ui.hitTest(p);
+    Object.assign(G.pointer, p, { down: true, touch: e.pointerType === 'touch' });
+    const hit = G.ui.hitTest(p, G.pointer.touch ? G.touchSlop() : 0);
     if (hit) { G.ui.pressed = hit; return; }
     if (G.scene && G.scene.down) G.scene.down(p, e);
   });
@@ -95,7 +103,7 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
     const p = toLocal(e);
     Object.assign(G.pointer, p, { down: false });
     if (G.ui.pressed) {
-      const hit = G.ui.hitTest(p);
+      const hit = G.ui.hitTest(p, G.pointer.touch ? G.touchSlop() : 0);
       const pr = G.ui.pressed;
       G.ui.pressed = null;
       if (hit && hit.id === pr.id && pr.enabled) { G.sfx.click(); pr.cb(); }
@@ -119,12 +127,20 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
   // ---------- Immediate-mode UI ----------
   G.ui = {
     hits: [], prevHits: [], pressed: null, anim: {}, dt: 0.016,
-    hitTest(p) {
-      for (let i = this.prevHits.length - 1; i >= 0; i--) {
-        const h = this.prevHits[i];
-        if (G.inRect(p, h)) return h;
+    // slop (touch): a tap that just misses a small button still presses it — the nearest one within slop,
+    // above whatever large backdrop (modal dimmer, card) the finger actually landed on
+    hitTest(p, slop) {
+      const H = this.prevHits, big = (h) => h.w * h.h > G.W * G.H * 0.3;
+      let top = -1;
+      for (let i = H.length - 1; i >= 0; i--) if (G.inRect(p, H[i])) { top = i; break; }
+      if (!slop || (top >= 0 && !big(H[top]))) return top >= 0 ? H[top] : null;
+      let best = null, bd = slop;
+      for (let i = H.length - 1; i > top; i--) {
+        const h = H[i]; if (!h.enabled || big(h)) continue;
+        const d = Math.hypot(Math.max(h.x - p.x, 0, p.x - h.x - h.w), Math.max(h.y - p.y, 0, p.y - h.y - h.h));
+        if (d < bd) { bd = d; best = h; }
       }
-      return null;
+      return best || (top >= 0 ? H[top] : null);
     }
   };
 
@@ -141,7 +157,7 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
 
   G.text = function (c, str, x, y, o) {
     o = o || {};
-    c.font = `${o.weight || 400} ${o.size || 18}px ${o.font || G.FONT}`;
+    c.font = `${o.weight || 400} ${o.fixed ? o.size || 18 : G.fs(o.size || 18)}px ${o.font || G.FONT}`;
     c.fillStyle = o.color || G.C.ink;
     c.textAlign = o.align || 'left';
     c.textBaseline = o.base || 'middle';
@@ -150,7 +166,9 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
 
   G.wrap = function (c, str, x, y, maxW, lineH, o) {
     o = o || {};
-    c.font = `${o.weight || 400} ${o.size || 18}px ${o.font || G.FONT}`;
+    const fz = G.fs(o.size || 18);
+    lineH *= fz / (o.size || 18); // boosted text needs taller lines
+    c.font = `${o.weight || 400} ${fz}px ${o.font || G.FONT}`;
     const words = String(str).split(' ');
     let line = '', yy = y, lines = [];
     for (const w of words) {
@@ -159,6 +177,13 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
       else line = test;
     }
     if (line) lines.push(line);
+    // maxLines: text that must not grow into what sits below it is cut with an ellipsis (phones enlarge text)
+    if (o.maxLines && lines.length > o.maxLines) {
+      lines.length = o.maxLines;
+      let l = lines[o.maxLines - 1];
+      while (l.length > 1 && c.measureText(l + '…').width > maxW) l = l.slice(0, -1);
+      lines[o.maxLines - 1] = l + '…';
+    }
     for (const l of lines) { G.text(c, l, x, yy, Object.assign({ base: 'top' }, o)); yy += lineH; }
     return lines.length * lineH;
   };
@@ -198,9 +223,14 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
     G.rr(c, x, y, w, h, r); c.strokeStyle = enabled ? G.INK : '#a8957f'; c.lineWidth = 2.2; c.stroke();
     G.rr(c, x, fy, w, fh, r); c.lineWidth = 1.4; c.stroke();
     if (o.icon) o.icon(c, x + w / 2, fy + fh / 2);
-    const size = o.size || 20, ty = fy + fh / 2 + 1;
-    if (o.style !== 'ghost' && enabled) G.text(c, label, x + w / 2, ty + 1.5, { align: 'center', size, weight: 700, font: G.GAME, color: P.lip });
-    G.text(c, label, x + w / 2, ty, { align: 'center', size, weight: 700, font: G.GAME, color: P.txt });
+    // the label shrinks to fit its button (phones boost small text; long labels must not spill out)
+    let size = G.fs(o.size || 20);
+    c.font = `700 ${size}px ${G.GAME}`;
+    const lw = c.measureText(label).width;
+    if (lw > w - 12) size = Math.max(8, (size * (w - 12)) / lw);
+    const ty = fy + fh / 2 + 1;
+    if (o.style !== 'ghost' && enabled) G.text(c, label, x + w / 2, ty + 1.5, { align: 'center', size, fixed: true, weight: 700, font: G.GAME, color: P.lip });
+    G.text(c, label, x + w / 2, ty, { align: 'center', size, fixed: true, weight: 700, font: G.GAME, color: P.txt });
     c.restore();
     return hit;
   };

@@ -19,9 +19,10 @@ G.scenes.emporium = {
     for (let gx = 60; gx < 830; gx += 64) { c.beginPath(); c.moveTo(gx, 66); c.lineTo(gx, G.H - 82); c.stroke(); }
     // material filter chips
     let x = 36;
-    x += U.chip(c, 'mall', 'Tất cả', x, 74, this.mat === 'all', () => { this.mat = 'all'; this.page = 0; }) + 6;
-    for (const m in C.MATS) x += U.chip(c, 'm' + m, C.MATS[m].name, x, 74, this.mat === m, () => { this.mat = m; this.page = 0; }) + 6;
-    U.chip(c, 'mcong', 'Cộng đồng', x, 74, this.mat === 'cong', () => { this.mat = 'cong'; this.page = 0; });
+    // fixed widths so the row always fits beside the sort button (labels shrink to fit on phones)
+    x += U.chip(c, 'mall', 'Tất cả', x, 74, this.mat === 'all', () => { this.mat = 'all'; this.page = 0; }, { w: 62 }) + 6;
+    for (const m in C.MATS) x += U.chip(c, 'm' + m, C.MATS[m].name, x, 74, this.mat === m, () => { this.mat = m; this.page = 0; }, { w: 60 }) + 6;
+    U.chip(c, 'mcong', 'Cộng đồng', x, 74, this.mat === 'cong', () => { this.mat = 'cong'; this.page = 0; }, { w: 92 });
     G.button(c, 'sort', this.sort === 'price' ? 'Giá ↑' : 'Hạng ↑', 748, 74, 80, 30, () => { this.sort = this.sort === 'price' ? 'rank' : 'price'; }, { style: 'ghost', size: 13, r: 15 });
     const ids = this.list(), per = 15, pages = Math.max(1, Math.ceil(ids.length / per));
     this.page = G.clamp(this.page, 0, pages - 1);
@@ -54,7 +55,7 @@ G.scenes.emporium = {
       c.strokeStyle = 'rgba(60,40,20,0.6)'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, -2); c.lineTo(0, 4); c.stroke();
       G.rr(c, -64, 4, 128, 34, 5); c.fillStyle = sel ? '#fff4d8' : '#fbf6ea'; c.fill(); c.strokeStyle = 'rgba(90,60,35,0.5)'; c.stroke();
       U.fitText(c, f.name, 0, 15, 120, { size: 11, weight: 700, align: 'center' });
-      G.text(c, lock ? `Hạng ${f.rank}` : G.econ.priceLabel(id) + (s.roll[id] ? ` · có ${(s.roll[id] / 100).toFixed(1)}m` : ''), 0, 29, { size: 10, weight: 800, align: 'center', color: lock ? U.T.bad : s.roll[id] ? U.T.ok : U.T.gold });
+      U.fitText(c, lock ? `Hạng ${f.rank}` : G.econ.priceLabel(id) + (s.roll[id] ? ` · có ${(s.roll[id] / 100).toFixed(1)}m` : ''), 0, 29, 120, { size: 10, weight: 800, align: 'center', color: lock ? U.T.bad : s.roll[id] ? U.T.ok : U.T.gold });
       c.restore();
     });
     if (pages > 1) {
