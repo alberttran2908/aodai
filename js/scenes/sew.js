@@ -52,7 +52,10 @@ G.scenes.sew = {
     this.baked = { cv, x0, y0, R };
   },
   toScreen(p) { return { x: (p.x - this.ocx) * this.oz + this.ovx, y: (p.y - this.ocy) * this.oz + this.ovy }; },
-  dead() { return 0.22 * Math.pow(G.tool('machine').speed, 0.6); },
+  // only the thread's own width is free; faster machines get a hair more slack
+  dead() { return 0.04 * Math.pow(G.tool('machine').speed, 0.6); },
+  // one stitch: every millimetre off the line costs, the first ones too (0.05 cm ≈ 96%, 0.1 ≈ 86%, 0.2 ≈ 70%, 0.5 ≈ 34%)
+  stitchQ(dist) { return G.clamp(1 - Math.pow(Math.max(0, dist - this.dead()) / 0.8, 0.75), 0, 1); },
   allDone() { return this.sd.every((d) => d); },
   nextSel() { const i = this.sd.findIndex((d) => !d); if (i >= 0) this.sel = i; },
 
@@ -69,7 +72,13 @@ G.scenes.sew = {
     const x = a.x + dx * t, y = a.y + dy * t;
     return { x, y, t, d: Math.hypot(p.x - x, p.y - y) };
   },
-  live() { const st = this.m.st; return st.reduce((a, s) => a + s.q, 0) / st.length; },
+  // the seam's score: average stitch, minus a little for a wavy line (steering back and forth)
+  live() {
+    const st = this.m.st, avg = st.reduce((a, s) => a + s.q, 0) / st.length;
+    let wob = 0, n = 0;
+    for (let i = 1; i < st.length; i++) if (st[i].off !== undefined && st[i - 1].off !== undefined) { wob += Math.abs(st[i].off - st[i - 1].off); n++; }
+    return G.clamp(avg - Math.min(0.12, n ? (wob / n) * 0.9 : 0), 0, 1);
+  },
   updateMachine(dt) {
     const m = this.m, P = this.paths[this.sel], K = G.keys;
     if (m.fail) { m.fail -= dt; if (m.fail <= 0) this.startSeam(this.sel); return; }
@@ -100,7 +109,7 @@ G.scenes.sew = {
     m.acc += v;
     if (m.acc >= 0.3) {
       m.acc = 0;
-      m.st.push({ x: m.n.x, y: m.n.y, q: G.clamp(1 - Math.max(0, m.dist - this.dead()) / 1.2, 0, 1) });
+      m.st.push({ x: m.n.x, y: m.n.y, q: this.stitchQ(m.dist), off: m.off });
       G.sfx.stitch();
     }
     if (m.dist > this.FAIL) {
@@ -498,7 +507,7 @@ G.scenes.sew = {
     G.text(c, 'Độ lệch kim', x + 24, 258, { size: 13, weight: 600, color: U.T.soft });
     const gx = x + 24, gw = 302, gy = 278, cx = gx + gw / 2;
     G.rr(c, gx, gy - 7, gw, 14, 7); c.fillStyle = '#eadfcd'; c.fill();
-    const okw = (this.dead() + 0.6) / this.FAIL * (gw / 2);
+    const okw = (this.dead() + 0.3) / this.FAIL * (gw / 2); // green = stitches that still score ~75%+
     G.rr(c, cx - okw, gy - 7, okw * 2, 14, 7); c.fillStyle = 'rgba(79,138,91,0.35)'; c.fill();
     const mx = cx + G.clamp(m.off / this.FAIL, -1, 1) * (gw / 2);
     c.beginPath(); c.arc(mx, gy, 8, 0, 7); c.fillStyle = Math.abs(m.off) > this.FAIL * 0.6 ? U.T.bad : U.T.ink; c.fill();
@@ -632,7 +641,8 @@ G.scenes.sew = {
   // a round tailor's stamp thumped onto the seam: grade word, percentage, a ring of stitches
   drawStamp(c, score) {
     const sc = Math.round(score * 100), t = this.stampT || 0;
-    const grade = sc >= 95 ? 'Hoàn hảo' : sc >= 85 ? 'Đẹp' : sc >= 65 ? 'Tạm ổn' : 'Nên may lại';
+    // "perfect" is earned, not given: only a near-flawless seam gets it
+    const grade = sc >= 98 ? 'Hoàn hảo' : sc >= 90 ? 'Rất đẹp' : sc >= 80 ? 'Đẹp' : sc >= 65 ? 'Tạm ổn' : 'Nên may lại';
     const col = sc >= 85 ? '#3f8a52' : sc >= 65 ? '#b8862a' : '#b8323f';
     const k = t < 0.28 ? 1.9 - 0.9 * G.easeBack(t / 0.28) : 1, x = this.N.x, y = 470;
     if (!this.stampSfx && t > 0.2) { this.stampSfx = true; G.sfx.stamp(); }
