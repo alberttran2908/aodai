@@ -278,7 +278,10 @@ G.scenes.finish = {
       y += 22;
     });
     const iron = G.tool('iron');
-    if (iron.bonus) { G.text(c, `${iron.name}: +${iron.bonus} điểm chất lượng`, 724, y, { size: 12, weight: 700, color: U.T.ok }); y += 20; }
+    if (iron.bonus) {
+      const got = Math.round(iron.bonus * (j.pressed === undefined ? 1 : j.pressed));
+      G.text(c, got ? `${iron.name}: +${got} điểm chất lượng${got < iron.bonus ? ` (ủi chưa hết, tối đa +${iron.bonus})` : ''}` : 'Áo chưa được ủi', 724, y, { size: 12, weight: 700, color: got ? U.T.ok : U.T.soft }); y += 20;
+    }
     y += 4; c.fillStyle = U.T.line; c.fillRect(724, y, 508, 1.5); y += 18;
     for (const ck of r.checks) {
       const extra = ['min', 'max', 'mat', 'gc', 'cols', 'cheap', 'qmax'].includes(ck.r.type) ? ` (đạt ${ck.value})` : '';

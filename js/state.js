@@ -495,7 +495,8 @@
     const j = G.job, com = j.com;
     const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
     const grain = avg(j.cutScore), sew = avg(j.sew), fit = j.fit;
-    const ironed = (G.tool('iron').bonus || 0) + (G.staff ? G.staff.ironBonus() : 0); // a pressed dress looks finished
+    // a pressed dress looks finished: the iron's bonus counts for how much was actually pressed at the board
+    const ironed = Math.round((G.tool('iron').bonus || 0) * (j.pressed === undefined ? 1 : j.pressed)) + (G.staff ? G.staff.ironBonus() : 0);
     const quality = Math.min(100, Math.round(100 * (0.3 * grain + 0.2 * fit + 0.5 * sew)) + ironed);
     const tags = G.computeTags(G.jobDesign(), j.fabs, j.decor, j.part);
     const checks = com.reqs.map((r) => Object.assign({ r }, G.reqCheck(r, tags, j.fabs, j.decor, { design: G.jobDesign(), quality })));

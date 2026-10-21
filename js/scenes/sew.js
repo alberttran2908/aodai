@@ -391,7 +391,9 @@ G.scenes.sew = {
       const avg = this.sd.reduce((a, d) => a + d.score, 0) / this.sd.length;
       G.text(c, `Trung bình: ${Math.round(avg * 100)}%`, x + 24, 614, { size: 18, weight: 800, color: U.T.accent });
     }
-    U.primary(c, 'next', 'Trang trí →', () => { j.sew = this.sd.map((d) => d.score); G.go('decorate'); }, done);
+    // with an iron in the shop, the dress is pressed before decorating
+    const hasIron = (G.state.tools.iron || 0) > 0;
+    U.primary(c, 'next', hasIron ? 'Ủi áo →' : 'Trang trí →', () => { j.sew = this.sd.map((d) => d.score); G.go(hasIron ? 'iron' : 'decorate'); }, done);
     const rough = G.job.com.reqs.some((r) => r.type === 'qmax'); // a costume that must look poorly made
     U.hint(c, rough && !done ? 'Khách muốn áo trông xuề xoà — cứ may lệch, xiêu vẹo một chút!' : done ? 'Đã may xong. Có thể tháo chỉ đường nào chưa ưng để may lại.' : 'Bấm đường may trên áo hoặc trong danh sách • Enter để bắt đầu may');
     U.topbar(c, 'May áo');
