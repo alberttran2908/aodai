@@ -1,0 +1,38 @@
+// Calendar events. reqs use 'auto' = rank-appropriate value from newCommission; ['min','auto','auto'] = client's favourite tag (likes[0]).
+// Reward is delivered by mail (letter id 'ev_<id>') once `goal` themed orders are delivered.
+
+G.EVENTS = [
+  { id: 'p2010', name: 'Tuần lễ 20/10', months: [10], days: [1, 5], chance: 0.6, bonus: 0.2, sex: 'f',
+    lines: ['Em may cho chị bộ áo tặng mẹ nhân 20/10 nha, mẹ chị chưa bao giờ được tặng áo dài.',
+      'Cơ quan tổ chức 20/10, chị em mặc áo dài đồng loạt, chị phải nổi nhất phòng!',
+      'Chồng chị lần đầu nhớ ngày 20/10, ảnh dắt chị ra đây đặt áo. Em may đẹp để ảnh nhớ hoài nha.'],
+    reqs: [['min', 'thanhlich', 'auto'], ['decor', 'theu']], goal: 3,
+    reward: { fabric: 'lua.hongsen.tron', cm: 300, coins: 80 }, letter: 'ev_p2010' },
+  { id: 'cuoi', name: 'Mùa cưới', months: [11, 12], days: [1, 5], chance: 0.45, bonus: 0.2,
+    lines: ['Cuối tuần em đi đám cưới bạn thân, áo phải đẹp mà không giành spotlight cô dâu!',
+      'Nhà có hỷ, cả họ may áo đồng phục, em làm mẫu cho cả nhà coi nha.',
+      'Thiệp cưới tới năm cái một tuần, em cần một bộ mặc đám nào cũng hợp.'],
+    reqs: [['min', 'sangtrong', 'auto'], ['avoid', 'den']], goal: 3,
+    reward: { fabric: 'ren.trang.img_ren', cm: 300, coins: 100 }, letter: 'ev_cuoi' },
+  { id: 'tet', name: 'Tết Nguyên Đán', months: [1], days: [1, 5], chance: 0.7, bonus: 0.25, lixi: true,
+    lines: ['Mùng Một đi chúc Tết, áo phải đỏ phải vàng cho hên cả năm!',
+      'Nhà chụp ảnh Tết, em may sao cho bà ngoại khen là được.',
+      'Năm nay em về quê ăn Tết sau ba năm đi làm xa. Áo phải đẹp cho má mừng.'],
+    reqs: [['min', 'truyenthong', 'auto'], ['avoid', 'den'], ['decor', 'theu']], goal: 3,
+    reward: { fabric: 'gam.do.img_gam_rong', cm: 300, coins: 150 }, letter: 'ev_tet' },
+  { id: 'p83', name: 'Quốc tế Phụ nữ 8/3', months: [3], days: [1, 3], chance: 0.5, bonus: 0.15, sex: 'f',
+    lines: ['8/3 năm nay chị tự thưởng cho mình một bộ áo, không chờ ai tặng nữa!',
+      'Tụi chị em trong chợ rủ nhau mặc áo dài đi ăn lẩu 8/3. Áo chị phải đúng gu chị nha em.'],
+    reqs: [['min', 'auto', 'auto']], goal: 2,
+    reward: { coins: 80 }, letter: 'ev_p83' },
+  { id: 'kyyeu', name: 'Mùa kỷ yếu', months: [5, 6], days: [1, 5], chance: 0.4, bonus: 0.15,
+    lines: ['Lớp em chụp kỷ yếu ở Hồ Con Rùa, áo phải nhẹ để chạy nhảy được!',
+      'Lớp em chụp kỷ yếu ở Bưu điện Thành phố, em muốn áo nhẹ nhàng mà lên ảnh vẫn nổi.'],
+    reqs: [['min', 'thanhlich', 'auto'], ['max', 'sangtrong', 30], ['mat', 'voan', 50]], goal: 3,
+    reward: { fabric: 'voan.trang.img_hoanhi', cm: 300, coins: 80 }, letter: 'ev_kyyeu' },
+  { id: 'trungthu', name: 'Trung thu', months: [8], days: [3, 5], chance: 0.6, bonus: 0.2,
+    lines: ['Rằm tháng Tám em dẫn tụi nhỏ trong xóm rước đèn, áo phải vui như đèn ông sao!',
+      'Đêm Trung thu cả nhà ngồi sân ngắm trăng, phá cỗ. Áo phải tươi như cái lồng đèn cá chép.'],
+    reqs: [['min', 'rucro', 'auto'], ['decor', 'theu']], goal: 2,
+    reward: { fabric: 'lua.vang.tron', cm: 300, coins: 80 }, letter: 'ev_trungthu' }
+];

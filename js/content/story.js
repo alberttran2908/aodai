@@ -1,0 +1,340 @@
+// Story content (Mùa 1 "Hẻm Chỉ Hồng"): NPCs, chapters, chapter orders, scripted scenes, letters.
+// Player-facing text in Vietnamese; ids in English / unaccented. Scenes use {shop} and {kim}.
+
+G.NPCS = [
+  { id: 'batu', npc: true, name: 'Bà Tư', role: 'chủ tiệm cũ, người dạy nghề', hair: 'bun', skin: '#e6c09c',
+    look: { hair: 'bun', hairCol: '#d9d3cc', bunPin: true, glasses: 'round' }, outfit: ['nhung', 'timhue'],
+    likes: ['truyenthong', 'thanhlich'], mats: ['lua', 'nhung'], bust: 86, waist: 72, hip: 92,
+    lines: ['Bà ghé coi con may nè. Đừng để ý bà, bà ngồi im mà.', 'May chậm thôi con, áo đẹp không có chạy đi đâu.'] },
+  { id: 'sa', npc: true, name: 'Madame Sa', role: 'cây bút thời trang Báo Trà Đá', hair: 'long', skin: '#efcdae',
+    look: { hair: 'bob', hairCol: '#2b2220', glasses: 'sun', pearls: true, lips: '#8e1f3a', earrings: 'drop' }, outfit: ['totam', 'den'],
+    likes: ['sangtrong', 'thanhlich'], mats: ['totam'], bust: 84, waist: 63, hip: 89,
+    lines: ['Chèn ơi, cưng may cho tôi một chiếc coi. Tôi chấm thẳng tay đó nha.', 'Tôi cần một chiếc áo cho tiệc toà soạn. Đừng bắt tôi phải viết đính chính.'] },
+  { id: 'ti', npc: true, male: true, name: 'Tí Flash', role: 'phóng viên kiêm thợ chụp kiêm người giao báo', skin: '#e8c4a2',
+    look: { hat: 'beanie' }, outfit: ['dui', 'reu'], likes: ['hiendai'], mats: ['dui'], bust: 88, waist: 74, hip: 90,
+    lines: ['Chủ tiệm ơi, em cần bộ áo chạy đưa tin mà không vướng chân!', 'Em sắp đi chụp đám cưới cho người ta, em cũng phải mặc cho đàng hoàng.'] },
+  { id: 'kevin', npc: true, male: true, name: 'Kevin Khải', role: 'CEO tiệm "Áo Dài Siêu Tốc 24h"', skin: '#f2d2b6',
+    look: { hair: 'slick', glasses: 'gold', earrings: 'stud' }, outfit: ['nhung', 'den'],
+    likes: ['hiendai', 'rucro'], mats: ['voan'], bust: 92, waist: 78, hip: 94,
+    lines: ['Hello! Anh qua “nghiên cứu thị trường”. Tiện thì may một bộ luôn.', 'Máy bên anh đang bảo trì, nên anh qua đây… học hỏi. Đừng nói ai nha.'] }
+];
+
+G.CHAPTERS = [
+  { id: 'ch0', title: 'Chương 0 · Chìa khoá tiệm cũ', rank: 1, intro: 'ch0_open', outro: 'ch0_end',
+    goals: [{ k: 'success', n: 3, t: 'Giao thành công 3 áo' }],
+    reward: { coins: 150, mail: 'batu_ch0' } },
+  { id: 'ch1', title: 'Chương 1 · Báo Trà Đá ghé hẻm', rank: 2, intro: 'ch1_open', outro: 'ch1_end',
+    goals: [{ k: 'kim3', n: 1, t: 'Lên báo với ít nhất 3 kim' }, { k: 'bondL1', n: 3, t: 'Làm thân với 3 khách (♥1)' }],
+    reward: { fabric: 'lua.champagne.img_hadong', cm: 300, mail: 'batu_ch1' } },
+  { id: 'ch2', title: 'Chương 2 · Đối thủ đầu hẻm', rank: 3, intro: 'ch2_open', outro: 'ch2_end',
+    goals: [{ k: 'keepVsRival', n: 3, t: 'Giữ chân 3 khách cầm tờ rơi 24h (áo ≥ 80 điểm)' }, { k: 'arc1Done', n: 1, t: 'Hoàn thành 1 đơn tâm sự' }],
+    reward: { coins: 250, prestige: 1, mail: 'kevin_ch2' } },
+  { id: 'ch3', title: 'Chương 3 · Mùa cưới hẻm Chỉ Hồng', rank: 4, intro: 'ch3_open', outro: 'ch3_end',
+    goals: [{ k: 'done_ch3_uyen', n: 1, t: 'Áo cưới cô dâu (Chị Uyên)' }, { k: 'done_ch3_nam', n: 1, t: 'Áo bà nội chồng (Bà Năm)' },
+      { k: 'done_ch3_thao', n: 1, t: 'Áo phù dâu (Em Thảo)' }],
+    reward: { fabric: 'gam.hongsen.img_maudon', cm: 300, mail: 'batu_ch3' } },
+  { id: 'ch4', title: 'Chương 4 · Sao về hẻm nhỏ', rank: 5, intro: 'ch4_open', introAlt: 'ch4_open_tv', outro: 'ch4_end',
+    goals: [{ k: 'starServed', alt: 'vipServed', n: 3, t: 'Giao áo cho 3 ngôi sao', tAlt: 'Giao áo cho 3 khách sang' },
+      { k: 'kim4', n: 2, t: '2 bài báo từ 4 kim' }],
+    reward: { coins: 400, mail: 'batu_ch4' } },
+  { id: 'ch5', title: 'Chương 5 · Đêm Hội Áo Dài', rank: 7, intro: 'ch5_open', outro: 'ch5_end', outroSilver: 'ch5_end_silver',
+    goals: [{ k: 'done_ch5_open', n: 1, t: 'Áo mở màn (Madame Sa)' }, { k: 'done_ch5_muse', n: 1, t: 'Áo người mẫu chính' },
+      { k: 'done_ch5_finale', n: 1, t: 'Áo hai tiệm cùng may (Kevin)' }],
+    reward: { badge: 'de_vang', mail: 'hoi_hue' } }
+];
+
+G.STORY_ORDERS = {
+  ch0_batu: { client: 'batu', title: 'Áo về Hội An', line: 'Một bộ lụa giản dị thôi con, bà mặc về Hội An. May chậm cũng được, bà không gấp.',
+    reqs: [['min', 'truyenthong', 20], ['mat', 'lua', 50]], budget: 200, quality: 40 },
+  ch3_uyen: { client: 'uyen', title: 'Áo cưới cô dâu', line: 'Áo cưới của em… em chỉ cưới một lần thôi đó! Sang mà dịu dàng nha chị.',
+    reqs: [['min', 'sangtrong', 'auto'], ['min', 'thanhlich', 'auto'], ['avoid', 'den'], ['decor', 'dau']], budgetMul: 1.5 },
+  ch3_nam: { client: 'nam', title: 'Áo bà nội chồng', line: 'Bà phải sang mà không lấn cô dâu nghe cháu. Gấm cho đàng hoàng, đừng chói quá.',
+    reqs: [['min', 'truyenthong', 'auto'], ['max', 'rucro', 35], ['mat', 'gam', 50]], budgetMul: 1.4 },
+  ch3_thao: { client: 'thao', title: 'Áo phù dâu', line: 'Phù dâu mà, đẹp vừa vừa thôi chị! Voan nhẹ nhẹ cho em chạy lăng xăng được.',
+    reqs: [['min', 'thanhlich', 'auto'], ['max', 'sangtrong', 30], ['mat', 'voan', 50]], budgetMul: 1.3 },
+  ch5_open: { client: 'sa', title: 'Áo mở màn', line: 'Áo mở màn phải kể được ba mươi năm áo dài Sài Gòn, cưng. Dáng xưa, nét thanh, có tranh thêu lớn.',
+    reqs: [['min', 'truyenthong', 45], ['min', 'thanhlich', 30], ['decor', 'tranh']], budgetMul: 1.6 },
+  ch5_muse: { client: '@topBond', title: 'Người mẫu chính', line: 'Ban tổ chức chọn tôi làm người mẫu chính đó! Em may đúng gu tôi là tôi tự tin bước ra liền.',
+    reqs: [['min', '@like0', 50], ['mat', '@mat0', 50]], budgetMul: 1.6 },
+  ch5_finale: { client: 'kevin', title: 'Áo hai tiệm cùng may', line: 'Áo kết show: máy anh nhanh, tay em khéo. Một nửa xưa, một nửa mới nha partner!',
+    reqs: [['min', 'truyenthong', 30], ['min', 'hiendai', 25], ['mat', 'lua', 50]], budgetMul: 1.8 }
+};
+
+G.SCRIPTS = {
+  // ---------- Chương 0 ----------
+  ch0_open: [
+    { who: 'narr', t: 'Sài Gòn, hẻm Chỉ Hồng. Tiệm may số 7 của Bà Tư đã đóng cửa ba năm.' },
+    { do: 'walkIn', id: 'batu' },
+    { who: 'batu', t: 'Con tới rồi hả? Vô đây, coi chừng cái bậc thềm, nó già hơn con nữa đó.' },
+    { who: 'batu', t: 'Bà may áo dài ở hẻm này bốn chục năm. Giờ tay bà run, xỏ kim ba lần mới trúng một.' },
+    { who: 'batu', t: 'Chìa khoá nè. Cái máy may còn chạy ngon, cây kéo bà mới mài hôm qua, cuộn lụa trắng bà để dành cho con.' },
+    { do: 'giveFabric', id: 'lua.trang.tron', cm: 300 },
+    { choice: [{ t: 'Con sẽ giữ tiệm cho bà.', go: 'keep' }, { t: 'Con… con chưa biết may đâu bà.', go: 'unsure' }] },
+    { label: 'keep' },
+    { who: 'batu', t: 'Ngoan. Giữ tiệm là giữ khách, giữ khách là giữ cái tình.' },
+    { jump: 'name' },
+    { label: 'unsure' },
+    { who: 'batu', t: 'Bà cũng đâu có biết, cho tới chiếc áo đầu tiên. Ai mà không vụng lần đầu.' },
+    { who: 'batu', t: 'Mình may từng đường một. Sai thì tháo, tháo rồi may lại. Vải nó hiền lắm, nó chờ mình.' },
+    { label: 'name' },
+    { who: 'batu', t: 'Đặt tên tiệm đi con. Bảng hiệu cũ mối ăn hết chữ rồi, chỉ còn chữ “May”.' },
+    { do: 'nameShop' },
+    { who: 'batu', t: '“{shop}”. Nghe được đó. Bà treo bảng liền.' },
+    { who: 'narr', t: 'Bà Tư lau tấm bảng, treo lên, lùi ra coi, rồi nhón chân chỉnh lại cho ngay.' },
+    { who: 'batu', t: 'Giờ rung chuông thử coi. Khách đầu tiên của tiệm là… bà nè.' },
+    { who: 'batu', t: 'Bà muốn một bộ áo lụa giản dị để mặc về Hội An. Lụa có rồi đó, con đo cho bà đi.' },
+    { do: 'queueOrder', id: 'ch0_batu' }
+  ],
+  ch0_end: [
+    { do: 'walkIn', id: 'batu' },
+    { who: 'batu', t: 'Ba chiếc áo, ba người khách cười. Bà yên tâm về Hội An rồi.' },
+    { who: 'batu', t: 'Nhớ nè: canh sợi cho thẳng, đường may cho đều, còn lòng mình thì cho ấm.' },
+    { who: 'batu', t: 'May áo cũng như nấu nồi canh chua: nêm từ từ, nếm từ từ, đừng đổ hết một lần.' },
+    { who: 'batu', t: 'Có gì bà viết thư. Bà không xài Zalo, bà xài tem.' },
+    { do: 'walkOut', id: 'batu' },
+    { who: 'narr', t: 'Bà Tư xách giỏ ra đầu hẻm, ngoái lại vẫy tay hai lần. Lần thứ ba thì bà vẫy cái bảng hiệu.' },
+    { who: 'narr', t: 'Tiệm đã có Hộp thư. Thư của Bà Tư sẽ tới bằng đường bưu điện, chậm mà chắc.' }
+  ],
+
+  // ---------- Chương 1 ----------
+  ch1_open: [
+    { do: 'walkIn', id: 'ti' },
+    { who: 'ti', t: 'Chào tiệm! Em là Tí, phóng viên kiêm thợ chụp kiêm người giao báo của Báo Trà Đá.' },
+    { who: 'ti', t: 'Báo tụi em chuyên tin hẻm: ai cưới, ai giận, ai mặc đẹp. Mà dạo này ai mặc đẹp cũng nói áo may ở {shop}.' },
+    { who: 'ti', t: 'Sếp em muốn coi tiệm có xứng lên báo không. Sếp chấm bằng kim. Một kim là… thôi, đừng để bị một kim.' },
+    { do: 'walkIn', id: 'sa' },
+    { who: 'sa', t: 'Chèn ơi, bảng hiệu mới sơn hả cưng? Được. Còn tay nghề thì để tôi coi đã.' },
+    { who: 'sa', t: 'Tôi đi sàn diễn từ hồi ngã tư này chưa có đèn xanh đèn đỏ. Áo đẹp hay không, tôi nhìn ba giây là biết.' },
+    { who: 'sa', t: 'Từ hôm nay, chiếc áo nào của cưng đáng nói sẽ lên mục “Kim Chỉ Nam”. Cố mà kiếm năm kim nha.' },
+    { do: 'walkOut', id: 'sa' },
+    { who: 'ti', t: '(nói nhỏ) Sếp khen ai năm kim thì người đó được cả hẻm mời trà đá một tuần đó chủ tiệm!' },
+    { do: 'walkOut', id: 'ti' },
+    { who: 'narr', t: 'Mục tiêu mới: lên báo với ít nhất 3 kim, và làm thân với 3 khách.' }
+  ],
+  ch1_end: [
+    { do: 'walkIn', id: 'ti' },
+    { who: 'ti', t: 'Chủ tiệm ơi! Đặc san ra lò rồi, mực còn ướt nè, cầm nhẹ tay nha!' },
+    { do: 'walkIn', id: 'sa' },
+    { who: 'sa', t: 'Tôi viết bài này mười phút. Chín phút là để kiếm cho đủ chữ khen mà không nghe sến.' },
+    { who: 'sa', t: '“Hẻm Chỉ Hồng có tiệm may mở cửa trở lại!” Tôi đặt cái tít đó lên trang nhất. Cưng biết vậy là sao không?' },
+    { choice: [{ t: 'Là tiệm con được lên báo?', go: 'paper' }, { t: 'Là Madame khen con hả?', go: 'praise' }] },
+    { label: 'paper' },
+    { who: 'sa', t: 'Là từ nay cả hẻm sẽ nhìn cưng. Nhìn kỹ lắm đó. Đường chỉ lệch một ly cũng có người bàn.' },
+    { jump: 'gift' },
+    { label: 'praise' },
+    { who: 'sa', t: 'Tôi không khen. Tôi ghi nhận. Khen là chuyện của năm kim, cưng còn phải đi xa.' },
+    { label: 'gift' },
+    { who: 'sa', t: 'Cuộn lụa champagne này là quà của toà soạn. Đừng may hỏng, tôi tiếc.' },
+    { who: 'ti', t: 'Từ giờ số báo nào có tiệm, em bỏ vô khe cửa trước tiên! Nghe tiếng “bộp” là có báo nha.' },
+    { do: 'walkOut', id: 'sa' },
+    { do: 'walkOut', id: 'ti' }
+  ],
+
+  // ---------- Chương 2 ----------
+  ch2_open: [
+    { do: 'walkIn', id: 'kevin' },
+    { who: 'kevin', t: 'Hello neighbor! Kevin Khải, CEO kiêm founder kiêm… thợ may duy nhất của Áo Dài Siêu Tốc 24h.' },
+    { who: 'kevin', t: 'Bên anh đo bằng app, cắt bằng máy, giao trong 24 tiếng. Disruption đó em, hiểu không?' },
+    { choice: [{ t: 'Chúc anh buôn may bán đắt.', go: 'nice' }, { t: 'Áo dài đâu phải trà sữa mà giao nhanh.', go: 'tea' }] },
+    { label: 'nice' },
+    { who: 'kevin', t: 'Oh, nice! Em dễ thương ghê. Anh vẫn sẽ giành khách của em nha. No hard feelings!' },
+    { jump: 'flyer' },
+    { label: 'tea' },
+    { who: 'kevin', t: 'Ha! Trà sữa bên anh cũng giao nhanh luôn. Đùa thôi… bên anh không bán trà sữa. Chưa.' },
+    { label: 'flyer' },
+    { who: 'kevin', t: 'Anh phát tờ rơi cả hẻm rồi. Khách nào chê tiệm em chậm thì anh nhận hết. Bye bye!' },
+    { do: 'walkOut', id: 'kevin' },
+    { who: 'narr', t: 'Một tờ rơi vàng chóe bay vô khe cửa, kế bên là… một lá thư dán tem Hội An.' },
+    { do: 'mail', id: 'batu_ch2' },
+    { who: 'narr', t: 'Có khách sẽ cầm tờ rơi Siêu Tốc 24h tới. Giao áo từ 80 điểm để giữ chân họ ở lại tiệm.' }
+  ],
+  ch2_end: [
+    { do: 'walkIn', id: 'kevin' },
+    { who: 'kevin', t: 'Ok, ok, anh thừa nhận… đường may của em đẹp hơn máy bên anh.' },
+    { who: 'kevin', t: 'Mà máy anh nhanh hơn! Vậy mình… hoà nha. Tạm hoà thôi đó.' },
+    { who: 'kevin', t: 'Khách bên anh hỏi: “Chừng nào máy biết canh sợi?” Anh nói: “Soon.” Mà anh cũng không biết soon là bao lâu.' },
+    { do: 'walkOut', id: 'kevin' },
+    { who: 'narr', t: 'Tờ rơi vàng trên cột điện đầu hẻm đã bị ai đó dán đè một mẩu giấy: “Chậm mà chắc, số 7.”' }
+  ],
+
+  // ---------- Chương 3 ----------
+  ch3_open: [
+    { do: 'walkIn', id: 'uyen' },
+    { who: 'uyen', t: 'Chị ơi! Em… em sắp cưới rồi! Mà chồng em là cháu nội Bà Năm đó!' },
+    { do: 'walkIn', id: 'nam' },
+    { who: 'nam', t: 'Cái hẻm này nhỏ như cái lỗ kim, đi đâu cũng đụng người quen.' },
+    { who: 'nam', t: 'Đám cưới làm ngay đầu hẻm. Cô dâu một bộ, bà nội chồng một bộ, phù dâu một bộ. Tiệm cháu lo hết được không?' },
+    { do: 'walkIn', id: 'thao' },
+    { who: 'thao', t: 'Em làm phù dâu nè! Em xin một bộ không được đẹp hơn cô dâu, mà cũng đừng xấu quá nha chị.' },
+    { do: 'walkIn', id: 'kevin' },
+    { who: 'kevin', t: '(ló đầu vào cửa) Bên anh tài trợ… bong bóng. Một trăm cái. Hình trái tim.' },
+    { do: 'walkOut', id: 'kevin' },
+    { who: 'nam', t: 'Thằng nhỏ đó giống ông Sáu ghê. Thôi, ba bộ áo, cháu may lần lượt nghen.' },
+    { do: 'queueOrder', id: 'ch3_uyen' },
+    { do: 'queueOrder', id: 'ch3_nam' },
+    { do: 'queueOrder', id: 'ch3_thao' },
+    { who: 'narr', t: 'Ba đơn cưới sẽ lần lượt tới ở ba lần chuông reo kế tiếp.' }
+  ],
+  ch3_end: [
+    { do: 'walkIn', id: 'ti' },
+    { who: 'ti', t: 'Xếp ba bộ áo đứng chung coi! Cô dâu ở giữa, bà nội bên trái, phù dâu bên phải… Một, hai, ba, cười!' },
+    { who: 'narr', t: 'Tách! Tấm ảnh “Đám cưới hẻm Chỉ Hồng” được dán vào album, ngay trang đầu.' },
+    { do: 'walkIn', id: 'nam' },
+    { who: 'nam', t: 'Đẹp! Bà mà trẻ lại ba chục tuổi là bà cưới thêm lần nữa.' },
+    { do: 'walkIn', id: 'uyen' },
+    { who: 'uyen', t: 'Bà nội khen em đẹp đó chị! Mà… bà khen cái áo trước, rồi mới khen em.' },
+    { do: 'walkIn', id: 'thao' },
+    { who: 'thao', t: 'Em bắt được bó hoa cưới! Mà em chưa có bồ. Chị may sẵn cho em một bộ nha, phòng hờ.' },
+    { do: 'walkIn', id: 'kevin' },
+    { who: 'kevin', t: 'Một trăm cái bong bóng, nổ có hai cái. Success rate chín mươi tám phần trăm!' }
+  ],
+
+  // ---------- Chương 4 ----------
+  ch4_open: [
+    { do: 'walkIn', id: 'ti' },
+    { who: 'ti', t: 'Chủ tiệm ơi! Có chiếc xe bảy chỗ de vô hẻm, kẹt cứng rồi! Cả hẻm đang ra coi!' },
+    { do: 'walkIn', id: 'trada' },
+    { who: 'trada', t: 'Hi cả nhà, đang live nha! Đây là tiệm may được Madame Sa chấm năm kim đó hả?' },
+    { who: 'trada', t: 'Chị mà mặc áo tiệm em lên clip, mai cả showbiz kéo về hẻm này luôn.' },
+    { do: 'walkOut', id: 'trada' },
+    { do: 'walkIn', id: 'sa' },
+    { who: 'sa', t: 'Người nổi tiếng khó tính lắm đó cưng. Mà khó tính mới làm nên tên tuổi.' },
+    { who: 'sa', t: 'Nhớ nè: ánh đèn là của họ, đường may là của cưng. Đừng để ánh đèn che mất đường may.' },
+    { do: 'walkOut', id: 'sa' },
+    { who: 'narr', t: 'Mục tiêu mới: giao áo cho 3 ngôi sao, và có 2 bài báo từ 4 kim.' }
+  ],
+  ch4_open_tv: [
+    { do: 'walkIn', id: 'ti' },
+    { who: 'ti', t: 'Chủ tiệm ơi! Xe của đài truyền hình de vô hẻm! Có cả cái ăng-ten to đùng!' },
+    { do: 'walkIn', id: 'ngoc' },
+    { who: 'ngoc', t: 'Chị giới thiệu tiệm em trong chương trình Tết rồi. Mấy tuần tới khách sang sẽ tới, em chuẩn bị tinh thần nha.' },
+    { who: 'ngoc', t: 'Lúc lên sóng chị chỉ nói một câu: “Áo này may ở hẻm nhỏ.” Vậy mà tổng đài reo tới khuya.' },
+    { do: 'walkOut', id: 'ngoc' },
+    { do: 'walkIn', id: 'sa' },
+    { who: 'sa', t: 'Khách sang khó tính lắm đó cưng. Mà khó tính mới làm nên tên tuổi.' },
+    { do: 'walkOut', id: 'sa' },
+    { who: 'narr', t: 'Mục tiêu mới: giao áo cho 3 khách sang, và có 2 bài báo từ 4 kim.' }
+  ],
+  ch4_end: [
+    { do: 'walkIn', id: 'ti' },
+    { who: 'ti', t: 'Chủ tiệm ơi, hẻm mình lên xu hướng rồi! Đầu hẻm có người bán nước mía tên “Sao về hẻm nhỏ” luôn.' },
+    { do: 'walkIn', id: 'sa' },
+    { who: 'sa', t: 'Người nổi tiếng tới rồi đi. Đường may thì ở lại. Cưng nhớ vậy là được.' },
+    { who: 'sa', t: 'Tôi có một chuyện muốn kể cưng nghe, chuyện từ hồi xửa hồi xưa. Mà chưa tới lúc.' },
+    { do: 'walkOut', id: 'sa' },
+    { who: 'ti', t: 'Sếp em nói chưa tới lúc là sắp tới lúc đó. Em đi rửa ảnh đây!' },
+    { do: 'walkOut', id: 'ti' }
+  ],
+
+  // ---------- Chương 5 ----------
+  ch5_open: [
+    { do: 'walkIn', id: 'sa' },
+    { who: 'sa', t: 'Ba mươi năm trước, có một bà thợ may bảng hiệu bé xíu may cho tôi chiếc áo dài đầu tiên lên sàn diễn.' },
+    { who: 'sa', t: 'Người đó tên Tư.' },
+    { who: 'sa', t: 'Năm nay Đêm Hội Áo Dài Sài Gòn mở lại. Ban tổ chức mời hai tiệm của hẻm Chỉ Hồng: {shop} và Siêu Tốc 24h.' },
+    { who: 'sa', t: 'Áo mở màn, tôi mặc. Cưng may. Coi như tôi trả nợ cho bà Tư bằng cách làm khó cháu bả.' },
+    { do: 'walkIn', id: 'kevin' },
+    { who: 'kevin', t: 'Anh… có một đề nghị. Áo kết show, mình may chung được không? Máy anh nhanh, tay em khéo.' },
+    { choice: [{ t: 'Được, mình may chung.', go: 'deal' }, { t: 'Để em suy nghĩ…', go: 'think' }] },
+    { label: 'deal' },
+    { who: 'kevin', t: 'Deal! Anh lo phần vải, em lo phần hồn. Nè, voan bên anh, tặng partner.' },
+    { do: 'giveFabric', id: 'voan.trang.tron', cm: 200 },
+    { do: 'flag', k: 'kevinDeal', v: true },
+    { jump: 'call' },
+    { label: 'think' },
+    { who: 'kevin', t: 'Ok, anh chờ. Anh giỏi chờ lắm. (Không giỏi.) Mà áo kết show anh vẫn mặc, em may nha.' },
+    { do: 'flag', k: 'kevinDeal', v: false },
+    { label: 'call' },
+    { do: 'walkOut', id: 'kevin' },
+    { do: 'walkOut', id: 'sa' },
+    { who: 'narr', t: 'Reng reng! Điện thoại bàn reo. Đầu dây bên kia là tiếng sóng sông Hoài.' },
+    { who: 'batu', t: '(qua điện thoại) Bà về coi. Bà ngồi hàng ghế đầu. Nhớ chừa cho bà cái ghế có nệm.' },
+    { do: 'queueOrder', id: 'ch5_open' },
+    { do: 'queueOrder', id: 'ch5_muse' },
+    { do: 'queueOrder', id: 'ch5_finale' },
+    { who: 'narr', t: 'Ba đơn chung kết: Áo mở màn, Người mẫu chính, Áo hai tiệm cùng may.' }
+  ],
+  ch5_end: [
+    { who: 'narr', t: 'Đêm Hội Áo Dài Sài Gòn. Đèn sân khấu tắt, rồi bật lại. Khán phòng vẫn chưa ai chịu về.' },
+    { do: 'walkIn', id: 'sa' },
+    { who: 'sa', t: '{kim} kim. Tôi viết báo ba chục năm, hôm nay lần đầu tôi muốn đứng dậy vỗ tay trước khi viết.' },
+    { who: 'sa', t: 'Kim Vàng, cưng. Ba mươi năm nay tôi chỉ nợ một người chữ đó.' },
+    { do: 'walkIn', id: 'batu' },
+    { who: 'batu', t: 'Con thấy chưa. Cái tiệm này chưa bao giờ là của bà. Nó là của người nào còn chịu ngồi xỏ kim.' },
+    { who: 'batu', t: 'Cái đê vàng này bà đeo bốn chục năm. Giờ tới con.' },
+    { who: 'narr', t: 'Bà Tư tháo chiếc đê vàng mòn vẹt, đeo vào ngón tay đứa cháu. Vừa khít, như được đo sẵn.' },
+    { do: 'walkIn', id: 'kevin' },
+    { who: 'kevin', t: 'Anh xin lỗi vụ tờ rơi. Năm sau mình mở lớp dạy may chung nha? Bên anh có máy, bên em có… Bà Tư.' },
+    { who: 'batu', t: 'Thằng nhỏ này giống ông Sáu hồi trẻ ghê. Nói nhiều mà tốt bụng.' },
+    { who: 'narr', t: 'Đèn sàn diễn bật sáng. Từng vị khách quen bước ra trong chiếc áo đẹp nhất mà họ từng nhận.' },
+    { do: 'parade' },
+    { who: 'sa', t: 'Bài này tôi không chấm kim. Tôi chỉ ghi một chữ: Cảm ơn.' },
+    { do: 'mail', id: 'sa_ch5' },
+    { who: 'narr', t: 'Hết Mùa 1 · Hẻm Chỉ Hồng. Tiệm vẫn mở cửa, chuông vẫn reo. Hẹn gặp lại ở Mùa 2.' }
+  ],
+  ch5_end_silver: [
+    { who: 'narr', t: 'Đêm Hội Áo Dài Sài Gòn. Đèn sân khấu tắt, rồi bật lại. Khán phòng vẫn chưa ai chịu về.' },
+    { do: 'walkIn', id: 'sa' },
+    { who: 'sa', t: '{kim} kim. Kim Bạc. Bạc mà sáng, cưng à, đừng có buồn.' },
+    { who: 'sa', t: 'Hồi tôi lên sàn lần đầu, tôi vấp ở bậc thứ ba. Vậy mà bà Tư vẫn nói “đẹp”. Hôm nay tôi cũng nói: đẹp.' },
+    { do: 'walkIn', id: 'batu' },
+    { who: 'batu', t: 'Con thấy chưa. Cái tiệm này chưa bao giờ là của bà. Nó là của người nào còn chịu ngồi xỏ kim.' },
+    { who: 'batu', t: 'Cái đê vàng này bà đeo bốn chục năm. Giờ tới con. Vàng hay bạc gì, mình còn may tiếp mà.' },
+    { who: 'narr', t: 'Bà Tư tháo chiếc đê vàng mòn vẹt, đeo vào ngón tay đứa cháu. Vừa khít, như được đo sẵn.' },
+    { do: 'walkIn', id: 'kevin' },
+    { who: 'kevin', t: 'Anh xin lỗi vụ tờ rơi. Năm sau mình mở lớp dạy may chung nha? Bên anh có máy, bên em có… Bà Tư.' },
+    { who: 'batu', t: 'Thằng nhỏ này giống ông Sáu hồi trẻ ghê. Nói nhiều mà tốt bụng.' },
+    { who: 'narr', t: 'Đèn sàn diễn bật sáng. Từng vị khách quen bước ra trong chiếc áo đẹp nhất mà họ từng nhận.' },
+    { do: 'parade' },
+    { who: 'sa', t: 'Năm sau tôi chấm lại. Mà nói nhỏ nghe nè: cả khán phòng hôm nay không ai đếm kim đâu.' },
+    { do: 'mail', id: 'sa_ch5' },
+    { who: 'narr', t: 'Hết Mùa 1 · Hẻm Chỉ Hồng. Tiệm vẫn mở cửa, chuông vẫn reo. Hẹn gặp lại ở Mùa 2.' }
+  ],
+
+  // ---------- Tết: cuộc gọi lì xì ----------
+  tet_lixi: [
+    { who: 'narr', t: 'Reng reng! Điện thoại bàn reo giữa sáng mùng Một.' },
+    { who: 'batu', t: '(qua điện thoại) Alô, con hả? Bà nè. Năm mới may mắn, kim không gãy, chỉ không rối.' },
+    { who: 'batu', t: 'Bà gửi con phong bao lì xì qua bưu điện rồi. Tám mươi tám xu, số đẹp đó, đừng tiêu vô trà sữa hết nha.' },
+    { who: 'batu', t: 'Dì Bảy gửi lời chúc Tết. Dì khen áo con may cho bà, đi chợ Hội An ai cũng hỏi.' },
+    { do: 'mail', id: 'lixi' }
+  ]
+};
+
+G.LETTERS = {
+  batu_ch0: { from: 'batu', title: 'Thư đầu tiên từ Hội An',
+    body: 'Con thương,\nBà về tới Hội An rồi. Dì Bảy ra bến xe đón, khen bộ áo lụa con may “mặc vô trẻ ra mười tuổi”. Bà nói: mười lăm.\nỞ đây sáng nào bà cũng ra chợ, chiều ngồi bờ sông coi người ta thả đèn. Tay bà vẫn run, mà lòng thì yên.\nMẹo nhỏ của bà: trước khi cắt, trải vải ra cho nó “thở” một đêm. Vải cũng như người, mới về nhà lạ thì còn co ro.\nGiữ sức khoẻ. Đừng thức khuya may áo, mắt con còn phải xài lâu.\nBà Tư' },
+  batu_ch1: { from: 'batu', title: 'Bà đọc báo rồi nè',
+    body: 'Con thương,\nDì Bảy ra sạp báo ở chợ Hội An, không hiểu sao kiếm được một tờ Báo Trà Đá. Thấy tên “{shop}” trên trang nhất, bà đọc to cho cả xóm nghe, đọc tới lần thứ ba thì xóm xin về.\nCái bà Sa đó viết khó tính mà công bằng. Bà nghe cái tên Sa quen quen… thôi, già rồi, nhớ không ra.\nBà dặn nè: báo khen thì mừng, báo chê thì cười. Cái áo mới là chuyện thật, cái tít chỉ là chuyện kể.\nBà Tư' },
+  batu_ch2: { from: 'batu', title: 'Chuyện ông Sáu Kéo Vàng',
+    body: 'Con thương,\nThằng Kevin là cháu nội ông Sáu Kéo Vàng. Hồi xưa ông Sáu với bà giành khách ở chợ Bến Thành, giành tới mức hai đứa con nít hai nhà không dám chơi chung.\nÔng Sáu cắt nhanh lắm, cây kéo mạ vàng của ổng kêu xoẹt xoẹt nghe sướng tai. Bà thì chậm, ngồi canh từng sợi. Khách ổng đông hơn, mà khách bà ở lâu hơn.\nCó năm bà bệnh nằm một chỗ. Ông Sáu lén may giùm bà ba cái áo cưới cho kịp ngày, rồi nói với khách là bà may. Chuyện đó tới giờ bà chưa cảm ơn ổng được.\nNên con đừng ghét thằng Kevin. Nhà đó nói nhiều mà tốt bụng. Kệ nó. Chậm mà chắc, con.\nBà Tư' },
+  batu_ch3: { from: 'batu', title: 'Ảnh cưới hẻm mình',
+    body: 'Con thương,\nBà Năm gửi ảnh cưới ra cho bà coi. Bà với Bà Năm quen nhau từ hồi hai đứa còn bán chè đầu hẻm, trước khi bả mở tiệm vàng, trước khi bà biết cầm kéo.\nBa chiếc áo đứng chung một khung, chiếc nào cũng có cái duyên riêng. Bà coi mà muốn chảy nước mắt, Dì Bảy phải đưa khăn.\nMẹo nhỏ: gấm dày, đừng ủi nóng quá kẻo bóng mặt vải. Lót cái khăn mỏng lên rồi hẵng ủi.\nBà Tư' },
+  batu_ch4: { from: 'batu', title: 'Người nổi tiếng cũng là người',
+    body: 'Con thương,\nNghe nói dạo này hẻm mình xe hơi vô ra kẹt cứng. Dì Bảy coi trên điện thoại thấy tiệm con, hét lên làm bà rớt cây kim.\nBà dặn nè: người nổi tiếng cũng là người. Đo vai ai cũng bằng cây thước dây đó thôi. Đừng may cho cái tên, may cho cái người đứng trước mặt mình.\nMà khách sang thì nhớ đếm lại tiền thối cho kỹ. Bà nói vậy thôi.\nBà Tư' },
+  batu_tip: { from: 'batu', title: 'Mẹo của bà: khi áo bị chê',
+    body: 'Con thương,\nBà nghe tin con bị chê trên báo. Bà cười một hồi, rồi bà nhớ ra hồi xưa bà còn bị chê nặng hơn nhiều.\nMẹo của bà: may chậm lại. Mắt nhìn theo mũi kim, đừng nhìn theo cái máy. Tới góc thì dừng, nâng chân vịt, xoay vải, rồi mới may tiếp.\nCắt thì đi theo đường phấn, kéo một đường dài cho dứt khoát, đừng nhấp nhấp từng khúc.\nÁo hỏng thì tháo ra may lại. Vải không giận mình đâu con.\nBà Tư' },
+  kevin_ch2: { from: 'kevin', title: 'Re: Hoà (tạm thời)',
+    body: 'Hi neighbor,\nAnh viết thư tay nè, lần đầu tiên trong đời. App bên anh không có chức năng này.\nAnh về kể ông nội nghe chuyện tiệm em. Ông ngồi im lâu lắm, rồi lấy ra cây kéo mạ vàng cũ, nói: “Bà Tư hả? Bả canh sợi giỏi nhất chợ.” Rồi ông dặn anh: “Học người ta đi con.”\nNên anh sẽ học. Mà anh vẫn giành khách nha. Fair and square.\nTái bút: Máy bên anh vẫn không biết hát. Đã kiểm tra hai lần.\nKevin Khải, CEO (kiêm thợ may duy nhất)' },
+  sa_ch5: { from: 'sa', title: 'Chiếc áo đầu tiên',
+    body: 'Cưng,\nBa mươi năm trước, tôi là con nhỏ mười tám tuổi, ốm nhom, lần đầu được gọi đi diễn mà không có nổi một cái áo.\nTôi đi lạc vô hẻm Chỉ Hồng, gặp một bà thợ may có tấm bảng hiệu bé xíu. Bả đo cho tôi, may suốt hai đêm, rồi không lấy tiền. Bả nói: “Mai mốt con nổi tiếng thì trả.”\nTôi nổi tiếng rồi, mà chưa trả. Tôi ngại, ba chục năm không dám quay lại hẻm.\nĐêm Hội, tôi ngồi cạnh bà Tư ở hàng ghế đầu, đưa bả cái phong bì. Bả không nhận, chỉ nói: “Trả cho cháu tôi rồi. Bằng mấy bài báo đó.”\nVậy là tôi hết nợ. Còn cưng thì mới bắt đầu.\nMadame Sa' },
+  hoi_hue: { from: 'hoi', title: 'Thư mời từ Cố Đô',
+    body: 'Kính gửi {shop},\nHội Áo Dài Cố Đô trân trọng mời quý tiệm ra Huế, tham dự mùa lễ hội áo dài bên bờ sông Hương.\nTiếng lành về đường may hẻm Chỉ Hồng đã vượt đèo Hải Vân. Ở đây, áo ngũ thân, nhiễu, gấm cung đình đang chờ một bàn tay kiên nhẫn.\nXin quý tiệm mang theo kéo, thước dây và chiếc đê vàng.\nKính thư,\nHội Áo Dài Cố Đô\n[Dấu son đỏ] MÙA 2 · SẮP MỞ' },
+  lixi: { from: 'batu', title: 'Phong bao lì xì',
+    body: 'Con thương,\nNăm mới may mắn, kim không gãy, chỉ không rối.\nBà gửi con tám mươi tám xu. Số tám là phát, hai số tám là phát hai lần. Mua cuộn chỉ mới mà may áo Tết cho người ta.\nDì Bảy cũng gửi lời chúc. Dì nói năm nay dì muốn một bộ áo con may, mà dì ngại không dám nói. Bà nói giùm đó.\nBà Tư',
+    gift: { coins: 88 } },
+
+  // ---------- thư thưởng sự kiện (quà lấy từ reward của sự kiện) ----------
+  ev_p2010: { from: 'batu', title: 'Mừng 20/10',
+    body: 'Con thương,\nBà nghe tuần rồi con may áo cho mấy bà mẹ, mấy chị em đi làm, mấy cô giáo. Ai mặc cũng được khen.\nPhụ nữ nào cũng đáng có một chiếc áo may vừa người, mà nhiều người cả đời chưa được ai may cho. Con làm được chuyện đó, bà mừng.\nBà gửi con chút quà nhỏ. Lụa hồng sen, màu bà thích nhất hồi còn con gái.\nBà Tư' },
+  ev_cuoi: { from: 'nam', title: 'Mùa cưới hẻm mình',
+    body: 'Cháu ơi,\nMùa cưới năm nay hẻm Chỉ Hồng có bao nhiêu đám là bà biết hết, vì đám nào cũng mời bà ngồi bàn đầu.\nĐám nào bà cũng thấy áo tiệm cháu. Cô dâu đẹp, khách đi đám đẹp, mà không ai giành spotlight của ai. Vậy mới là khéo.\nBà gửi cháu ít ren trắng, để mùa sau cháu may áo cưới cho mấy đứa nhỏ trong hẻm.\nBà Năm' },
+  ev_tet: { from: 'ti', title: 'Báo Trà Đá chúc Tết',
+    body: 'Chủ tiệm ơi,\nSố báo Tết của tụi em bán hết sạch từ sáng mùng Một! Trang nào cũng có người mặc áo tiệm mình, em chụp mỏi tay luôn.\nSếp em nói: “Năm nay hẻm Chỉ Hồng đỏ rực như phong bao lì xì.” Rồi sếp sửa lại: “Đỏ mà có gu.”\nToà soạn gửi tiệm cuộn gấm đỏ rồng mây làm quà Tết. Chúc tiệm năm mới đắt khách, kim chỉ bình an!\nTí Flash' },
+  ev_p83: { from: 'sa', title: 'Kim Chỉ Nam · 8/3',
+    body: 'Cưng,\nTuần này tôi gặp nhiều chị em tự thưởng cho mình một bộ áo, không chờ ai tặng nữa. Tôi thích lắm.\nTôi đi sàn diễn nửa đời người, mới hiểu ra: chiếc áo đẹp nhất là chiếc mình mặc vì mình muốn.\nToà soạn gửi cưng chút nhuận bút. Không nhiều đâu, đủ mua trà đá cho cả hẻm một chiều.\nMadame Sa' },
+  ev_kyyeu: { from: 'thao', title: 'Ảnh kỷ yếu cả khoá',
+    body: 'Chị ơi!\nẢnh kỷ yếu khoá em ra rồi nè! Tụi em chạy nhảy cả buổi ở Hồ Con Rùa, áo nhẹ tênh, không ai bị vấp tà.\nCô chủ nhiệm xem ảnh, hỏi cả lớp may ở đâu mà đều tay vậy. Cả lớp đồng thanh: “Số 7 hẻm Chỉ Hồng!”\nTụi em góp tiền gửi chị cuộn voan hoa nhí, chị may cho khoá sau nha.\nEm Thảo' },
+  ev_trungthu: { from: 'khanh', title: 'Trăng rằm phố Hội',
+    body: 'Chị ơi,\nĐêm rằm tháng Tám em dẫn tụi nhỏ trong xóm đi rước đèn dọc sông Hoài. Đứa nào cũng mặc áo dài, chạy như một đàn đèn ông sao nhỏ.\nBà Tư ngồi trước hiên phát bánh. Bà nói áo tụi nhỏ là cháu bà may, ai hỏi bà cũng nói vậy.\nEm gửi chị cuộn lụa vàng, màu trăng rằm. Trung thu vui nha chị!\nEm Khánh' }
+};

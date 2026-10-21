@@ -1,0 +1,5 @@
+# full-size original images (the game loads the web-sized copies in assets/)
+assets_src/
+# local tool settings and scratch
+.claude/
+screenshots/

@@ -1,0 +1,35 @@
+name: Vải cộng đồng
+# Turns approved, voted-up posts in the "vai-cong-dong" Discussions category into game fabrics.
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  discussion:
+    types: [labeled, unlabeled, edited, deleted]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  discussions: read
+
+concurrency: community-fabrics
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tools/community-fabrics.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          MIN_VOTES: ${{ vars.FABRIC_MIN_VOTES || '10' }}
+          APPROVE_LABEL: ${{ vars.FABRIC_APPROVE_LABEL || 'duyet' }}
+      - name: Commit the new list
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add community
+          git diff --cached --quiet || (git commit -m "Vải cộng đồng: cập nhật danh sách" && git push)
