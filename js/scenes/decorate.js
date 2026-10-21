@@ -78,7 +78,16 @@ G.scenes.decorate = {
     c.restore();
     // just stamped: a ring bursts out from the new motif
     if (this.pop) { const k = this.pop.t / 0.4, r = (this.pop.it.size * v.z) / 2 + 6 + k * 30; c.beginPath(); c.arc(v.ox + this.pop.it.x * v.z, v.oy + this.pop.it.y * v.z, r, 0, 7); c.strokeStyle = `rgba(246,205,106,${1 - k})`; c.lineWidth = 4 * (1 - k) + 1; c.stroke(); }
-    if (this.sel) { c.beginPath(); c.arc(v.ox + this.sel.x * v.z, v.oy + this.sel.y * v.z, (this.sel.size * v.z) / 2 + 4, 0, 7); c.setLineDash([5, 4]); c.strokeStyle = U.T.accent; c.lineWidth = 2; c.stroke(); c.setLineDash([]); }
+    if (this.sel) {
+      const it = this.sel, sx = v.ox + it.x * v.z, sy = v.oy + it.y * v.z, rr = (it.size * v.z) / 2 + 4;
+      c.beginPath(); c.arc(sx, sy, rr, 0, 7); c.setLineDash([5, 4]); c.strokeStyle = U.T.accent; c.lineWidth = 2; c.stroke(); c.setLineDash([]);
+      // a little toolbar over the selected motif, so rotating / resizing / removing works by touch too (Q/E, [ ], Delete)
+      if (!this.drag) {
+        const tools = [['⟲', () => { it.rot -= 0.15; }], ['⟳', () => { it.rot += 0.15; }], ['−', () => { it.size *= 0.9; }], ['+', () => { it.size *= 1.1; }], ['✕', () => { const items = G.job.decor.items; items.splice(items.indexOf(it), 1); this.sel = null; G.sfx.click(); }]];
+        const tw = tools.length * 40 - 4, tx = G.clamp(sx - tw / 2, 384, 826 - tw), ty = Math.max(70, sy - rr - 46);
+        tools.forEach(([lab, cb], k) => G.button(c, 'dt' + k, lab, tx + k * 40, ty, 36, 34, cb, { style: k === 4 ? 'primary' : 'ghost', size: 16, r: 12 }));
+      }
+    }
     // with a motif in hand: glowing snap spots, and a see-through preview under the pointer
     const placing = this.tool && C.DECOR[this.tool.group].kind === 'place';
     if (placing || this.drag) {
@@ -134,7 +143,7 @@ G.scenes.decorate = {
     G.text(c, `Chi phí trang trí: ${cost} xu`, 1050, 638, { size: 15, weight: 800, font: G.GAME, align: 'center', color: U.T.accent });
     U.primary(c, 'done', `Hoàn thành áo`, () => { if (cost && !G.spend(cost)) return; G.go('finish'); });
     U.secondary(c, 'clear', 'Gỡ hết', () => { j.decor = { items: [] }; this.sel = null; });
-    U.hint(c, grp.kind === 'place' ? 'Chọn mẫu rồi bấm lên áo (gần chấm vàng sẽ tự khớp) • kéo để dời • Q/E xoay • [ ] cỡ • chuột phải để gỡ' : 'Bấm để chọn, bấm lần nữa để bỏ');
+    U.hint(c, grp.kind === 'place' ? 'Chọn mẫu rồi bấm lên áo (gần chấm vàng sẽ tự khớp) • kéo để dời • bấm hoạ tiết để xoay, đổi cỡ hay gỡ' : 'Bấm để chọn, bấm lần nữa để bỏ');
     U.topbar(c, 'Trang trí');
   },
   thumb(c, group, id, x, y) {

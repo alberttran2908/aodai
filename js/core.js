@@ -72,6 +72,11 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
     e.preventDefault();
     try { cv.setPointerCapture(e.pointerId); } catch (err) {}
     G.sfx.unlock();
+    // phones: the first touch goes fullscreen and holds the screen sideways (Android; iOS ignores this)
+    if (e.pointerType === 'touch' && !document.fullscreenElement && !G.triedFull && document.documentElement.requestFullscreen) {
+      G.triedFull = true;
+      document.documentElement.requestFullscreen().then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {});
+    }
     const p = toLocal(e);
     Object.assign(G.pointer, p, { down: true });
     const hit = G.ui.hitTest(p);
