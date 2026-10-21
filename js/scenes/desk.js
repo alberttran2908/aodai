@@ -245,6 +245,7 @@ G.scenes.desk = {
     if (this.challenges) this.challengePanel(c);
     U.topbar(c, s.isDaily ? 'Đơn ngày ' + G.daily.label(s.dailyKey) : 'Quầy tiếp khách');
     if (G.idle && G.idle.pending && !(G.Dialog && G.Dialog.active)) this.awayCard(c);
+    else if (G.idle && !(G.Dialog && G.Dialog.active) && !(G.tut && G.tut.active()) && G.idle.checkinDue()) this.checkinCard(c);
     // collected coins arc up into the purse in the top bar
     if (this.coinFx && this.coinFx.length) {
       const tx = G.W - 330, ty = 28;
@@ -255,6 +256,29 @@ G.scenes.desk = {
       }
       this.coinFx = this.coinFx.filter((f) => !f.done);
     }
+  },
+  // daily check-in: seven gift boxes, today's one glowing; the ones already taken this streak are ticked
+  checkinCard(c) {
+    const U = G.UI, d = G.idle.checkinDue(), w = 760, h = 300, x = (G.W - w) / 2, y = (G.H - h) / 2;
+    c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'ci_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => {} });
+    U.card(c, x, y, w, h);
+    U.ribbon(c, 'Quà điểm danh', G.W / 2, y + 4, { size: 17 });
+    G.text(c, 'Ghé tiệm mỗi ngày để nhận quà — bỏ một ngày là chuỗi tính lại từ đầu', G.W / 2, y + 46, { size: 13, align: 'center', color: U.T.soft });
+    const tw = 96, gap = 10, x0 = G.W / 2 - (7 * tw + 6 * gap) / 2, ty = y + 70, pulse = 0.5 + 0.5 * Math.sin(performance.now() / 200);
+    G.idle.GIFTS.forEach((g, i) => {
+      const n = i + 1, tx = x0 + i * (tw + gap), past = n < d.day, now = n === d.day;
+      if (now) { G.rr(c, tx - 4, ty - 4, tw + 8, 132, 14); c.fillStyle = `rgba(246,205,106,${0.35 + 0.35 * pulse})`; c.fill(); }
+      U.tile(c, tx, ty, tw, 124, { sel: now, r: 12 });
+      G.text(c, `Ngày ${n}`, tx + tw / 2, ty + 16, { size: 13, weight: 800, align: 'center', color: now ? U.T.accent : U.T.soft });
+      // the gift: a coin stack or a little bolt of the cloth
+      const f = g.fabric && G.CAT.FABRICS[g.fabric];
+      if (f) { c.save(); G.rr(c, tx + 24, ty + 32, 48, 40, 6); c.clip(); c.beginPath(); c.rect(tx + 24, ty + 32, 48, 40); G.art.fillFabric(c, f.mat, f.color, 12, f.print); c.restore(); G.rr(c, tx + 24, ty + 32, 48, 40, 6); c.strokeStyle = 'rgba(30,15,8,0.5)'; c.lineWidth = 1.2; c.stroke(); }
+      if (g.coins) G.art.coin(c, f ? tx + 74 : tx + tw / 2, f ? ty + 74 : ty + 52, f ? 10 : 16);
+      U.fitText(c, G.idle.giftText(g), tx + tw / 2, ty + 98, tw - 8, { size: 11, weight: 700, align: 'center' });
+      if (past) { c.fillStyle = 'rgba(251,246,236,0.65)'; G.rr(c, tx, ty, tw, 124, 12); c.fill(); G.text(c, '✓', tx + tw / 2, ty + 56, { size: 34, weight: 800, align: 'center', color: U.T.ok }); }
+    });
+    G.button(c, 'ci_ok', `Nhận quà ngày ${d.day}`, G.W / 2 - 120, y + h - 62, 240, 46, () => G.idle.checkin(), { style: 'green', size: 17, r: 23 });
   },
   // "while you were away": what the shop did in real time, collected with a shower of coins
   awayCard(c) {

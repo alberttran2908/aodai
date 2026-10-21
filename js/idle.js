@@ -100,6 +100,31 @@ G.idle = {
     return due;
   },
   nextEta() { const o = this.orders(); return o.length ? Math.min(...o.map((x) => x.eta)) : 0; },
+  // ---------- daily check-in: a 7-day ladder of gifts (Vietnam calendar days); missing a day starts over ----------
+  GIFTS: [
+    { coins: 60 }, { fabric: 'lua.trang.tron', cm: 300 }, { coins: 100 }, { fabric: 'dui.be.tron', cm: 300 },
+    { coins: 150 }, { fabric: 'voan.hongphan.tron', cm: 300 }, { coins: 250, fabric: 'gam.do.img_maudon', cm: 200 }
+  ],
+  // the gift waiting today (or null if already taken): { day: 1..7, gift }
+  checkinDue() {
+    if (!this.on()) return null;
+    const s = G.state, c = s.checkin || {}, today = G.dateKeyVN(), yesterday = G.dateKeyVN(Date.now() - 864e5);
+    if (c.last === today) return null;
+    const streak = c.last === yesterday ? (c.streak || 0) % 7 + 1 : 1;
+    return { day: streak, gift: this.GIFTS[streak - 1] };
+  },
+  giftText(g) {
+    const f = g.fabric && G.CAT.FABRICS[g.fabric];
+    return [g.coins ? `${g.coins} xu` : '', f ? `${(g.cm / 100).toFixed(0)} m ${f.name}` : ''].filter(Boolean).join(' + ');
+  },
+  checkin() {
+    const d = this.checkinDue(); if (!d) return;
+    const s = G.state, g = d.gift;
+    if (g.coins) G.addCoins(g.coins);
+    if (g.fabric && G.CAT.FABRICS[g.fabric]) s.roll[g.fabric] = (s.roll[g.fabric] || 0) + g.cm;
+    s.checkin = { last: G.dateKeyVN(), streak: d.day };
+    G.sfx.coin(); G.toast(`Quà ngày ${d.day}: ${this.giftText(g)}`, G.C.green); G.save();
+  },
   awayText(ms) {
     const m = Math.round(ms / 60e3);
     return m < 60 ? `${m} phút` : `${Math.floor(m / 60)} giờ${m % 60 ? ' ' + (m % 60) + ' phút' : ''}`;
