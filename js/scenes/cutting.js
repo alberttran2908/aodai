@@ -82,8 +82,9 @@ G.scenes.cutting = {
         const rp = this.toRoll(pt);
         let best = 0, bd = Infinity;
         path.forEach((q2, k) => { const d = Math.hypot(q2.x - rp.x, q2.y - rp.y); if (d < bd) { bd = d; best = k; } });
-        if (bd > this.cutTol() * 2.5) { G.toast('Đặt kéo lên đường viền của mảnh rập'); return; }
-        this.trace = { p: cand, path, i: best, start: best, dir: 0, done: 0, dev: 0 };
+        // a tap in the middle of a piece: the scissors go round by themselves (a quick, slightly rougher cut)
+        if (bd > this.cutTol() * 2.5) { this.autoCut(cand); return; }
+        this.trace = { p: cand, path, i: best, start: best, dir: 0, done: 0, dev: 0, down: pt };
         this.cutting = true; G.sfx.snip();
       }
       return;
@@ -139,8 +140,19 @@ G.scenes.cutting = {
     if (d.pan) { const v = this.view(); this.pan = this.clampPan(d.pan0 - (pt.x - d.start) / v.k); return; }
     d.pt = pt;
   },
+  autoCut(p) {
+    if (this.trace && this.trace.p === p) this.trace = null;
+    const q = G.geo.rotated(p, p.rot);
+    this.anim = { p, t: 0, path: G.geo.resample(q.poly.map((v) => ({ x: v.x + p.x, y: v.y + p.y })), 2, true) };
+  },
   up(pt) {
-    if (this.cutting) { this.cutting = false; return; } // the scissors stay where they stopped
+    if (this.cutting) {
+      this.cutting = false;
+      // a tap on the outline (no tracing) also lets the scissors cut on their own
+      const T = this.trace;
+      if (T && T.done < 3 && T.down && Math.hypot(pt.x - T.down.x, pt.y - T.down.y) < 8) this.autoCut(T.p);
+      return; // otherwise the scissors stay where they stopped
+    }
     const d = this.drag; this.drag = null; if (!d || d.pan) return;
     if (pt.y > 560) { d.p.placed = false; this.dirty = true; return; }
     const rp = this.toRoll(pt);
@@ -161,8 +173,10 @@ G.scenes.cutting = {
       if (Math.floor(this.anim.t * 12) !== Math.floor((this.anim.t - dt) * 12)) G.sfx.snip();
       if (this.anim.t > 0.9) {
         const p = this.anim.p; p.cut = true;
-        G.job.cutScore.push(this.onGrain(p) ? 1 : G.tool('scissors').off || 0.75);
+        // quick cut: grain counts in full, the line only half (tracing by hand can earn the rest)
+        G.job.cutScore.push((this.onGrain(p) ? 1 : G.tool('scissors').off || 0.75) * (0.82 + 0.18 * 0.5));
         this.anim = null; G.sfx.done();
+        if (!this.tipShown) { this.tipShown = true; G.toast('Cắt nhanh xong! Rê kéo dọc viền thì đường cắt đẹp hơn'); }
       }
     }
   },
@@ -281,6 +295,15 @@ G.scenes.cutting = {
       const sp = this.toScreen(p.x, p.y);
       this.drawPiece(c, p, sp.x, sp.y, v.k, { bad: this.bad.has(i), sel: this.sel === p });
     });
+    if (this.anim) {
+      // the quick cut: the scissors run round the piece on their own
+      const a = this.anim, n = Math.floor((a.t / 0.9) * a.path.length);
+      c.strokeStyle = '#2b1d18'; c.lineWidth = 2.5; c.beginPath();
+      for (let i = 0; i < n && i < a.path.length; i++) { const sp = this.toScreen(a.path[i].x, a.path[i].y); i ? c.lineTo(sp.x, sp.y) : c.moveTo(sp.x, sp.y); }
+      c.stroke();
+      const hp = a.path[Math.min(n, a.path.length - 1)], sp = this.toScreen(hp.x, hp.y);
+      G.text(c, '✂', sp.x, sp.y, { size: 26, align: 'center', fixed: true });
+    }
     const T = this.trace;
     if (T && T.p.fabric === r.id) {
       const N = T.path.length, at = (k) => { const q = T.path[((k % N) + N) % N]; return this.toScreen(q.x, q.y); };
@@ -313,7 +336,7 @@ G.scenes.cutting = {
     // tray
     G.rr(c, 20, 566, 820, 98, 14); c.fillStyle = 'rgba(251,246,236,0.9)'; c.fill();
     const slots = this.traySlots();
-    if (!slots.length) G.text(c, this.mode === 'cut' ? 'Đặt kéo lên đường viền mảnh rồi rê dọc theo nét để cắt' : 'Đã xếp hết mảnh của cuộn này', 430, 615, { size: 15, weight: 600, align: 'center', color: U.T.soft });
+    if (!slots.length) G.text(c, this.mode === 'cut' ? 'Chạm vào mảnh để cắt nhanh, hoặc rê dọc viền để cắt khéo' : 'Đã xếp hết mảnh của cuộn này', 430, 615, { size: 15, weight: 600, align: 'center', color: U.T.soft });
     for (const sl of slots) {
       const q = G.geo.rotated(sl.p, sl.p.rot), tk = Math.min((sl.w - 16) / q.w, (sl.h - 16) / q.h);
       G.UI.tile(c, sl.x, sl.y, sl.w, sl.h, { sel: this.sel === sl.p, r: 10 });
@@ -330,7 +353,7 @@ G.scenes.cutting = {
     const allCut = j.pieces.every((p) => p.cut);
     U.primary(c, 'sew', 'Đem đi may  →', () => this.finish(), allCut);
     U.secondary(c, 'buy', 'Mua thêm vải', () => G.go('emporium', { back: 'cutting' }));
-    U.hint(c, this.mode === 'cut' ? 'Kéo: đặt lên viền mảnh, rê dọc theo nét vàng • nhấc tay rồi chạm lại ✂ để cắt tiếp' : 'Kéo mảnh từ khay lên vải • R / chuột phải xoay • kéo nền để cuộn vải • mũi tên xanh = đúng canh sợi');
+    U.hint(c, this.mode === 'cut' ? 'Kéo: chạm vào mảnh để cắt nhanh • hoặc rê dọc theo viền để cắt khéo hơn' : 'Kéo mảnh từ khay lên vải • R / chuột phải xoay • kéo nền để cuộn vải • mũi tên xanh = đúng canh sợi');
     U.topbar(c, 'Phòng cắt');
   },
   finish() {

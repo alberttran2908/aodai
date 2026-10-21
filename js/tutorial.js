@@ -16,7 +16,7 @@ G.tut = (function () {
     { scene: 'sketch', target: { rect: () => ({ x: 24, y: 70, w: 394, h: 560 }) }, text: 'Bên trái: dấu ✓ là đạt yêu cầu. Thiếu vải thì bấm “Mua” ngay dưới phiếu. Đủ hết thì “Vẽ rập”.', done: () => { const h = find('draft'); return h && h.enabled; } },
     { scene: 'sketch', target: btn('draft'), text: 'Đạt rồi! Bấm “Vẽ rập” để sang bàn cắt.', done: () => G.sceneName !== 'sketch' },
     { scene: 'cutting', target: { rect: () => ({ x: 20, y: 66, w: 820, h: 560 }) }, text: 'Kéo từng mảnh rập từ khay lên vải. Mũi tên xanh là đúng canh sợi, áo rủ đẹp hơn. Bấm R hoặc chuột phải để xoay. Xếp khít thì đỡ tốn vải.', ack: true },
-    { scene: 'cutting', target: btn('tCut'), text: 'Xếp xong thì chọn “Kéo”. Đặt kéo lên đường viền một mảnh rồi rê dọc theo nét vàng cho tới khi giáp vòng. Cắt càng sát nét càng đẹp.', done: () => sc().mode === 'cut' },
+    { scene: 'cutting', target: btn('tCut'), text: 'Xếp xong thì chọn “Kéo”. Chạm vào một mảnh là kéo tự cắt. Muốn cắt khéo hơn thì đặt kéo lên viền và rê dọc theo nét vàng cho tới khi giáp vòng.', done: () => sc().mode === 'cut' },
     { scene: 'cutting', target: btn('sew'), text: 'Cắt hết rồi! Đem đi may thôi.', wait: () => { const h = find('sew'); return h && h.enabled; }, done: () => G.sceneName !== 'cutting' },
     { scene: 'sew', target: btn('pinall'), text: 'Trước khi may phải ghim. Kéo từng mảnh thả lên ma-nơ-canh, hoặc bấm “Ghim nhanh tất cả”.', done: () => !find('pinall') },
     { scene: 'sew', target: btn('go'), text: 'Chọn một đường may trong danh sách rồi bấm “May”.', done: () => !!find('leave') || !!sc().mach },
