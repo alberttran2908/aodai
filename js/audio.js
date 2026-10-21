@@ -1,12 +1,21 @@
 // Procedural WebAudio SFX (no audio files)
 G.sfx = (function () {
-  let ac = null, noiseBuf = null;
+  let ac = null, noiseBuf = null, bus = null;
   function ensure() {
     if (!ac) {
       try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
     }
     if (ac.state === 'suspended') ac.resume();
     return ac;
+  }
+  // every effect goes through one soft bus: quieter overall, highs rolled off and peaks tamed (no shrill clicks)
+  function out() {
+    if (bus) return bus;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; lp.Q.value = 0.5;
+    const comp = ac.createDynamicsCompressor(); comp.threshold.value = -24; comp.ratio.value = 4;
+    const g = ac.createGain(); g.gain.value = 0.55;
+    g.connect(lp).connect(comp).connect(ac.destination);
+    return (bus = g);
   }
   // automated tests set sessionStorage 'aodai_test_mute' (or open with ?mute) so playtesting stays silent
   let testMute = /[?&]mute\b/.test(location.search);
@@ -25,7 +34,7 @@ G.sfx = (function () {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.008);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(a.destination);
+    o.connect(g).connect(out());
     o.start(t);
     o.stop(t + dur + 0.02);
   }
@@ -48,7 +57,7 @@ G.sfx = (function () {
     const g = a.createGain();
     g.gain.setValueAtTime(vol || 0.2, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    src.connect(f).connect(g).connect(a.destination);
+    src.connect(f).connect(g).connect(out());
     src.start(t, Math.random() * 0.3);
     src.stop(t + dur + 0.02);
   }
@@ -109,44 +118,44 @@ G.sfx = (function () {
   return {
     unlock() { const a = ensure(); if (a) startMusic(); return a; },
     music,
-    click() { tone(660, 0.05, 'triangle', 0.08); },
+    // soft wooden taps and mellow chimes: nothing above ~1 kHz carries the tone, nothing square or sawtooth
+    click() { tone(520, 0.05, 'sine', 0.07); },
     snip() {
       const n = performance.now();
       if (n - lastSnip < 70) return;
       lastSnip = n;
-      noise(0.045, 0.22, G.rand(2800, 4200), 2);
-      tone(G.rand(1800, 2200), 0.02, 'square', 0.02);
+      noise(0.04, 0.12, G.rand(1600, 2200), 1.5);
     },
-    // one stitch of a heavy vintage machine: a low "thunk" as the needle drops, plus the click of the feed dog
+    // one stitch of a heavy vintage machine: a low "thunk" as the needle drops, plus the soft tick of the feed dog
     stitch() {
       const n = performance.now();
       if (n - lastStitch < 45) return;
       lastStitch = n;
-      tone(G.rand(88, 104), 0.07, 'sine', 0.16, 0, 0.6);
-      tone(G.rand(150, 170), 0.03, 'square', 0.025);
-      noise(0.025, 0.07, 2200, 4);
+      tone(G.rand(88, 104), 0.07, 'sine', 0.15, 0, 0.6);
+      tone(G.rand(150, 170), 0.03, 'triangle', 0.02);
+      noise(0.025, 0.04, 1400, 3);
     },
     // the thread catching when the fabric drifts off the line
     snag() {
       const n = performance.now();
       if (n - lastSnag < 320) return;
       lastSnag = n;
-      noise(0.14, 0.12, 900, 6);
-      tone(120, 0.16, 'sawtooth', 0.04, 0, 0.75);
+      noise(0.14, 0.09, 700, 5);
+      tone(120, 0.16, 'triangle', 0.05, 0, 0.75);
     },
     // the shop cat purring: a soft low rumble pulsing about 22 times a second
     purr() { for (let i = 0; i < 26; i++) noise(0.035, 0.07, 160, 1.2, i * 0.045); },
     // a seam finished beautifully
-    cheer() { noise(0.09, 0.14, 3200, 0.7); [659, 784, 988, 1319].forEach((f, i) => tone(f, 0.22, 'triangle', 0.09, 0.05 + i * 0.06)); },
-    coin() { tone(988, 0.08, 'sine', 0.15); tone(1319, 0.2, 'sine', 0.15, 0.07); },
-    bell() { tone(1568, 0.6, 'sine', 0.12); tone(2093, 0.5, 'sine', 0.07, 0.12); },
+    cheer() { noise(0.08, 0.06, 1800, 0.7); [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.24, 'sine', 0.08, 0.05 + i * 0.06)); },
+    coin() { tone(784, 0.08, 'sine', 0.11); tone(1047, 0.2, 'sine', 0.1, 0.07); },
+    bell() { tone(784, 0.6, 'sine', 0.11); tone(1047, 0.5, 'sine', 0.06, 0.12); },
     // a close friend's own doorbell tune (♥5): you learn who is coming before they walk in
-    tune(freqs) { (freqs || []).forEach((f, i) => { tone(f * 2, 0.42, 'sine', 0.1, i * 0.16); tone(f * 4, 0.3, 'sine', 0.03, i * 0.16); }); },
-    paper() { noise(0.12, 0.25, 500, 0.8); tone(180, 0.1, 'sine', 0.12); },
-    place() { tone(330, 0.06, 'triangle', 0.1); },
-    bad() { tone(220, 0.18, 'sawtooth', 0.05, 0, 0.7); },
-    good() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.25, 'sine', 0.11, i * 0.08)); },
-    done() { [784, 988].forEach((f, i) => tone(f, 0.18, 'triangle', 0.1, i * 0.07)); },
-    stamp() { noise(0.08, 0.12, 600, 1); tone(500, 0.08, 'sine', 0.08, 0, 1.6); }
+    tune(freqs) { (freqs || []).forEach((f, i) => { tone(f * 2, 0.42, 'sine', 0.09, i * 0.16); tone(f * 4, 0.3, 'sine', 0.02, i * 0.16); }); },
+    paper() { noise(0.12, 0.18, 500, 0.8); tone(180, 0.1, 'sine', 0.1); },
+    place() { tone(330, 0.06, 'sine', 0.09); },
+    bad() { tone(196, 0.2, 'triangle', 0.08, 0, 0.75); },
+    good() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.25, 'sine', 0.09, i * 0.08)); },
+    done() { [659, 784].forEach((f, i) => tone(f, 0.18, 'sine', 0.09, i * 0.07)); },
+    stamp() { noise(0.08, 0.1, 500, 1); tone(400, 0.08, 'sine', 0.08, 0, 1.6); }
   };
 })();
