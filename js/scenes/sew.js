@@ -320,7 +320,16 @@ G.scenes.sew = {
     c.restore();
   },
   stitchPath(c, st, w, tf) {
-    c.lineCap = 'round'; c.lineWidth = w;
+    c.lineCap = 'round';
+    // stitches off the line get a glow under the thread, by the seam grades: amber = not good (<99%), red = bad (<90%)
+    c.lineWidth = w * 2.6;
+    for (let k = 1; k < st.length; k++) {
+      if (st[k].q >= 0.99) continue;
+      const a = tf ? tf(st[k - 1]) : st[k - 1], b = tf ? tf(st[k]) : st[k];
+      c.strokeStyle = st[k].q < 0.9 ? 'rgba(217,83,79,0.55)' : 'rgba(224,170,60,0.45)';
+      c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
+    }
+    c.lineWidth = w;
     for (let k = 1; k < st.length; k++) {
       const a = tf ? tf(st[k - 1]) : st[k - 1], b = tf ? tf(st[k]) : st[k];
       c.strokeStyle = st[k].q < 0.6 ? '#d9534f' : this.thread;
