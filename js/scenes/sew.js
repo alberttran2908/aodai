@@ -53,9 +53,19 @@ G.scenes.sew = {
   },
   toScreen(p) { return { x: (p.x - this.ocx) * this.oz + this.ovx, y: (p.y - this.ocy) * this.oz + this.ovy }; },
   // only the thread's own width is free; faster machines get a hair more slack
-  dead() { return 0.04 * Math.pow(G.tool('machine').speed, 0.6); },
-  // one stitch: every millimetre off the line costs, the first ones too (0.05 cm ≈ 96%, 0.1 ≈ 86%, 0.2 ≈ 70%, 0.5 ≈ 34%)
-  stitchQ(dist) { return G.clamp(1 - Math.pow(Math.max(0, dist - this.dead()) / 0.8, 0.75), 0, 1); },
+  dead() { return 0.03 * Math.pow(G.tool('machine').speed, 0.6); },
+  // one stitch: the % says how far off the line it went (straight from the distance, nothing rounded up)
+  stitchQ(dist) { return G.clamp(1 - Math.max(0, dist - this.dead()) / 1.2, 0, 1); },
+  // the shown % is rounded down: 99.6% is still 99%, only a truly clean seam reads 100%
+  pct(score) { return Math.floor(score * 100 + 1e-9); },
+  // a seam is judged strictly: 100% perfect, 99% good, 90–98% not good, under 90% badly sewn
+  grade(score) {
+    const sc = this.pct(score);
+    return sc >= 100 ? { key: 'hoanhao', label: 'Hoàn hảo', col: '#2f7a46', good: true }
+      : sc >= 99 ? { key: 'tot', label: 'May tốt', col: '#3f8a52', good: true }
+      : sc >= 90 ? { key: 'khongtot', label: 'Không tốt', col: '#b8862a' }
+      : { key: 'te', label: 'May tệ', col: '#b8323f' };
+  },
   allDone() { return this.sd.every((d) => d); },
   nextSel() { const i = this.sd.findIndex((d) => !d); if (i >= 0) this.sel = i; },
 
@@ -77,7 +87,7 @@ G.scenes.sew = {
     const st = this.m.st, avg = st.reduce((a, s) => a + s.q, 0) / st.length;
     let wob = 0, n = 0;
     for (let i = 1; i < st.length; i++) if (st[i].off !== undefined && st[i - 1].off !== undefined) { wob += Math.abs(st[i].off - st[i - 1].off); n++; }
-    return G.clamp(avg - Math.min(0.12, n ? (wob / n) * 0.9 : 0), 0, 1);
+    return G.clamp(avg - Math.min(0.05, n ? (wob / n) * 0.5 : 0), 0, 1);
   },
   updateMachine(dt) {
     const m = this.m, P = this.paths[this.sel], K = G.keys;
@@ -122,7 +132,7 @@ G.scenes.sew = {
       m.done = 1.6; m.run = false; m.mouse = false; m.vel = 0;
       // the seam gets a tailor's stamp; a clean one also gets a little burst of sparkles
       this.stampT = 0; this.stampSfx = false;
-      if (score >= 0.85) {
+      if (this.grade(score).good) {
         G.sfx.cheer();
         for (let k = 0; k < 26; k++) { const a = Math.random() * Math.PI * 2, sp = G.rand(120, 360); this.parts.push({ x: this.N.x, y: this.N.y + 40, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120, life: G.rand(0.7, 1.2), t: 0, col: G.pick(['#f6cd6a', '#ffffff', '#e86a7a', '#7fc8a9']) }); }
       } else G.sfx.done();
@@ -379,7 +389,8 @@ G.scenes.sew = {
       G.ui.hits.push({ id: 'seam' + i, x: x + 14, y: y - 18, w: 322, h: 36, enabled: true, cb: () => { this.sel = i; } });
       if (on) { G.rr(c, x + 14, y - 18, 322, 36, 10); c.fillStyle = '#f6e6d6'; c.fill(); }
       G.text(c, (d ? '✓ ' : '• ') + sm.name, x + 28, y, { size: 15, weight: on ? 800 : 600, color: d ? U.T.ok : on ? U.T.accent : U.T.ink });
-      G.text(c, d ? Math.round(d.score * 100) + '%' + (d.byHelper ? ' ✋' : '') : 'chưa may', x + 322, y, { size: 14, weight: d ? 800 : 500, align: 'right', color: d ? (d.byHelper ? '#4f7a8c' : U.T.ink) : U.T.soft });
+      const gr = d && this.grade(d.score);
+      G.text(c, d ? `${gr.label} · ${this.pct(d.score)}%${d.byHelper ? ' ✋' : ''}` : 'chưa may', x + 322, y, { size: 13, weight: d ? 800 : 500, align: 'right', color: d ? gr.col : U.T.soft });
       y += 40;
     });
     const sd = this.sd[this.sel];
@@ -398,13 +409,14 @@ G.scenes.sew = {
     G.text(c, `Máy: ${G.tool('machine').name}`, x + 24, 560, { size: 13, color: U.T.soft });
     if (done) {
       const avg = this.sd.reduce((a, d) => a + d.score, 0) / this.sd.length;
-      G.text(c, `Trung bình: ${Math.round(avg * 100)}%`, x + 24, 614, { size: 18, weight: 800, color: U.T.accent });
+      G.text(c, `Trung bình: ${this.pct(avg)}%`, x + 24, 614, { size: 18, weight: 800, color: U.T.accent });
     }
     // with an iron in the shop, the dress is pressed before decorating
     const hasIron = (G.state.tools.iron || 0) > 0;
     U.primary(c, 'next', hasIron ? 'Ủi áo →' : 'Trang trí →', () => { j.sew = this.sd.map((d) => d.score); G.go(hasIron ? 'iron' : 'decorate'); }, done);
     const rough = G.job.com.reqs.some((r) => r.type === 'qmax'); // a costume that must look poorly made
-    U.hint(c, rough && !done ? 'Khách muốn áo trông xuề xoà — cứ may lệch, xiêu vẹo một chút!' : done ? 'Đã may xong. Có thể tháo chỉ đường nào chưa ưng để may lại.' : 'Bấm đường may trên áo hoặc trong danh sách • Enter để bắt đầu may');
+    const bad = this.sd.some((d) => d && this.grade(d.score).key === 'te');
+    U.hint(c, rough && !done ? 'Khách muốn áo trông xuề xoà — cứ may lệch, xiêu vẹo một chút!' : bad && !rough ? 'Có đường “May tệ” (dưới 90%) — nên tháo chỉ may lại, khách sẽ chê' : done ? 'Đã may xong. Có thể tháo chỉ đường nào chưa ưng để may lại.' : 'Bấm đường may trên áo hoặc trong danh sách • Enter để bắt đầu may');
     U.topbar(c, 'May áo');
   },
   drawMachine(c) {
@@ -495,11 +507,13 @@ G.scenes.sew = {
     }
 
     // HUD
-    const x = 910, live = Math.round(this.live() * 100);
+    const x = 910, live = this.pct(this.live());
     U.card(c, x, 66, 350, 570);
     U.title(c, this.asm.seams[this.sel].name, x + 24, 102);
     G.text(c, 'Chất lượng đường may', x + 24, 140, { size: 13, weight: 600, color: U.T.soft });
-    G.text(c, `${live}%`, x + 24, 180, { size: 40, weight: 800, color: live >= 85 ? U.T.ok : live >= 65 ? U.T.gold : U.T.bad });
+    const vg = this.grade(this.live());
+    G.text(c, `${live}%`, x + 24, 180, { size: 40, weight: 800, color: vg.col });
+    G.text(c, vg.label, x + 326, 180, { size: 16, weight: 800, align: 'right', color: vg.col }); // live verdict while sewing
     const prog = m.idx / (P.length - 1);
     G.rr(c, x + 24, 214, 302, 10, 5); c.fillStyle = '#eadfcd'; c.fill();
     G.rr(c, x + 24, 214, Math.max(10, 302 * prog), 10, 5); c.fillStyle = U.T.accent; c.fill();
@@ -640,10 +654,8 @@ G.scenes.sew = {
   },
   // a round tailor's stamp thumped onto the seam: grade word, percentage, a ring of stitches
   drawStamp(c, score) {
-    const sc = Math.round(score * 100), t = this.stampT || 0;
-    // "perfect" is earned, not given: only a near-flawless seam gets it
-    const grade = sc >= 98 ? 'Hoàn hảo' : sc >= 90 ? 'Rất đẹp' : sc >= 80 ? 'Đẹp' : sc >= 65 ? 'Tạm ổn' : 'Nên may lại';
-    const col = sc >= 85 ? '#3f8a52' : sc >= 65 ? '#b8862a' : '#b8323f';
+    const sc = this.pct(score), t = this.stampT || 0;
+    const gr = this.grade(score), grade = gr.label, col = gr.col;
     const k = t < 0.28 ? 1.9 - 0.9 * G.easeBack(t / 0.28) : 1, x = this.N.x, y = 470;
     if (!this.stampSfx && t > 0.2) { this.stampSfx = true; G.sfx.stamp(); }
     c.save(); c.translate(x, y); c.rotate(-0.14); c.scale(k, k); c.globalAlpha = Math.min(1, t * 6);
