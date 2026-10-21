@@ -87,6 +87,7 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
     }
     const p = toLocal(e);
     Object.assign(G.pointer, p, { down: true, touch: e.pointerType === 'touch' });
+    if (G.pointer.touch) G.touchUI = true; // hints switch from mouse words to touch words
     const hit = G.ui.hitTest(p, G.pointer.touch ? G.touchSlop() : 0);
     if (hit) { G.ui.pressed = hit; return; }
     if (G.scene && G.scene.down) G.scene.down(p, e);

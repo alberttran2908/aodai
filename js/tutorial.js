@@ -11,7 +11,7 @@ G.tut = (function () {
     { scene: 'desk', target: btn('qbase', 'qgo', 'qok'), text: 'Trả giá cao thì lời hơn, nhưng khách khó tính có thể phật ý. Đơn đầu cứ lấy đúng giá khách đề nghị cho chắc.', done: () => G.sceneName !== 'desk' },
     { scene: 'measure', target: { rect: () => ({ x: 380, y: 120, w: 440, h: 420 }) }, text: 'Đo ba vòng: ngực, eo, hông. Kéo thước dây từ mép trái sang mép phải thân người, ngay vạch đang sáng. Càng sát mép, áo càng vừa.', done: () => (sc().results || []).length > 0 },
     { scene: 'measure', target: btn('next'), text: 'Đo tiếp hai vòng còn lại, xong thì mở sổ phác thảo.', done: () => G.sceneName !== 'measure', wait: () => { const h = find('next'); return h && h.enabled; } },
-    { scene: 'sketch', target: { rect: () => ({ x: 834, y: 112, w: 416, h: 520 }) }, text: 'Đây là sổ phác thảo. Chọn cổ, dáng, tay, tà, quần ở trang phải. Rê chuột lên một kiểu để xem các thanh phong cách bên trái tăng giảm ra sao.', ack: true },
+    { scene: 'sketch', target: { rect: () => ({ x: 834, y: 112, w: 416, h: 520 }) }, text: () => `Đây là sổ phác thảo. Chọn cổ, dáng, tay, tà, quần ở trang phải. ${G.touchUI ? 'Chạm một kiểu' : 'Rê chuột lên một kiểu'} để xem các thanh phong cách bên trái tăng giảm ra sao — khách cũng tỏ thái độ ngay cạnh áo đó.`, ack: true },
     { scene: 'sketch', target: btn('tabv'), text: 'Giờ tới vải. Bấm thẻ “Vải”, rồi kéo một tấm vải thả lên thân, tay hay quần trên áo.', done: () => sc().tab === 'vai' },
     { scene: 'sketch', target: { rect: () => ({ x: 24, y: 70, w: 394, h: 560 }) }, text: 'Bên trái: dấu ✓ là đạt yêu cầu. Thiếu vải thì bấm “Mua” ngay dưới phiếu. Đủ hết thì “Vẽ rập”.', done: () => { const h = find('draft'); return h && h.enabled; } },
     { scene: 'sketch', target: btn('draft'), text: 'Đạt rồi! Bấm “Vẽ rập” để sang bàn cắt.', done: () => G.sceneName !== 'sketch' },
@@ -20,7 +20,7 @@ G.tut = (function () {
     { scene: 'cutting', target: btn('sew'), text: 'Cắt hết rồi! Đem đi may thôi.', wait: () => { const h = find('sew'); return h && h.enabled; }, done: () => G.sceneName !== 'cutting' },
     { scene: 'sew', target: btn('pinall'), text: 'Trước khi may phải ghim. Kéo từng mảnh thả lên ma-nơ-canh, hoặc bấm “Ghim nhanh tất cả”.', done: () => !find('pinall') },
     { scene: 'sew', target: btn('go'), text: 'Chọn một đường may trong danh sách rồi bấm “May”.', done: () => !!find('leave') || !!sc().mach },
-    { scene: 'sew', target: { rect: () => ({ x: 20, y: 66, w: 880, h: 560 }) }, text: 'Giữ Space hoặc giữ chuột để chạy máy. A/D hoặc kéo chuột để lái kim theo đường chấm. Tới góc thì dừng hẳn, xoay vải rồi may tiếp. W/S đổi tốc độ.', ack: true },
+    { scene: 'sew', target: { rect: () => ({ x: 20, y: 66, w: 880, h: 560 }) }, text: () => (G.touchUI ? 'Giữ ngón tay trên vải để chạy máy, rê sang trái phải để lái kim theo đường chấm. Tới góc thì nhấc tay cho máy dừng hẳn, rồi may tiếp.' : 'Giữ Space hoặc giữ chuột để chạy máy. A/D hoặc kéo chuột để lái kim theo đường chấm. Tới góc thì dừng hẳn, xoay vải rồi may tiếp. W/S đổi tốc độ.'), ack: true },
     { scene: 'sew', target: btn('next'), text: 'May đủ các đường là xong. Đường nào chưa ưng thì tháo chỉ may lại. Rồi sang trang trí.', wait: () => { const h = find('next'); return h && h.enabled; }, done: () => G.sceneName !== 'sew' },
     { scene: 'decorate', target: { rect: () => ({ x: 840, y: 62, w: 420, h: 560 }) }, text: 'Thêu, viền, cúc, phụ kiện… Chọn mẫu rồi bấm lên áo để đặt. Phiếu bên trái cho biết khách có cần trang trí không. Trang trí tốn xu đó nha.', ack: true },
     { scene: 'decorate', target: btn('done'), text: 'Ưng rồi thì “Hoàn thành áo”.', done: () => G.sceneName !== 'decorate' },
@@ -96,7 +96,7 @@ G.tut = (function () {
     U.card(c, bx, by, bw, bh, { fill: '#fffaf0' });
     G.Dialog.portrait(c, 'batu', bx + 12, by + 14, 78, 92);
     G.text(c, 'Bà Tư', bx + 51, by + 118, { size: 12, weight: 800, font: G.GAME, align: 'center', color: U.T.accent });
-    G.wrap(c, s.text, bx + 104, by + 14, bw - 120, 19, { size: 14, color: '#3a2c26', maxLines: big ? 4 : 5 });
+    G.wrap(c, typeof s.text === 'function' ? s.text() : s.text, bx + 104, by + 14, bw - 120, 19, { size: 14, color: '#3a2c26', maxLines: big ? 4 : 5 });
     const t = st();
     G.text(c, `${t.idx + 1}/${STEPS.length}`, bx + bw - 14, by + bh - 18, { size: 11, weight: 700, align: 'right', color: U.T.soft });
     if (s.ack) G.button(c, 'tut_ok', s.last ? 'Cảm ơn bà!' : 'Hiểu rồi', bx + bw - 148, by + bh - 50, 100, 34, () => next(), { size: 14, r: 17 });

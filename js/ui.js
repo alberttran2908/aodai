@@ -264,7 +264,7 @@ G.UI = (function () {
     G.text(c, tg.name, x, y, { size: 13, weight: 600, color: T.ink });
     // the bar starts after the label (wider when phones enlarge the text)
     c.font = `600 ${G.fs(13)}px ${G.FONT}`;
-    const lab = Math.max(92, c.measureText(tg.name).width + 10), bx = x + lab, bw = w - 40 - lab;
+    const lab = Math.max(92, ...G.CAT.TAG_KEYS.map((k) => c.measureText(G.CAT.TAGS[k].name).width + 10)), bx = x + lab, bw = w - 40 - lab; // all bars start in one column
     G.rr(c, bx, y - 5, bw, 10, 5); c.fillStyle = '#eadfcd'; c.fill();
     let ok = true;
     if (req) ok = req.type === 'min' ? val >= req.val : val <= req.val;
@@ -312,7 +312,12 @@ G.UI = (function () {
       c.restore();
     }
     G.text(c, cl.name, x + 16, y + 22, { size: 17, weight: 800, color: T.accent });
-    G.text(c, cl.role, x + 16, y + 42, { size: 12, color: T.soft });
+    if (live && live.mood) {
+      // the client reacting to the design as it changes (pops in when the mood changes)
+      const m = live.mood, k = 0.6 + 0.4 * G.easeBack(m.pop);
+      c.save(); c.translate(x + 26, y + 42); c.scale(k, k); G.text(c, m.face, 0, 1, { size: 17, align: 'center', fixed: true }); c.restore();
+      fitText(c, m.line, x + 40, y + 42, w * 0.5, { size: 12, weight: 700, color: m.col });
+    } else G.text(c, cl.role, x + 16, y + 42, { size: 12, color: T.soft });
     G.art.coin(c, x + w - 82, y + 22, 9);
     G.text(c, String(com.budget), x + w - 68, y + 22, { size: 16, weight: 800 });
     const qmax = com.reqs.find((r) => r.type === 'qmax');

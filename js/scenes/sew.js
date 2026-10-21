@@ -515,9 +515,9 @@ G.scenes.sew = {
       G.text(c, nm, px, sy2 + 26, { size: 12, weight: i === this.lvl ? 800 : 600, font: G.GAME, align: 'center', color: i === this.lvl ? U.T.ink : U.T.soft });
     });
     c.beginPath(); c.arc(kx, sy2, 13, 0, 7); c.fillStyle = '#fffaf0'; c.fill(); c.strokeStyle = G.INK; c.lineWidth = 2.2; c.stroke();
-    G.wrap(c, 'Giữ Space hoặc giữ chuột để chạy máy. Lái vải bằng A/D hoặc kéo chuột sang trái/phải để nét đứt luôn chạy thẳng vào kim. Thả ra để dừng và chỉnh vải.', x + 24, 452, 300, 21, { size: 13, color: U.T.soft });
+    G.wrap(c, G.touchUI ? 'Giữ ngón tay trên vải để chạy máy, rê sang trái/phải để nét đứt luôn chạy thẳng vào kim. Nhấc tay để dừng và chỉnh vải.' : 'Giữ Space hoặc giữ chuột để chạy máy. Lái vải bằng A/D hoặc kéo chuột sang trái/phải để nét đứt luôn chạy thẳng vào kim. Thả ra để dừng và chỉnh vải.', x + 24, 452, 300, 21, { size: 13, color: U.T.soft, maxLines: 4 });
     G.button(c, 'leave', '← Về ma-nơ-canh', x + 24, 568, 302, 46, () => { this.mode = 'form'; }, { style: 'ghost', size: 15, r: 23 });
-    U.hint(c, m.run ? 'Máy đang chạy…' : 'Giữ Space / giữ chuột để may • A/D hoặc kéo chuột để lái • W/S tốc độ • Esc để dừng');
+    U.hint(c, m.run ? 'Máy đang chạy…' : G.touchUI ? 'Giữ ngón tay để may • rê trái phải để lái • nhấc tay để dừng' : 'Giữ Space / giữ chuột để may • A/D hoặc kéo chuột để lái • W/S tốc độ • Esc để dừng');
     U.topbar(c, 'Máy may');
   },
   // the tailor's hands flat on the cloth either side of the foot: they lean with the steering and

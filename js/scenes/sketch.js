@@ -209,7 +209,7 @@ G.scenes.sketch = {
     // ----- left page: brief with live bars (and the hovered change), fabric needed -----
     const tags = G.computeTags(G.jobDesign(), j.fabs, j.decor, j.part);
     const ghost = hv ? G.computeTags(design, fabs, j.decor, partSel) : null;
-    const ch = U.commission(c, 30, 74, 380, { tags, ghost, fabs: j.fabs, decor: j.decor, stage: 'sketch' });
+    const ch = U.commission(c, 30, 74, 380, { tags, ghost, fabs: j.fabs, decor: j.decor, stage: 'sketch', mood: this.moodOf(ghost || tags, fabs, design) });
     this.drawNeeds(c, 74 + ch + 30);
 
     // ----- middle: the dress; click a part to choose its fabric -----
@@ -254,9 +254,29 @@ G.scenes.sketch = {
     U.secondary(c, 'shop', 'Cửa hàng vải', () => G.go('emporium', { back: 'sketch' }));
     if (this.pastDesigns().length) G.button(c, 'reuse', 'Dùng lại mẫu cũ', G.W - 604, G.H - 66, 170, 50, () => { this.reuse = true; }, { style: 'ghost', size: 15, r: 25 });
     if (this.reuse) this.drawReuse(c);
-    U.hint(c, shaping ? 'Kéo các nút trên áo để chỉnh eo, hông, chỗ xẻ tà và độ xoè — rập cắt đổi theo' : !assigned ? 'Kéo tấm vải thả lên phần áo • hoặc bấm phần áo rồi chọn vải • rê chuột để xem trước'
-      : short.length ? 'Còn thiếu vải — bấm “Mua” ở trang trái' : 'Rê chuột lên lựa chọn để xem thanh phong cách thay đổi thế nào');
+    U.hint(c, shaping ? 'Kéo các nút trên áo để chỉnh eo, hông, chỗ xẻ tà và độ xoè — rập cắt đổi theo' : !assigned ? `Kéo tấm vải thả lên phần áo • hoặc bấm phần áo rồi chọn vải${G.touchUI ? '' : ' • rê chuột để xem trước'}`
+      : short.length ? 'Còn thiếu vải — bấm “Mua” ở trang trái' : G.touchUI ? 'Chạm một kiểu để thử — xem khách phản ứng cạnh áo' : 'Rê chuột lên lựa chọn để xem thanh phong cách thay đổi thế nào');
     U.topbar(c, 'Sổ phác thảo');
+  },
+
+  // ---------- the client's face reacting to the design as it changes (Dressmaker's live reaction) ----------
+  MOOD: [
+    { at: 1, face: '😍', line: 'Đúng ý tôi luôn!', col: '#4f8a5b' },
+    { at: 0.66, face: '🙂', line: 'Ừm, gần được rồi…', col: '#7a8a3a' },
+    { at: 0.33, face: '😐', line: 'Chưa đúng ý lắm.', col: '#b8862a' },
+    { at: 0, face: '😟', line: 'Không phải gu tôi…', col: '#b23a48' }
+  ],
+  // shown on the brief in place of the client's job title; pops when it changes
+  moodOf(tags, fabs, design) {
+    const j = G.job;
+    // only what can be judged now (decorations and the sewing come later)
+    const reqs = j.com.reqs.filter((r) => r.type !== 'decor' && r.type !== 'qmax');
+    if (!reqs.length || !Object.values(j.fabs).some(Boolean)) return null;
+    const ok = reqs.filter((r) => G.reqCheck(r, tags, fabs, j.decor, { design }).ok).length / reqs.length;
+    const m = this.MOOD.find((x) => ok >= x.at);
+    if (this.lastMood !== m.face) { this.lastMood = m.face; this.moodPop = 0; if (m.at === 1) G.sfx.good && G.sfx.good(); }
+    this.moodPop = Math.min(1, (this.moodPop || 0) + (G.ui.dt || 0.016) * 4);
+    return Object.assign({ pop: this.moodPop }, m);
   },
 
   // ---------- reuse a past design from the album (cut, shape and fabrics) ----------
