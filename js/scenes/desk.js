@@ -395,7 +395,7 @@ G.scenes.desk = {
     ['tasks', 'Ô “Hôm nay” trên thanh công cụ', 'Nhiệm vụ ngày, khách sang hẹn giờ, đơn shop, thành tựu, tin hẻm tuần này.'],
     ['workshop', 'Tiệm chạy cả khi bạn vắng', 'Thợ phụ sửa đồ và may áo bán sẵn, tủ kính bán hàng, khách nhắn Zalo, khách quen ghé tặng quà.'],
     ['album', 'Khoe cả tiệm với bạn bè', 'Album › “Khoe cả tiệm”: bạn bè mở link là ghé tiệm, đặt may y chang, nhận quà ghé thăm.'],
-    ['fabric', 'Cài game lên điện thoại', 'Thêm vào màn hình chính để chơi toàn màn hình, cả khi mất mạng. Chuyển tiệm sang máy khác ở ⚙ Cài đặt.']
+    ['phone', 'Cài game lên điện thoại', 'Thêm vào màn hình chính để chơi toàn màn hình, cả khi mất mạng. Chuyển tiệm sang máy khác ở ⚙ Cài đặt.']
   ] },
   newsCard(c) {
     const U = G.UI, N = this.NEWS, w = 640, h = 150 + N.lines.length * 76, x = (G.W - w) / 2, y = (G.H - h) / 2;
@@ -451,7 +451,7 @@ G.scenes.desk = {
       G.wrap(c, 'Tiệm đóng cửa, chưa có ai trông. ' + G.idle.idleTip(), x + 30, ly - 12, w - 60, 20, { size: 14, color: U.T.ink, maxLines: 3 });
     }
     for (const l of P.lines) {
-      U.icon(c, { dress: 'album', fabric: 'fabric', mail: 'mail' }[l.icon] || 'workshop', x + 44, ly, Math.min(28, lh - 6));
+      U.icon(c, { dress: 'album', fabric: 'fabric', mail: 'mail', phone: 'phone', box: 'box' }[l.icon] || 'workshop', x + 44, ly, Math.min(28, lh - 6));
       U.fitText(c, l.text, x + 70, ly, w - 200, { size: 15, weight: 600 });
       if (l.coins) { G.art.coin(c, x + w - 98, ly, 9); G.text(c, `+${l.coins}`, x + w - 84, ly, { size: 16, weight: 800, font: G.GAME, color: U.T.gold }); }
       else G.text(c, l.note || '', x + w - 30, ly, { size: 14, weight: 800, align: 'right', color: U.T.ok });

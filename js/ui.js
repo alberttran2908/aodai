@@ -152,6 +152,15 @@ G.UI = (function () {
         box(-6, 10, 12, 4, 1.5, '#d9a441');
         line([[-2, 14], [-2, 19]], '#d9a441', 1.6); line([[2, 14], [2, 19]], '#d9a441', 1.6);
         break;
+      case 'phone': // a smartphone with a chat bubble on its screen
+        c.rotate(-0.12);
+        box(-10, -17, 20, 34, 4, '#3a3a46');
+        G.rr(c, -7.5, -13, 15, 24, 2); c.fillStyle = '#bfe3f2'; c.fill();
+        G.rr(c, -5.5, -9, 11, 7, 3); c.fillStyle = '#2f8fe0'; c.fill();
+        c.beginPath(); c.moveTo(-3, -2.5); c.lineTo(-4.5, 0.5); c.lineTo(0, -2.5); c.fill();
+        G.rr(c, -3.5, 1.5, 9, 6, 3); c.fillStyle = '#fffaf0'; c.fill();
+        c.beginPath(); c.arc(0, 14, 1.4, 0, 7); c.fillStyle = '#cfd6dc'; c.fill();
+        break;
       case 'box': // a cardboard parcel with tape and a shipping label
         c.beginPath(); c.moveTo(-15, -6); c.lineTo(0, -13); c.lineTo(15, -6); c.lineTo(0, 1); c.closePath(); c.fillStyle = '#e2b77a'; c.fill(); c.stroke();
         c.beginPath(); c.moveTo(-15, -6); c.lineTo(0, 1); c.lineTo(0, 16); c.lineTo(-15, 9); c.closePath(); c.fillStyle = '#c9965a'; c.fill(); c.stroke();

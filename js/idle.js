@@ -59,7 +59,7 @@ G.idle = {
     if (G.vip && G.vip.tick() === 'missed') { const v = s.vip, cl = G.client(v.client); lines.push({ icon: 'mail', text: `${cl ? cl.name : 'Khách sang'} tới lúc ${G.vip.hm(v.start)}, tiệm đóng cửa`, coins: 0, note: 'lỡ hẹn' }); }
     // a boutique's order came in (or an old one lapsed) while you were out
     const offer = G.contract && G.contract.tick();
-    if (offer) lines.push({ icon: 'mail', text: `${offer.shop} đặt ${offer.n} áo bán sẵn`, coins: 0, note: 'đơn mới' });
+    if (offer) lines.push({ icon: 'box', text: `${offer.shop} đặt ${offer.n} áo bán sẵn`, coins: 0, note: 'đơn mới' });
     // a regular drops by with a present (once a Vietnam day, after 2 hours away): the closer the friend, the
     // likelier and the bigger — at "Tri kỷ" and up, a metre of their signature cloth too
     const gifts = [], today = G.dateKeyVN();
@@ -88,7 +88,7 @@ G.idle = {
         const com = this.phoneCom();
         if (!com || s.bench.seats.some((x) => x.com.client === com.client) || calls.some((x) => x.client === com.client)) continue;
         calls.push(com); n--;
-        lines.push({ icon: 'mail', text: `${G.client(com.client).name} nhắn Zalo đặt may`, coins: 0, note: 'ghế chờ' });
+        lines.push({ icon: 'phone', text: `${G.client(com.client).name} nhắn Zalo đặt may`, coins: 0, note: 'ghế chờ' });
       }
     }
     // an empty report ("nobody minded the shop") is a tip, shown at most once a day
