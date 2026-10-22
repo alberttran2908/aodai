@@ -329,7 +329,7 @@ G.scenes.desk = {
   },
   // "while you were away": what the shop did in real time, collected with a shower of coins
   awayCard(c) {
-    const U = G.UI, P = G.idle.pending, w = 520, x = (G.W - w) / 2;
+    const U = G.UI, P = G.idle.pending, w = 600, x = (G.W - w) / 2;
     const n = Math.max(1, P.lines.length), h = 190 + n * 40, y = (G.H - h) / 2;
     c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
     G.ui.hits.push({ id: 'away_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => {} });

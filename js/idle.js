@@ -52,6 +52,25 @@ G.idle = {
       if (Math.random() < 1 - Math.pow(night ? 0.9 : 0.95, hours)) { const p = Math.round(G.fair.value(it) * (night ? 0.9 : 0.8)); sold.push({ it, p }); }
     }
     for (const x of sold) { coins += x.p; lines.push({ icon: 'dress', text: night ? 'Chợ đêm bán một áo trên sạp' : 'Tủ kính bán một áo cho khách qua đường', coins: x.p }); }
+    // a regular drops by with a present (once a Vietnam day, after 2 hours away): the closer the friend, the
+    // likelier and the bigger — at "Tri kỷ" and up, a metre of their signature cloth too
+    const gifts = [], today = G.dateKeyVN();
+    if (hours >= 2 && s.regGiftDay !== today && G.bond && s.bond) {
+      const pool = G.CAT.CLIENTS.filter((c) => G.clientAllowed(c) && s.bond[c.id] && s.bond[c.id].lvl >= 2);
+      if (pool.length && Math.random() < Math.min(0.9, 0.45 + 0.1 * pool.length)) {
+        const w = pool.map((c) => s.bond[c.id].lvl), tot = w.reduce((a, b) => a + b, 0);
+        let r = Math.random() * tot, cl = pool[0];
+        for (let i = 0; i < pool.length; i++) { r -= w[i]; if (r <= 0) { cl = pool[i]; break; } }
+        const lvl = s.bond[cl.id].lvl, n = 15 * lvl, sig = G.BONDS && G.BONDS[cl.id] && G.BONDS[cl.id].sig;
+        const thing = this.TREATS[Math.floor(Math.random() * this.TREATS.length)];
+        coins += n; s.regGiftDay = today;
+        lines.push({ icon: 'mail', text: `${cl.name} ghé tặng ${thing} + phong bao`, coins: n });
+        if (lvl >= 4 && sig && G.CAT.FABRICS[sig]) {
+          gifts.push({ fid: sig, cm: 100 });
+          lines.push({ icon: 'fabric', text: `Quà kèm: 1 m ${G.CAT.FABRICS[sig].name}`, coins: 0, note: 'vào kho' });
+        }
+      }
+    }
     // clients who found the shop shut leave a Zalo message and book a seat on the bench (one per two hours
     // away, at most two, while the bench has room); they pay 10% more for being fitted in
     const calls = [];
@@ -67,7 +86,7 @@ G.idle = {
     // an empty report ("nobody minded the shop") is a tip, shown at most once a day
     if (!lines.length) { if (Date.now() - (s.idleTipAt || 0) < 24 * 3600e3) return; s.idleTipAt = Date.now(); }
     // kept in the save until collected, so closing the tab again does not lose it
-    s.idlePending = { away, capped: away > this.CAP, lines, coins, made, calls, sold: sold.map((x) => ({ i: s.rack.indexOf(x.it), p: x.p })) };
+    s.idlePending = { away, capped: away > this.CAP, lines, coins, made, calls, gifts, sold: sold.map((x) => ({ i: s.rack.indexOf(x.it), p: x.p })) };
   },
   get pending() { return G.state && G.state.idlePending; },
   set pending(v) { if (G.state) G.state.idlePending = v; },
@@ -75,11 +94,14 @@ G.idle = {
     const P = this.pending; if (!P) return;
     for (const x of P.sold) { const it = G.state.rack[x.i]; if (it && !it.sold) { it.sold = true; it.soldFor = x.p; it.price = x.p; } }
     for (const m of P.made || []) this.hangMade(m);
+    for (const g of P.gifts || []) if (G.CAT.FABRICS[g.fid]) G.state.roll[g.fid] = (G.state.roll[g.fid] || 0) + g.cm;
     for (const com of P.calls || []) G.state.bench.seats.push({ com, patience: G.bench.patience() + 1, arrived: G.state.day, phone: true });
     if (P.coins) { G.addCoins(P.coins); G.sfx.coin(); }
     if (G.staff.current() && G.state.staff) G.state.staff.earned += P.lines.filter((l) => l.icon === 'needle').reduce((a, l) => a + l.coins, 0);
     this.pending = null; this.stamp(); G.save();
   },
+  TREATS: ['hộp bánh pía', 'túi xoài cát Hoà Lộc', 'đòn bánh tét', 'bó hoa huệ', 'hũ mứt gừng', 'gói cà phê rang',
+    'chục bánh ít lá gai', 'hộp chè khô', 'giỏ chôm chôm', 'túi bánh tráng mè'],
   // a walk-in drawn without putting them at the counter, at 10% over their usual offer
   phoneCom() {
     const s = G.state, keep = s.commission, last = s.lastClient;
