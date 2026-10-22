@@ -47,9 +47,10 @@ G.geo = (function () {
     yem:    { nx: 4.5, nd: 10, band: 0, bare: 'yem' },
     trevai: { nx: 15.2, nd: 10.5, band: 0, bare: 'trevai' },
     lechvai:{ nx: 6.5, nd: 2.5, band: 0, bare: 'lechvai' },
-    baba:   { nx: 7, nd: 5.5, band: 0 } // áo bà ba: a soft round neck, collarless, opening down the front
+    baba:   { nx: 7, nd: 5.5, band: 0 }, // áo bà ba: a soft round neck, collarless, opening down the front
+    nhatbinh: { nx: 6.2, nd: 3, band: 0 } // áo Nhật Bình: a plain round neck under the great collar
   };
-  const LENGTH = { got: 149, chan: 130, goi: 100, ngan: 80, nam: 114, namngan: 102, ao: 60, baba: 70 }; // baba = áo bà ba, just below the hip // ao = an everyday shirt to the hip // 'got' sweeps the floor; nam* = men's, below / at the knee
+  const LENGTH = { got: 149, chan: 130, goi: 100, ngan: 80, nam: 114, namngan: 102, ao: 60, baba: 70, nb: 116 }; // baba = áo bà ba, just below the hip; nb = áo Nhật Bình, below the knee // ao = an everyday shirt to the hip // 'got' sweeps the floor; nam* = men's, below / at the knee
   // the side slit of a real ao dai opens at the waist, so the panels fall free from there
   // never above the waist (y≈39): the slit must start where the waist is narrowest, or the waist disappears
   const SLIT = { thap: 52, vua: 45, cao: 40 };
@@ -63,10 +64,15 @@ G.geo = (function () {
     namthan: [[19, 14.1], [24, 14.8], [40, 14.9], [54, 15.3], [70, 15.8], [200, 16.2]],  // men's ngũ thân: roomy and straight
     // áo bà ba: easy through the body but still drawn in at the waist, flaring a touch to the short slits
     baba: [[19, 13.9], [24, 14.7], [31, 13.7], [39, 12.6], [47, 13.5], [56, 14.4], [70, 14.8], [200, 15]],
-    babanam: [[19, 14.1], [24, 14.8], [40, 14.9], [56, 15.4], [70, 15.9], [200, 16.2]] // the men's bà ba hangs straight
+    babanam: [[19, 14.1], [24, 14.8], [40, 14.9], [56, 15.4], [70, 15.9], [200, 16.2]], // the men's bà ba hangs straight
+    // áo dài cưới ngũ thân: a roomier ngũ thân, still drawn in at the waist for the bride; the groom's falls straight
+    cuoi: [[19, 14.2], [24, 15], [31, 13.8], [39, 12], [47, 13.6], [56, 15.2], [70, 16], [200, 16.8]],
+    cuoinam: [[19, 14.4], [24, 15.1], [40, 15.3], [54, 15.8], [70, 16.4], [200, 16.8]],
+    // áo Nhật Bình: an easy court robe with a light waist, opening into a gentle A-line below the hip slits
+    nhatbinh: [[19, 14.2], [24, 15], [31, 14.2], [39, 13.4], [47, 14.2], [56, 15.4], [70, 16.2], [200, 17]]
   };
   // hem half-width the flaps open to (fitted cut sweeps wide; straight cuts fall almost straight)
-  const FULL = { om: 22, suong: 23, nguthan: 24.5, nam: 19, namom: 16.5 };
+  const FULL = { om: 22, suong: 23, nguthan: 24.5, nam: 19, namom: 16.5, cuoi: 26, nhatbinh: 21 };
   const MX = 1.12; // men: broader across (applied to x only)
   const STRETCH = 1.14; // fashion proportions: longer legs and flaps
   const U = V(13.6, 18); // underarm
@@ -76,8 +82,11 @@ G.geo = (function () {
   const NV = V(-Math.cos(ARM), Math.sin(ARM)); // across the arm (inward)
 
   // men keep a straight, loose ngũ thân; the women's version is waisted
-  const fitKey = (d) => (d.male && d.fit === 'nguthan' ? 'namthan' : d.male && d.fit === 'baba' ? 'babanam' : d.fit);
+  const fitKey = (d) => (d.male && d.fit === 'nguthan' ? 'namthan' : d.male && d.fit === 'baba' ? 'babanam' : d.male && d.fit === 'cuoi' ? 'cuoinam' : d.fit);
   const isBaba = (d) => d.garment === 'baba';
+  const isNB = (d) => d.garment === 'nhatbinh';
+  // the wedding áo dài is a ngũ thân: cut-in-one sleeves joined down the arm, a front seam, the little vạt con
+  const isNgu = (d) => d.fit === 'nguthan' || d.fit === 'cuoi';
   function widthAt(fit, y) {
     const k = FIT[fit] || FIT.om;
     if (y <= k[0][0]) return k[0][1];
@@ -94,7 +103,7 @@ G.geo = (function () {
   // eo/hong = cm added to the half-width at waist/hip, xoe = cm added to the hem sweep, xe = where the slit opens
   const SHAPE = { eo: [-1, 2.5], hong: [-1.5, 2.5], xoe: [-6, 8], xe: [40, 54] };
   function shapeOf(d) {
-    const s = isBaba(d) ? {} : d.shape || {}, o = {}; // the bà ba keeps its own short cut
+    const s = isBaba(d) || isNB(d) ? {} : d.shape || {}, o = {}; // the bà ba and the Nhật Bình keep their own cut
     for (const k in SHAPE) o[k] = typeof s[k] === 'number' ? G.clamp(s[k], SHAPE[k][0], SHAPE[k][1]) : k === 'xe' ? null : 0;
     return o;
   }
@@ -150,7 +159,7 @@ G.geo = (function () {
     keys.push(V(xs, slitY));
     const side = catmull(keys, 5);
     // from the waist the panels open into a long A-line: the longer the tà, the wider the hem
-    const full = (d.fit === 'nguthan' && d.male ? 21 : FULL[d.fit] || FULL.om) + shapeOf(d).xoe;
+    const full = (d.fit === 'nguthan' && d.male ? 21 : d.fit === 'cuoi' && d.male ? 22 : FULL[d.fit] || FULL.om) + shapeOf(d).xoe;
     // the panels first follow the hip (that curve is what shows the waist), then fall almost straight
     const HIP = 56, hipW = W(d, HIP);
     let hw = Math.max(hipW, xs) + (full - Math.max(hipW, xs)) * G.clamp((Lside - HIP) / 93, 0.25, 1);
@@ -187,7 +196,8 @@ G.geo = (function () {
     else cY = L + 1.5;
     // áo ngũ thân is slit low, from the hip
     const xe = shapeOf(d).xe;
-    const slitY = d.casual ? Math.min(LR, LL) - 1 : isBaba(d) ? Math.min(LR, LL) - 13 : Math.min(xe !== null ? xe : d.fit === 'nguthan' ? SLIT.thap : SLIT[d.slit] || 54, Math.min(LR, LL) - 14);
+    const slitY = d.casual ? Math.min(LR, LL) - 1 : isBaba(d) ? Math.min(LR, LL) - 13 : isNB(d) ? 60
+      : Math.min(xe !== null ? xe : isNgu(d) ? SLIT.thap : SLIT[d.slit] || 54, Math.min(LR, LL) - 14);
     const R = half(d, back, LR, cY, slitY, 'R');
     const Lh = half(d, back, LL, cY, slitY, 'L');
     const left = mirror(Lh.pts).reverse();
@@ -220,6 +230,14 @@ G.geo = (function () {
       return join(sh, catmull([S, add(add(S, DV, 3), NV, -4), add(add(S, DV, 9), NV, -4.6), P1], 5), line(P1, C1, 5), [C2], line(C2, P2, 4), catmull([P2, add(add(S, DV, 9), NV, 11), U], 4));
     };
     if (d.sleeve === 'dai' || d.sleeve === 'voan') pts = simple(57, 5.8);
+    else if (d.sleeve === 'rong') pts = simple(57, 8.6); // the wedding ngũ thân: long, roomy sleeves
+    else if (d.sleeve === 'thung') {
+      // tay thụng of the Nhật Bình: the sleeve widens from the elbow into a deep bell that hangs past the wrist
+      const E1 = add(S, DV, 16), E2 = add(E1, NV, 10.5);
+      const C1 = add(add(S, DV, 55), NV, -8.5), C2 = add(C1, NV, 27);
+      cuff = [C1, C2];
+      pts = join(sh, line(S, E1, 3), catmull([E1, add(add(S, DV, 36), NV, -4.5), C1], 5), catmull([C1, add(add(C1, NV, 13.5), DV, 1.2), C2], 4), catmull([C2, add(add(E2, DV, 16), NV, 4), E2], 4), line(E2, U, 4));
+    }
     else if (d.sleeve === 'lung') pts = simple(40, 6.8);
     else if (d.sleeve === 'ngan') pts = simple(21, 9.6);
     else if (d.sleeve === 'bong') pts = puff(58, 7.5);
@@ -307,7 +325,7 @@ G.geo = (function () {
     // display coordinates: fashion-illustration stretch below the bust (flat pattern pieces keep real sizes)
     const SY = (y) => (y <= 38 ? y : 38 + (y - 38) * STRETCH);
     const scA = (pts) => (pts ? pts.map((p) => V(p.x * sx, SY(p.y) * s)) : null);
-    const ngu = d.fit === 'nguthan', setIn = d.fit === 'namom';
+    const ngu = isNgu(d), setIn = d.fit === 'namom';
     // ngũ thân keeps its low "cổ trụ" standing collar
     const N0 = NECK[d.neck] || NECK.dung, N = ngu && N0.band > 3 ? Object.assign({}, N0, { band: 3 }) : N0;
     const F = body(d, false), B = body(d, true);
@@ -355,7 +373,16 @@ G.geo = (function () {
       seams.push({ name: 'Nẹp nút', pts: line(V(0.9, N.nd + 0.3), V(0.9, F.cY - 0.8), 20) });
       for (const [m, side] of [[1, 'phải'], [-1, 'trái']]) seams.push({ name: 'Túi ' + side, pts: pocket(m) }); // sewn on three sides, open at the top
     }
-    if (!d.casual) seams.push({ name: baba ? 'Lai áo' : d.hem === 'kep' ? 'Lai tà ngoài' : 'Lai tà', pts: F.hemLine });
+    // áo Nhật Bình: the great collar lies over the shoulders and down the chest on both sides of the opening,
+    // its two ends hanging in points below the bust; it is sewn on along its outer edge
+    const nb = isNB(d);
+    const nbEdge = () => [V(N.nx + 7.5, 1.2), V(9.6, 14), V(8.4, 30), V(7.6, 39), V(5, 42.5)];
+    const nbBand = (m) => {
+      const p = join([V(N.nx - 0.2, -0.2)], nbEdge(), [V(2.4, 39.5), V(2.4, 30), V(3.4, 14), V(N.nx - 0.6, 3)]);
+      return m < 0 ? mirror(p) : p;
+    };
+    if (nb) for (const [m, side] of [[1, 'phải'], [-1, 'trái']]) seams.push({ name: 'Cổ Nhật Bình ' + side, pts: m < 0 ? mirror(nbEdge()) : nbEdge() });
+    if (!d.casual) seams.push({ name: baba || nb ? 'Lai áo' : d.hem === 'kep' ? 'Lai tà ngoài' : 'Lai tà', pts: F.hemLine });
     seams.forEach((sm) => { sm.pts = scA(sm.pts); });
     // buttons along the right opening
     const cR = F.cfgR;
@@ -368,15 +395,20 @@ G.geo = (function () {
     if (N.band) buttons.unshift(V(N.nx - 1.6, -N.band * 0.5));
     // bà ba: five buttons straight down the front opening
     if (baba) buttons = [0, 1, 2, 3, 4].map((i) => V(0.9, N.nd + 2.2 + i * ((L0 - N.nd - 10) / 4)));
-    // flat pattern pieces (the bà ba's front is two halves that overlap at the button stand)
+    if (nb) buttons = []; // the Nhật Bình closes under its collar
+    // flat pattern pieces (the bà ba's and the Nhật Bình's fronts are two halves that overlap at the opening)
     const halfPanel = (pts) => join(pts, [V(-2.2, pts[pts.length - 1].y), V(-2.2, pts[0].y)]);
-    const defs = baba ? [
+    const defs = baba || nb ? [
       { id: 'frontR', slot: 'than', name: 'Vạt trước phải', poly: sc(halfPanel(F.halfR)) },
       { id: 'frontL', slot: 'than', name: 'Vạt trước trái', poly: sc(mirror(halfPanel(F.halfL))) },
-      { id: 'back', slot: 'than', name: 'Vạt sau', poly: sc(B.poly) },
+      { id: 'back', slot: 'than', name: 'Vạt sau', poly: sc(B.poly) }
+    ].concat(baba ? [
       { id: 'pocketR', slot: 'than', name: 'Túi phải', poly: sc([V(0, 0), V(9.6, 0), V(9.6, 14.5), V(0, 14.5)]) },
       { id: 'pocketL', slot: 'than', name: 'Túi trái', poly: sc([V(0, 0), V(9.6, 0), V(9.6, 14.5), V(0, 14.5)]) }
     ] : [
+      // the collar is cut as one long band, pointed at both ends
+      { id: 'nbcollar', slot: 'co', name: 'Cổ Nhật Bình', poly: sc([V(0, 2.5), V(3.6, 0), V(7.2, 2.5), V(7.2, 95), V(3.6, 97.5), V(0, 95)]) }
+    ]) : [
       { id: 'front', slot: 'than', name: 'Vạt trước', poly: sc(F.poly) },
       { id: 'back', slot: 'than', name: 'Vạt sau', poly: sc(B.poly) }
     ];
@@ -399,6 +431,8 @@ G.geo = (function () {
     }
     if (slR && slR.band) for (const side of ['phải', 'trái']) defs.push({ id: 'cuff' + side, slot: 'tay', name: 'Bo tay ' + side, poly: sc([V(0, 0), V(26, 0), V(26, 4.5), V(0, 4.5)]) });
     if (d.neck === 'lasen') defs.push({ id: 'lacoc', slot: 'than', name: 'Lá cổ', poly: sc(join(catmull([V(-11, 0), V(-6, 5), V(0, 6.5), V(6, 5), V(11, 0)], 5), catmull([V(11, 0), V(5, 2.6), V(0, 3.4), V(-5, 2.6), V(-11, 0)], 5))) });
+    // the wedding áo dài comes with a khăn đóng wound from a long band of the same cloth
+    if (d.garment === 'cuoi') defs.push({ id: 'khandong', slot: 'co', name: 'Khăn đóng', poly: sc([V(0, 0), V(9, 0), V(9, 72), V(0, 72)]) });
     if (d.neck === 'no') defs.push({ id: 'daino', slot: 'than', name: 'Dây nơ', poly: sc([V(0, 0), V(70, 0), V(72, 2.5), V(70, 5), V(0, 5), V(-2, 2.5)]) });
     // trousers or skirt panels, cut from the "quần" fabric
     if (d.bottom === 'chanvay' || d.bottom === 'tuyn') {
@@ -434,10 +468,11 @@ G.geo = (function () {
       sheerSleeves: !!(slR && slR.sheer),
       neckType: d.neck, nx: N.nx * sx, nd: N.nd * s, bare: N.bare || null, neckFront: scA(F.neckFull),
       buttons: scA(buttons), seams, slitY: SY(F.slitY) * s, flap: SY(F.hemY) * s, hemY: SY(F.hemY) * s, SY: (y) => SY(y / s) * s,
-      garment: baba ? 'baba' : 'aodai', pockets: baba ? [scA(pocket(1)), scA(pocket(-1))] : null,
-      frontR: baba ? scA(F.halfR) : null, frontL: baba ? mirror(scA(F.halfL)) : null, // the two front halves, for pinning
-      opening: baba ? scA(line(V(0, N.nd), V(0, F.cY), 12)) : null,
-      capeR, capeL, topY: ({ nonla: -50, quaithao: -44, khanxep: -38 }[d.head] || -36) * s, botY: Math.max(SY(154), SY(F.hemY) + 11) * s, floorY: SY(152) * s,
+      garment: d.garment || 'aodai', pockets: baba ? [scA(pocket(1)), scA(pocket(-1))] : null,
+      frontR: baba || nb ? scA(F.halfR) : null, frontL: baba || nb ? mirror(scA(F.halfL)) : null, // the two front halves, for pinning
+      opening: baba ? scA(line(V(0, N.nd), V(0, F.cY), 12)) : nb ? scA(line(V(0, 41), V(0, F.cY), 12)) : null,
+      nbCollar: nb ? [scA(nbBand(1)), scA(nbBand(-1))] : null,
+      capeR, capeL, topY: ({ nonla: -50, quaithao: -44, khanxep: -38, khandong: -40 }[d.head] || -36) * s, botY: Math.max(SY(154), SY(F.hemY) + 11) * s, floorY: SY(152) * s,
       bounds: bounds(all), defs
     };
     cache[key] = res;

@@ -401,7 +401,7 @@
     G.state.lastClient = cl.id;
     let extra = {};
     // most walk-ins come for something: an occasion told in their own words, with wishes to match
-    const occ = G.OCCASION_ORDER.filter((k) => G.OCCASIONS[k].sex !== 'f' || !cl.male);
+    const occ = G.OCCASION_ORDER.filter((k) => (G.OCCASIONS[k].sex !== 'f' || !cl.male) && (G.OCCASIONS[k].minRank || 1) <= G.rank());
     if (!opts.noOccasion && occ.length && rng() < 0.55) {
       const key = occ[Math.floor(rng() * occ.length)], oc = G.OCCASIONS[key];
       extra = { occasion: key, title: oc.title, line: G.rpick(rng, oc.lines), reqs: oc.reqs, garment: oc.garment, bonus: 0.05 };
@@ -462,7 +462,7 @@
   G.job = null;
   G.startJob = function () {
     const com = G.state.commission;
-    const garment = C.GARMENTS[com.garment] ? com.garment : 'aodai', gdef = C.GARMENTS[garment].def;
+    const garment = C.GARMENTS[com.garment] ? com.garment : 'aodai', GD = C.GARMENTS[garment], gdef = com.male && GD.defM ? GD.defM : GD.def;
     G.job = {
       com, measured: null, fit: 1, garment,
       part: gdef ? Object.assign({}, gdef) : com.male ? { co: 'dung', dang: 'nam', tay: 'dai', ta: 'nam_dai', quan: 'quan' } : { co: 'dung', dang: 'om', tay: 'dai', ta: 'dai_thang', quan: 'quan' },
@@ -485,6 +485,9 @@
     if (cl && cl.look) d.look = cl.look;
     d.trim = j.decor.trim || 'none'; d.buttons = j.decor.buttons || 'an'; d.head = j.decor.head || 'none';
     d.deco = j.decor.deco || 'none'; d.cape = j.decor.cape || 'none';
+    // a garment that comes with its own head wear (the wedding khăn đóng) always wears it
+    const GD = C.GARMENTS[d.garment];
+    if (GD && GD.head) d.head = GD.head;
     return d;
   };
   // freeze the design: build the garment and its pattern pieces (each tagged with its fabric)

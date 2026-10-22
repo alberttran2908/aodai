@@ -398,7 +398,8 @@ G.art = (function () {
       return { x, y };
     };
     // a men's áo dài hangs straight: no godet waves, the back panel stays close behind
-    const short = d.casual || d.garment === 'baba'; // an everyday shirt or a bà ba: a plain hem, no trailing back panel
+    // an everyday shirt, a bà ba or the Nhật Bình robe: a plain hem, no trailing back panel
+    const short = d.casual || d.garment === 'baba' || d.garment === 'nhatbinh';
     const mk = asm.male || short ? 0 : 1;
     const sw = swF(0, { flare: 0.07, drop: 1.2, wave: 1.3 * mk, wph: 0 });
     const swB0 = swF(1.6, { flare: 0.1, drop: 6, wave: 0.9 * mk, wph: Math.PI, lamK: 1.7 });
@@ -425,7 +426,8 @@ G.art = (function () {
     const outline = (w) => { c.strokeStyle = 'rgba(43,29,24,0.13)'; c.lineWidth = (w || 0.3) * s; c.stroke(); };
     const hq = !o.noSheen;
     // ngũ thân (cut-in-one) and the men's set-in cut have no raglan line between shoulder and body
-    const noRaglan = d.fit === 'nguthan' || d.fit === 'namom';
+    const ngu = d.fit === 'nguthan' || d.fit === 'cuoi'; // the wedding áo dài is a ngũ thân too
+    const noRaglan = ngu || d.fit === 'namom';
     const innerShade = (poly, k, below) => {
       c.save(); pathPoly(c, poly); c.clip();
       if (below !== undefined) { c.beginPath(); c.rect(-40 * s, below, 80 * s, 400 * s); c.clip(); }
@@ -582,7 +584,7 @@ G.art = (function () {
       rg.addColorStop(0, 'rgba(255,255,255,0.06)'); rg.addColorStop(0.7, 'rgba(255,255,255,0.01)'); rg.addColorStop(1, 'rgba(0,0,0,0.02)');
       c.fillStyle = rg; c.fillRect(-W, 10 * s, 2 * W, 30 * s);
     }
-    const fitted = d.fit !== 'nam' && !(d.male && d.fit === 'nguthan');
+    const fitted = d.fit !== 'nam' && !(d.male && ngu);
     if (fitted) {
       const wg = c.createLinearGradient(0, 30 * s, 0, 46 * s);
       wg.addColorStop(0, 'rgba(0,0,0,0)'); wg.addColorStop(0.5, 'rgba(0,0,0,0.08)'); wg.addColorStop(1, 'rgba(0,0,0,0)');
@@ -596,7 +598,7 @@ G.art = (function () {
       }
     }
     // ngũ thân: the centre-front seam where the two front panels meet
-    if (d.fit === 'nguthan') {
+    if (ngu) {
       c.save(); c.lineCap = 'round';
       const y0 = (asm.nd || 2.5 * s) + 0.5 * s;
       c.strokeStyle = 'rgba(0,0,0,0.18)'; c.lineWidth = 0.35 * s; c.beginPath(); c.moveTo(0, y0); c.lineTo(0, hy - 1 * s); c.stroke();
@@ -748,6 +750,27 @@ G.art = (function () {
       pathPoly(c, inset, false); c.setLineDash([0.55 * s, 0.45 * s]); c.strokeStyle = 'rgba(30,15,10,0.3)'; c.lineWidth = 0.12 * s; c.stroke();
       c.restore();
     }
+    // áo Nhật Bình: the great collar over the shoulders and down the chest, in the collar cloth, edged in gold,
+    // scattered with small embroidered dots, a little tassel hanging from each point
+    if (asm.nbCollar && o.pockets !== false) { // (left off, like the pockets, until it is pinned on)
+      const gold = trimHex || '#d8ad4a';
+      for (const poly of asm.nbCollar) {
+        c.save(); pathPoly(c, poly); fillFabric(c, fCo.mat, fCo.color, tile, fCo.print);
+        c.fillStyle = 'rgba(0,0,0,0.06)'; c.fill();
+        c.clip();
+        c.fillStyle = rgba(gold, 0.55);
+        const b = G.geo.bounds(poly);
+        for (let yy = b.y + 2 * s; yy < b.y + b.h; yy += 2.6 * s) for (let xx = b.x + ((yy / s) % 2) * 1.3 * s; xx < b.x + b.w; xx += 2.6 * s) { c.beginPath(); c.arc(xx, yy, 0.28 * s, 0, 7); c.fill(); }
+        c.restore();
+        pathPoly(c, poly); c.strokeStyle = gold; c.lineWidth = 0.55 * s; c.stroke();
+        c.strokeStyle = 'rgba(40,20,10,0.25)'; c.lineWidth = 0.12 * s; c.stroke();
+        // the tassel at the hanging point
+        const tip = poly.reduce((a, p) => (p.y > a.y ? p : a), poly[0]);
+        c.strokeStyle = gold; c.lineWidth = 0.18 * s;
+        for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(tip.x, tip.y); c.quadraticCurveTo(tip.x + k * 0.25 * s, tip.y + 2 * s, tip.x + k * 0.45 * s, tip.y + 4.2 * s); c.stroke(); }
+        c.beginPath(); c.arc(tip.x, tip.y + 0.4 * s, 0.6 * s, 0, 7); c.fillStyle = gold; c.fill();
+      }
+    }
     // buttons (the bà ba always shows its front buttons: cloth knots when no button is chosen)
     const bt = ST.buttons.opts[d.buttons] && ST.buttons.opts[d.buttons].hex ? ST.buttons.opts[d.buttons] : asm.opening ? { hex: mix(F.hex, '#000000', 0.25) } : null;
     if (o.buttons !== false && bt && bt.hex && !asm.bare) {
@@ -813,7 +836,9 @@ G.art = (function () {
     if (o.mannequin) {
       lookFront(c, s, d.look, asm);
       c.save(); headXf(c, s);
-      if (d.head === 'khanxep') khanxep(c, s, accentHex);
+      // the wedding khăn đóng is wound from the collar cloth: a round halo for the bride, a pleated ring for the groom
+      if (d.head === 'khandong') { const hx = fabric(fCo.mat, fCo.color, fCo.print).hex; if (asm.manBody) khanxep(c, s, hx); else khandong(c, s, hx); }
+      else if (d.head === 'khanxep') khanxep(c, s, accentHex);
       else if (d.head === 'khanvan') khanvan(c, s, accentHex);
       else if (d.head === 'nonla') nonla(c, s, accentHex);
       else if (d.head === 'quaithao') quaithao(c, s, accentHex);
@@ -1361,6 +1386,31 @@ G.art = (function () {
     const g = c.createRadialGradient(-2 * s, -22 * s, 1 * s, 0, -19.5 * s, 9 * s);
     g.addColorStop(0, '#fbf1e2'); g.addColorStop(1, '#dcc6a8');
     c.fillStyle = g; c.fill();
+  }
+
+  // khăn đóng of the bride ("khăn vành"): a thick roll of wound cloth ringing the head above the brow, its
+  // back half rising over the crown; diagonal turns of the wrap catch the light along the front
+  function khandong(c, s, hex) {
+    const cy = -26.4 * s, rx = 8.9 * s, ry = 3 * s, T = 3.3 * s;
+    const dark = mix(hex, '#000000', 0.4), mid = mix(hex, '#000000', 0.12), lite = mix(hex, '#ffffff', 0.32);
+    const arc = (dy, a0, a1) => { c.beginPath(); c.ellipse(0, cy + dy, rx, ry, 0, a0, a1); };
+    c.save(); c.lineCap = 'round';
+    // the back of the roll, over the crown
+    arc(0, Math.PI, 2 * Math.PI); c.strokeStyle = dark; c.lineWidth = T; c.stroke();
+    arc(-T * 0.2, Math.PI + 0.2, 2 * Math.PI - 0.2); c.strokeStyle = rgba(mid, 0.55); c.lineWidth = T * 0.4; c.stroke();
+    // the front of the roll, across the forehead: body, a lit top and a shaded underside
+    arc(0, 0, Math.PI); c.strokeStyle = mid; c.lineWidth = T; c.stroke();
+    arc(-T * 0.24, 0.12, Math.PI - 0.12); c.strokeStyle = rgba(lite, 0.75); c.lineWidth = T * 0.32; c.stroke();
+    arc(T * 0.3, 0.1, Math.PI - 0.1); c.strokeStyle = rgba(dark, 0.55); c.lineWidth = T * 0.24; c.stroke();
+    // the turns of the wrap
+    for (let i = 1; i < 20; i++) {
+      const th = (Math.PI * i) / 20, x = Math.cos(th) * rx, y = cy + Math.sin(th) * ry;
+      c.strokeStyle = 'rgba(0,0,0,0.26)'; c.lineWidth = 0.22 * s;
+      c.beginPath(); c.moveTo(x - 0.8 * s, y - T * 0.46); c.quadraticCurveTo(x + 0.2 * s, y, x + 0.8 * s, y + T * 0.46); c.stroke();
+      c.strokeStyle = 'rgba(255,255,255,0.16)'; c.lineWidth = 0.16 * s;
+      c.beginPath(); c.moveTo(x - 0.4 * s, y - T * 0.46); c.quadraticCurveTo(x + 0.6 * s, y, x + 1.2 * s, y + T * 0.46); c.stroke();
+    }
+    c.restore();
   }
 
   function khanvan(c, s, hex) {

@@ -117,8 +117,10 @@ G.scenes.decorate = {
     });
     const gy = 76 + Math.ceil(C.DECOR_ORDER.length / 4) * 36 + 12; // item grid below the group chips
     const male = !!j.com.male;
-    const grp = C.DECOR[this.group], keys = Object.keys(grp.items).filter((k) => C.decorFits(grp.items[k], male));
-    if (!keys.length) G.text(c, male ? 'Mục này dành cho áo dài nữ' : 'Chưa có mẫu', 1050, 220, { size: 15, align: 'center', color: U.T.soft });
+    // the wedding áo dài already has its khăn đóng, wound from the collar cloth
+    const ownHead = this.group === 'dau' && C.GARMENTS[j.garment] && C.GARMENTS[j.garment].head;
+    const grp = C.DECOR[this.group], keys = ownHead ? [] : Object.keys(grp.items).filter((k) => C.decorFits(grp.items[k], male));
+    if (!keys.length) G.text(c, ownHead ? 'Áo cưới đã có khăn đóng may từ vải cổ áo' : male ? 'Mục này dành cho áo dài nữ' : 'Chưa có mẫu', 1050, 220, { size: 15, align: 'center', color: U.T.soft });
     keys.forEach((id, i) => {
       const it = grp.items[id], cx = 856 + (i % 3) * 132, cy = gy + Math.floor(i / 3) * 112;
       const lock = (it.rank || 1) > rk;

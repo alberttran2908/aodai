@@ -22,7 +22,7 @@ G.scenes.sketch = {
     const map = { co: 'neck', tay: 'sleeve', dang: 'fit', quan: 'bottom' }[part];
     return G.DATA.style[map].opts[key].name;
   },
-  hasCollar(partSel) { return ['dung', 'thap'].includes((partSel || G.job.part).co); },
+  hasCollar(partSel) { return ['dung', 'thap', 'nhatbinh'].includes((partSel || G.job.part).co); },
   slots(partSel) { return Object.keys(G.CAT.SLOTS).filter((k) => k !== 'co' || this.hasCollar(partSel)); },
   // the commission's hard fabric rules, for badges on the fabric cards
   rules() {
@@ -89,7 +89,7 @@ G.scenes.sketch = {
   // ---------- shaping the cut by dragging handles on the dress (Kiểu dáng → Dáng) ----------
   SHAPE_NAME: { eo: 'Eo', hong: 'Hông', xe: 'Xẻ tà', xoe: 'Độ xoè tà' },
   // (the bà ba keeps its own short, easy cut: no handles)
-  shaping() { return this.tab === 'kieu' && this.part === 'dang' && this.pv && G.job.garment !== 'baba' && !(G.job.skin && G.skins.ready(G.job.skin.id)); },
+  shaping() { return this.tab === 'kieu' && this.part === 'dang' && this.pv && !['baba', 'nhatbinh'].includes(G.job.garment) && !(G.job.skin && G.skins.ready(G.job.skin.id)); },
   handlePts() {
     const v = this.pv, a = v.asm, h = G.geo.handles(v.asm.design), kx = a.s * (a.mx || 1) * v.z, ky = a.s * v.z;
     return ['eo', 'hong', 'xe', 'xoe'].map((k) => ({ k, x: v.ox + h[k].x * kx, y: v.oy + h[k].y * ky, lx: v.ox - h[k].x * kx, val: h.shape[k], kx, ky }));

@@ -70,4 +70,38 @@ G.OCCASIONS = {
     win: ['Đi cả ngày mà vẫn mát, khách khen “anh hướng dẫn mặc đẹp quá”!', 'Gọn gàng, mát mẻ, đúng chất miệt vườn. Công ty đặt thêm năm bộ nữa đó!'],
     lose: { mat: 'Vải này đi nắng cả ngày chắc ướt đẫm mồ hôi…', min: 'Hơi luộm thuộm, dẫn khách sợ mất mặt công ty…', q: 'Đi cả ngày mà sợ bung đường may…' } }
 };
+// weddings in the old style (áo dài cưới ngũ thân + khăn đóng, from rank 2) and the Huế court robe
+// (áo Nhật Bình, from rank 3)
+Object.assign(G.OCCASIONS, {
+  leCuoi: { title: 'Lễ cưới theo lễ xưa', sex: 'mf', garment: 'cuoi', minRank: 2, ribbon: ['#b23a48', 'Áo cưới'],
+    lines: ['Nhà tui làm đám cưới theo lễ xưa, lạy gia tiên đàng hoàng. May giùm bộ ngũ thân cưới đỏ thắm với khăn đóng nha.',
+      'Tháng sau cưới rồi! Hai bên nội ngoại muốn cô dâu chú rể mặc ngũ thân, đội khăn đóng như ông bà mình hồi xưa.'],
+    reqs: [['min', 'truyenthong', 'auto'], ['min', 'sangtrong', 'auto'], ['cols', ['do', 'ruou', 'vang', 'hongsen'], 60, 'đỏ hoặc vàng'], ['mat', 'gam']],
+    win: ['Lúc lạy gia tiên, bà nội rưng rưng: “Y như ngày bà về nhà chồng.”', 'Khăn đóng ngay ngắn, áo đỏ rực, ảnh cưới đẹp như tranh!'],
+    lose: { cols: 'Cưới mà màu này, các cụ trong họ nhìn không vui đâu…', mat: 'Áo cưới mà không phải gấm thì chưa đủ trịnh trọng…', min: 'Chưa ra chất lễ xưa, nhà trai chắc chê…', q: 'Đang lạy gia tiên mà đường may bung thì xui lắm…' } },
+  anHoi: { title: 'Lễ ăn hỏi', sex: 'mf', garment: 'cuoi', minRank: 2, ribbon: ['#b23a48', 'Áo cưới'],
+    lines: ['Tuần sau nhà trai qua hỏi cưới. Bộ ngũ thân lụa, khăn đóng cùng màu, đừng đen nha.',
+      'Lễ dạm ngõ xong rồi, giờ tới ăn hỏi. Cần bộ ngũ thân lụa thật tươm tất để bưng tráp.'],
+    reqs: [['min', 'truyenthong', 'auto'], ['mat', 'lua'], ['avoid', 'den']],
+    win: ['Họ nhà trai khen hoài, bưng tráp mà ai cũng xin chụp hình!', 'Đằm thắm, đúng lễ, mẹ hai bên đều vừa lòng.'],
+    lose: { mat: 'Ăn hỏi mà không phải lụa, mẹ nói nhìn không sang…', avoid: 'Đen thui đi ăn hỏi, các cụ kiêng lắm…', min: 'Đẹp mà chưa ra chất lễ nghi…', q: 'Bưng tráp mà nút áo bung thì quê chết…' } },
+  daiNoi: { title: 'Chụp ảnh ở Đại Nội', sex: 'f', garment: 'nhatbinh', minRank: 3, ribbon: ['#7a4a8a', 'Nhật Bình'],
+    lines: ['Em ra Huế chụp ảnh ở Đại Nội, muốn mặc áo Nhật Bình như các bà hoàng xưa, có thêu hoa văn nha chị.',
+      'Chuyến này chị đi Huế, nhất định phải có tấm hình áo Nhật Bình trước Ngọ Môn. Thêu thùa cho thật đẹp!'],
+    reqs: [['min', 'truyenthong', 'auto'], ['min', 'sangtrong', 'auto'], ['decor', 'theu']],
+    win: ['Đứng trước Ngọ Môn mà khách du lịch tưởng em là diễn viên!', 'Như bước ra từ tranh cung đình, ảnh này em treo phòng khách luôn.'],
+    lose: { decor: 'Không có thêu, nhìn trơn trơn chẳng giống áo cung đình…', min: 'Chưa đủ uy nghi cho Đại Nội chị ơi…', q: 'Đường may vầy chụp cận là lộ hết…' } },
+  festivalHue: { title: 'Diễu hành Festival Huế', sex: 'f', garment: 'nhatbinh', minRank: 3, ribbon: ['#7a4a8a', 'Nhật Bình'],
+    lines: ['Đoàn tụi em diễu hành Festival Huế, áo Nhật Bình màu vàng hoàng bào hay tím Huế, phải nổi trên đường phố.',
+      'Lễ hội áo dài ở Huế năm nay, em được chọn đi đầu đoàn. Áo Nhật Bình phải thật lộng lẫy!'],
+    reqs: [['min', 'sangtrong', 'auto'], ['cols', ['vang', 'timhue', 'tim', 'do', 'champagne'], 60, 'vàng, tím Huế hoặc đỏ']],
+    win: ['Cả đoàn ai cũng hỏi may ở đâu, em đi đầu mà nở mày nở mặt!', 'Nắng chiếu vô áo lấp lánh, người xem vỗ tay suốt dọc đường.'],
+    lose: { cols: 'Màu này đi diễu hành chìm nghỉm giữa đoàn…', min: 'Chưa đủ lộng lẫy cho lễ hội lớn vậy…', q: 'Đi cả buổi mà sợ bung chỉ quá…' } },
+  phimCo: { title: 'Đóng phim cổ trang', sex: 'f', garment: 'nhatbinh', minRank: 3, ribbon: ['#7a4a8a', 'Nhật Bình'],
+    lines: ['Em được vai phi tần trong phim cổ trang! Đạo diễn muốn áo Nhật Bình có tranh thêu lớn sau lưng… à trước ngực cũng được.',
+      'Đoàn phim cần một bộ Nhật Bình cho cảnh thiết triều, có tranh thêu lớn cho lên hình.'],
+    reqs: [['min', 'truyenthong', 'auto'], ['decor', 'tranh']],
+    win: ['Đạo diễn hô “cắt!” rồi khen áo đẹp nhất đoàn phim!', 'Lên hình sang như bà hoàng thật, cảnh này chắc hot lắm.'],
+    lose: { decor: 'Không có tranh thêu, lên hình trống trơn…', min: 'Chưa ra chất cung đình, đạo diễn chắc bắt quay lại…', q: 'Quay cận mà đường may lộ thì hỏng cảnh…' } }
+});
 G.OCCASION_ORDER = Object.keys(G.OCCASIONS);
