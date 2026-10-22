@@ -13,8 +13,8 @@ G.scenes.sketch = {
   update(dt) { this.t += dt; },
   // options that suit this client (men's or women's cut)
   options(part) {
-    const opts = G.CAT.PARTS[part].opts, male = !!G.job.com.male;
-    return Object.keys(opts).filter((k) => G.CAT.partFits(opts[k], male));
+    const opts = G.CAT.PARTS[part].opts, male = !!G.job.com.male, g = G.job.garment;
+    return Object.keys(opts).filter((k) => G.CAT.partFits(opts[k], male) && G.CAT.garmentAllows(part, k, opts[k], g));
   },
   optName(part, key) {
     const o = G.CAT.PARTS[part].opts[key];
@@ -88,7 +88,8 @@ G.scenes.sketch = {
   },
   // ---------- shaping the cut by dragging handles on the dress (Kiểu dáng → Dáng) ----------
   SHAPE_NAME: { eo: 'Eo', hong: 'Hông', xe: 'Xẻ tà', xoe: 'Độ xoè tà' },
-  shaping() { return this.tab === 'kieu' && this.part === 'dang' && this.pv && !(G.job.skin && G.skins.ready(G.job.skin.id)); },
+  // (the bà ba keeps its own short, easy cut: no handles)
+  shaping() { return this.tab === 'kieu' && this.part === 'dang' && this.pv && G.job.garment !== 'baba' && !(G.job.skin && G.skins.ready(G.job.skin.id)); },
   handlePts() {
     const v = this.pv, a = v.asm, h = G.geo.handles(v.asm.design), kx = a.s * (a.mx || 1) * v.z, ky = a.s * v.z;
     return ['eo', 'hong', 'xe', 'xoe'].map((k) => ({ k, x: v.ox + h[k].x * kx, y: v.oy + h[k].y * ky, lx: v.ox - h[k].x * kx, val: h.shape[k], kx, ky }));

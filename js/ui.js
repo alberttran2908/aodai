@@ -330,7 +330,7 @@ G.UI = (function () {
     card(c, x, y, w, h);
     // ribbon for special orders: personal story (pink), event (gold), chapter (red), daily (blue), copy (violet)
     if (com.title) {
-      const th = G.themeRibbon && G.themeRibbon(com.kind); // odd jobs: funeral, alluring, poor-folk costume
+      const th = G.comRibbon && G.comRibbon(com); // odd jobs (funeral, alluring, poor-folk costume), occasions, áo bà ba
       const col = th ? th[0] : { arc: '#d6698a', event: '#c9952e', story: '#b23a48', daily: '#4a86b8', copy: '#6b5bb8' }[com.kind] || T.accent;
       const lab = th ? th[1] : { arc: 'Tâm sự', event: 'Sự kiện', story: 'Truyện', daily: 'Đơn ngày', copy: 'May y chang' }[com.kind] || '';
       c.font = `800 ${G.fs(12)}px ${G.FONT}`;

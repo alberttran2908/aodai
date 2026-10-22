@@ -398,11 +398,13 @@ G.art = (function () {
       return { x, y };
     };
     // a men's áo dài hangs straight: no godet waves, the back panel stays close behind
-    const mk = asm.male || d.casual ? 0 : 1; // an everyday shirt has a plain hem too
+    const short = d.casual || d.garment === 'baba'; // an everyday shirt or a bà ba: a plain hem, no trailing back panel
+    const mk = asm.male || short ? 0 : 1;
     const sw = swF(0, { flare: 0.07, drop: 1.2, wave: 1.3 * mk, wph: 0 });
     const swB0 = swF(1.6, { flare: 0.1, drop: 6, wave: 0.9 * mk, wph: Math.PI, lamK: 1.7 });
     // the back panel peeks just past the front one and pools into a short train (kept slim: the silhouette must stay long and narrow)
     const swB = (p) => {
+      if (short) return sw(p);
       if (p.y <= sy) return swB0(p);
       const u = (p.y - sy) / (hy - sy);
       const spread = Math.sign(p.x) * (asm.male ? 1 : 2) * s * Math.pow(Math.min(1, u * 4), 0.6);
@@ -726,8 +728,28 @@ G.art = (function () {
       strokeLine(asm.cuffR); strokeLine(asm.cuffL);
       c.restore();
     }
-    // buttons
-    const bt = ST.buttons.opts[d.buttons];
+    // áo bà ba: the front opening (a shadowed edge with a stitched button stand) and two patch pockets
+    if (asm.opening) {
+      const op = asm.opening.map(sw);
+      c.save(); pathPoly(c, op, false);
+      c.strokeStyle = 'rgba(30,15,10,0.32)'; c.lineWidth = 0.35 * s; c.stroke();
+      c.translate(1.6 * s, 0); pathPoly(c, op, false); c.setLineDash([0.6 * s, 0.5 * s]); c.strokeStyle = 'rgba(30,15,10,0.22)'; c.lineWidth = 0.14 * s; c.stroke();
+      c.restore();
+    }
+    for (const pk of o.pockets === false ? [] : asm.pockets || []) {
+      const q = pk.map(sw);
+      c.save(); pathPoly(c, q); fillFabric(c, fab.mat, fab.color, tile, basePrint);
+      c.fillStyle = 'rgba(0,0,0,0.05)'; c.fill();
+      // the pocket's top is folded down: a lighter band; stitches on the three sewn sides
+      const top = Math.min(...q.map((p) => p.y)), xs = q.map((p) => p.x), x0 = Math.min(...xs), x1 = Math.max(...xs);
+      c.fillStyle = 'rgba(255,255,255,0.12)'; c.fillRect(x0, top, x1 - x0, 1.6 * s);
+      c.strokeStyle = 'rgba(30,15,10,0.28)'; c.lineWidth = 0.22 * s; c.stroke();
+      const inset = q.map((p) => ({ x: p.x + (p.x > (x0 + x1) / 2 ? -0.5 : 0.5) * s, y: p.y - (p.y > top + 1 ? 0.5 * s : -0.5 * s) }));
+      pathPoly(c, inset, false); c.setLineDash([0.55 * s, 0.45 * s]); c.strokeStyle = 'rgba(30,15,10,0.3)'; c.lineWidth = 0.12 * s; c.stroke();
+      c.restore();
+    }
+    // buttons (the bà ba always shows its front buttons: cloth knots when no button is chosen)
+    const bt = ST.buttons.opts[d.buttons] && ST.buttons.opts[d.buttons].hex ? ST.buttons.opts[d.buttons] : asm.opening ? { hex: mix(F.hex, '#000000', 0.25) } : null;
     if (o.buttons !== false && bt && bt.hex && !asm.bare) {
       for (const p of asm.buttons) {
         c.beginPath(); c.arc(p.x, p.y, 0.6 * s, 0, 7); c.fillStyle = bt.hex; c.fill();

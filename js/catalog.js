@@ -89,7 +89,8 @@ G.CAT = (function () {
       thuyen: { rank: 3, tags: { hiendai: 14, sangtrong: 4 } }, no: { rank: 3, tags: { hiendai: 10, thanhlich: 8 } },
       tim: { rank: 4, tags: { hiendai: 16, rucro: 4 } }, vuong: { rank: 4, tags: { hiendai: 12, sangtrong: 6 } },
       yem: { rank: 5, tags: { rucro: 12, hiendai: 10 } }, trevai: { rank: 6, tags: { hiendai: 18, rucro: 8 } },
-      lechvai: { rank: 7, tags: { hiendai: 22, rucro: 6 } }
+      lechvai: { rank: 7, tags: { hiendai: 22, rucro: 6 } },
+      baba: { rank: 1, sex: 'mf', garment: 'baba', name: 'Cổ tròn bà ba', tags: { truyenthong: 14, thanhlich: 6 } }
     } },
     tay: { name: 'Tay áo', key: 'sleeve', opts: {
       dai: { rank: 1, sex: 'mf', tags: { truyenthong: 14, thanhlich: 8 } }, lung: { rank: 1, sex: 'mf', tags: { thanhlich: 12, hiendai: 4 } },
@@ -102,7 +103,8 @@ G.CAT = (function () {
       om: { rank: 1, tags: { thanhlich: 10, truyenthong: 6 } }, suong: { rank: 1, tags: { hiendai: 8, thanhlich: 6 } },
       nguthan: { rank: 3, sex: 'mf', tags: { truyenthong: 22 } },
       nam: { rank: 1, sex: 'm', name: 'Dáng nam suông', tags: { truyenthong: 10, thanhlich: 8 } },
-      namom: { rank: 2, sex: 'm', name: 'Dáng nam cách tân', tags: { hiendai: 12, thanhlich: 6 } }
+      namom: { rank: 2, sex: 'm', name: 'Dáng nam cách tân', tags: { hiendai: 12, thanhlich: 6 } },
+      baba: { rank: 1, sex: 'mf', garment: 'baba', name: 'Dáng bà ba', tags: { truyenthong: 10, thanhlich: 6 } }
     } },
     ta: { name: 'Tà áo', key: 'ta', opts: {
       dai_thang: { rank: 1, set: { length: 'got', hem: 'thang' }, name: 'Tà dài chấm gót', tags: { truyenthong: 12, thanhlich: 8 } },
@@ -114,7 +116,8 @@ G.CAT = (function () {
       ngan_xeo: { rank: 5, set: { length: 'ngan', hem: 'xeo' }, name: 'Tà xéo ngang đùi', tags: { hiendai: 18, rucro: 4 } },
       nam_dai: { rank: 1, sex: 'm', set: { length: 'nam', hem: 'thang' }, name: 'Tà nam qua gối', tags: { truyenthong: 12, thanhlich: 6 } },
       nam_ngan: { rank: 2, sex: 'm', set: { length: 'namngan', hem: 'thang' }, name: 'Tà nam ngang gối', tags: { hiendai: 10, thanhlich: 6 } },
-      nam_bau: { rank: 3, sex: 'm', set: { length: 'nam', hem: 'bau' }, name: 'Tà nam vạt bầu', tags: { truyenthong: 10, sangtrong: 6 } }
+      nam_bau: { rank: 3, sex: 'm', set: { length: 'nam', hem: 'bau' }, name: 'Tà nam vạt bầu', tags: { truyenthong: 10, sangtrong: 6 } },
+      baba: { rank: 1, sex: 'mf', garment: 'baba', set: { length: 'baba', hem: 'thang', garment: 'baba' }, name: 'Ngang hông, xẻ tà ngắn', tags: { truyenthong: 12, hiendai: 4 } }
     } },
     quan: { name: 'Quần / váy', key: 'bottom', opts: {
       quan: { rank: 1, sex: 'mf', tags: { truyenthong: 8 } }, ongrong: { rank: 2, sex: 'mf', tags: { hiendai: 10 } },
@@ -122,6 +125,18 @@ G.CAT = (function () {
     } }
   };
   const PART_ORDER = ['co', 'dang', 'tay', 'ta', 'quan'];
+  // what can be sewn: each garment has its own options (marked garment: '…') plus a few shared ones;
+  // the áo dài uses every option that belongs to no other garment
+  const GARMENTS = {
+    aodai: { name: 'Áo dài' },
+    baba: { name: 'Áo bà ba', short: 'Bà ba',
+      allow: { co: ['baba', 'tron', 'tim', 'vuong'], dang: ['baba'], tay: ['dai', 'lung', 'ngan'], ta: ['baba'], quan: ['ongrong', 'quan', 'chanvay'] },
+      def: { co: 'baba', dang: 'baba', tay: 'dai', ta: 'baba', quan: 'ongrong' } }
+  };
+  const garmentAllows = (part, key, o, garment) => {
+    const g = GARMENTS[garment] ? garment : 'aodai';
+    return g === 'aodai' ? !o.garment : (GARMENTS[g].allow[part] || []).includes(key);
+  };
   // fabric slots and how much each counts toward fabric share
   const SLOTS = { than: { name: 'Thân & tà', w: 0.6 }, tay: { name: 'Tay áo', w: 0.2 }, co: { name: 'Cổ áo', w: 0.05 }, quan: { name: 'Quần / váy', w: 0.15 } };
 
@@ -226,5 +241,5 @@ G.CAT = (function () {
   const partFits = (o, male) => wear(o.sex || 'f', male);
   const decorFits = (it, male) => wear(it.sex || 'mf', male);
 
-  return { TAGS, TAG_KEYS, MATS, COLOR_TAGS, PRINTS, FABRICS, PARTS, PART_ORDER, SLOTS, DECOR, DECOR_ORDER, CLIENTS, AVOID_COLORS, sumTags, partFits, decorFits };
+  return { TAGS, TAG_KEYS, MATS, COLOR_TAGS, PRINTS, FABRICS, PARTS, PART_ORDER, GARMENTS, garmentAllows, SLOTS, DECOR, DECOR_ORDER, CLIENTS, AVOID_COLORS, sumTags, partFits, decorFits };
 })();

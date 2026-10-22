@@ -35,7 +35,8 @@ G.scenes.sew = {
     this.thread = G.art.isLight(G.jobFabs().than.color) ? '#8c2a37' : '#f6e7c4';
     this.bake();
     // first the cut pieces are pinned onto the dress form, one by one (back, front, sleeves, collar)
-    const ORDER = ['back', 'front', 'sleeveR', 'sleeveL', 'collar'];
+    // (an áo bà ba pins its two front halves and then its patch pockets)
+    const ORDER = ['back', 'front', 'frontR', 'frontL', 'sleeveR', 'sleeveL', 'collar', 'pocketR', 'pocketL'];
     j.pinned = j.pinned || {};
     this.pinList = j.pieces.filter((p) => ORDER.includes(p.id)).sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
     if (this.pinList.some((p) => !j.pinned[p.id])) this.mode = 'pin';
@@ -51,6 +52,14 @@ G.scenes.sew = {
     c.scale(R, R); c.translate(-x0, -y0);
     G.art.garment(c, a, G.jobFabs(), { trousers: false, buttons: false, still: true, noSheen: true });
     this.baked = { cv, x0, y0, R };
+    // patch pockets are pinned on their own: the panels underneath are shown without them
+    this.bakedBare = this.baked;
+    if (a.pockets) {
+      const cb = document.createElement('canvas'); cb.width = cv.width; cb.height = cv.height;
+      const c2 = cb.getContext('2d'); c2.scale(R, R); c2.translate(-x0, -y0);
+      G.art.garment(c2, a, G.jobFabs(), { trousers: false, buttons: false, still: true, noSheen: true, pockets: false });
+      this.bakedBare = { cv: cb, x0, y0, R };
+    }
   },
   toScreen(p) { return { x: (p.x - this.ocx) * this.oz + this.ovx, y: (p.y - this.ocy) * this.oz + this.ovy }; },
   // where the form view should look for the selected seam: the upper body, or the seam itself when it runs lower
@@ -231,8 +240,11 @@ G.scenes.sew = {
   },
   pinPolys(id) {
     const a = this.asm;
-    return ({ back: [a.body], front: [a.body], sleeveR: [a.sleeveR], sleeveL: [a.sleeveL], collar: [a.collar] }[id] || []).filter(Boolean);
+    const pk = a.pockets || [];
+    return ({ back: [a.body], front: [a.body], frontR: [a.frontR], frontL: [a.frontL], sleeveR: [a.sleeveR], sleeveL: [a.sleeveL], collar: [a.collar], pocketR: [pk[0]], pocketL: [pk[1]] }[id] || []).filter(Boolean);
   },
+  // the front is on the form (in one piece, or both bà ba halves): the back no longer shows through
+  frontDone() { const p = this.j.pinned; return !!(p.front || (p.frontR && p.frontL)); },
   // the dress form with whatever has been pinned so far; pieces still to pin wait on the right
   drawPin(c) {
     const U = G.UI, a = this.asm, j = this.j, s = a.s, B = this.baked;
@@ -245,12 +257,13 @@ G.scenes.sew = {
       const pop = this.pinPop[id] !== undefined ? this.pinPop[id] : 1, k = 1 + 0.06 * (1 - G.easeOut(pop * 3));
       c.save(); c.scale(k, k); c.beginPath();
       for (const poly of polys) { poly.forEach((q, n) => (n ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y))); c.closePath(); }
-      c.clip(); c.drawImage(B.cv, B.x0, B.y0, B.cv.width / B.R, B.cv.height / B.R);
+      const src = /^pocket/.test(id) ? B : this.bakedBare || B;
+      c.clip(); c.drawImage(src.cv, src.x0, src.y0, src.cv.width / src.R, src.cv.height / src.R);
       if (dark) { c.fillStyle = 'rgba(0,0,0,0.22)'; c.fillRect(-60 * s, -20 * s, 120 * s, 120 * s); }
       c.restore();
     };
-    if (j.pinned.back && !j.pinned.front) piece('back', true);
-    for (const id of ['front', 'sleeveR', 'sleeveL', 'collar']) if (j.pinned[id]) piece(id);
+    if (j.pinned.back && !this.frontDone()) piece('back', true);
+    for (const id of ['front', 'frontR', 'frontL', 'sleeveR', 'sleeveL', 'collar', 'pocketR', 'pocketL']) if (j.pinned[id]) piece(id);
     // where the piece in hand will go
     if (this.pinDrag) {
       c.setLineDash([2.5 / this.oz * 3, 2 / this.oz * 3]); c.lineWidth = 3 / this.oz; c.strokeStyle = `rgba(178,50,63,${0.6 + Math.sin(this.t * 8) * 0.3})`;
@@ -261,7 +274,7 @@ G.scenes.sew = {
     // pins along the edges of every pinned piece
     const cols = ['#c2414b', '#3f7fbf', '#e0b23c'];
     for (const p of this.pinList) {
-      if (!j.pinned[p.id] || (p.id === 'back' && j.pinned.front)) continue;
+      if (!j.pinned[p.id] || (p.id === 'back' && this.frontDone())) continue;
       for (const poly of this.pinPolys(p.id)) for (let k = 0; k < 6; k++) {
         const q = this.toScreen(poly[Math.floor((poly.length - 1) * (k + 0.5) / 6)]);
         this.pin(c, q.x - 4, q.y - 4, cols[k % 3]);
@@ -406,7 +419,7 @@ G.scenes.sew = {
     const x = 910;
     U.card(c, x, 66, 350, 570);
     U.title(c, 'Đường may', x + 24, 102);
-    G.wrap(c, 'Các mảnh đã ghim lên ma-nơ-canh. Chọn một đường may rồi đưa vải qua máy.', x + 24, 130, 300, 21, { size: 14, color: U.T.soft });
+    G.wrap(c, 'Chọn một đường may rồi đưa vải qua máy.', x + 24, 130, 300, 21, { size: 14, color: U.T.soft, maxLines: 2 });
     // rows tighten when a design has many seams, so the list always ends above the buttons
     const rowH = Math.min(40, 226 / asm.seams.length);
     let y = 186 + rowH / 2;

@@ -56,6 +56,9 @@ G.scenes.finish = {
     if (cl && cl.id === 'hotxoan' && r.success) this.say = 'Đẹp như hột xoàn! Thôi khỏi giảm giá, chị bo thêm cho em nè.';
     // odd jobs answer in their own voice (and a mourner gets no confetti)
     if (th) this.say = r.success ? G.pick(th.win) : (miss && th.lose[miss.r.type]) || this.say;
+    // an occasion is answered about that occasion: the beach wedding, meeting the in-laws, the night of the contest…
+    const oc = j.com.occasion && G.OCCASIONS && G.OCCASIONS[j.com.occasion];
+    if (oc && !th) this.say = r.success ? G.pick(oc.win) : !r.qualOk ? oc.lose.q || this.say : (miss && oc.lose[miss.r.type]) || this.say;
     G.sfx.good();
   },
   update(dt) {

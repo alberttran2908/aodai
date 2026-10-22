@@ -147,7 +147,10 @@
 
   // best value a player of this rank could reach for one style tag (keeps commissions solvable)
   // part options / decorations this rank has unlocked that suit the client (men's or women's)
-  G.partOpts = (p, rank, male) => Object.values(C.PARTS[p].opts).filter((o) => o.rank <= rank && C.partFits(o, male));
+  // the options of one part a client of this rank/sex can be given, for the garment being priced (G._garment,
+  // set while an order is made, so a bà ba brief only asks for what a bà ba can reach)
+  G.partOpts = (p, rank, male, garment) => Object.entries(C.PARTS[p].opts)
+    .filter(([k, o]) => o.rank <= rank && C.partFits(o, male) && C.garmentAllows(p, k, o, garment || G._garment)).map(([, o]) => o);
   G.maxTag = function (tag, rank, noDecor, male) {
     let v = 0;
     for (const p of C.PART_ORDER) v += Math.max(0, ...G.partOpts(p, rank, male).map((o) => o.tags[tag] || 0));
@@ -209,7 +212,7 @@
     let v = 0;
     for (const k in GC) v += GC[k][d[k]] || 0;
     const xe = typeof sh.xe === 'number' ? sh.xe : d.fit === 'nguthan' ? 52 : 45; // the slit opens nearer the waist = higher
-    v += G.clamp((52 - xe) * 1.2, 0, 14);
+    if (d.garment !== 'baba') v += G.clamp((52 - xe) * 1.2, 0, 14); // the bà ba's little slits show nothing
     if (typeof sh.eo === 'number' && sh.eo < 0) v += -sh.eo * 3;
     if (fabs) { const m = G.fabricShare(fabs).mats; v += ((m.voan || 0) + (m.ren || 0)) * 20; } // sheer cloth
     return Math.round(G.clamp(v, 0, 100));
@@ -263,6 +266,9 @@
     }
   };
   G.themeRibbon = (kind) => (G.THEMES[kind] ? G.THEMES[kind].ribbon : null);
+  // the coloured label on an order's card: odd job, occasion, or a plain áo bà ba
+  G.comRibbon = (com) => G.themeRibbon(com.kind) || (com.occasion && G.OCCASIONS && G.OCCASIONS[com.occasion] ? G.OCCASIONS[com.occasion].ribbon : null)
+    || (com.garment === 'baba' && com.kind === 'normal' ? ['#6f5a3a', 'Áo bà ba'] : null);
 
   // ---------- commissions ----------
   // random style requirements from what a client likes, always solvable at this rank
@@ -327,8 +333,10 @@
   // spec: { client, kind, title, line, reqs, budget, budgetMul, bonus, quality, rank, rng, flags, refId }
   G.makeCommission = function (spec) {
     const s = G.state, cl = G.client(spec.client), rng = spec.rng || Math.random, rank = spec.rank || G.rank();
-    const kind = spec.kind || 'normal', flags = spec.flags || {};
-    const reqs = spec.reqs ? resolveReqs(spec.reqs, cl, rank, rng) : autoReqs(cl, rank, rng);
+    const kind = spec.kind || 'normal', flags = spec.flags || {}, garment = C.GARMENTS[spec.garment] ? spec.garment : 'aodai';
+    const was = G._garment; G._garment = garment;
+    let reqs;
+    try { reqs = spec.reqs ? resolveReqs(spec.reqs, cl, rank, rng) : autoReqs(cl, rank, rng); } finally { G._garment = was; }
     const b = G.bond ? G.bond.get(cl.id) : { lvl: 0 };
     let bonus = 0;
     if (kind !== 'daily') {
@@ -345,7 +353,8 @@
     const quality = spec.quality !== undefined ? spec.quality : Math.min(80, 45 + rank * 3) - ((b.lvl || 0) >= 3 ? 5 : 0) + (flags.rival ? 5 : 0);
     const budget = Math.round((base * (1 + bonus)) / 10) * 10;
     return {
-      client: cl.id, male: !!cl.male, broad: !!cl.broad, kind, title: spec.title || null, refId: spec.refId || null, flags,
+      client: cl.id, male: !!cl.male, broad: !!cl.broad, kind, title: spec.title || null, refId: spec.refId || null, flags, garment,
+      occasion: G.OCCASIONS && G.OCCASIONS[spec.occasion] ? spec.occasion : null,
       line: spec.line || G.rpick(rng, cl.lines),
       budget, baseBudget: budget, quote: 1, bonusPct: Math.round(bonus * 100),
       quality, qualityBase: quality, reqs,
@@ -368,6 +377,13 @@
     for (let i = 0; i < from.length; i++) { x -= w[i]; if (x <= 0) return from[i]; }
     return from[from.length - 1];
   };
+  G.BABA_LINES = {
+    f: ['Cô đi chợ nổi Cái Răng, may cho cô bộ bà ba mặc cho mát nghen.', 'Em về quê ăn đám giỗ ngoại, cần bộ bà ba cho tươm tất.',
+      'Em đóng vở cải lương, vai cô gái miệt vườn, bộ bà ba phải thiệt duyên.', 'Chụp ảnh ở vườn trái cây Cái Bè, chị muốn bộ bà ba thật xinh.',
+      'Cô dạy múa cho mấy đứa nhỏ, cần bộ bà ba gọn gàng mà vẫn đẹp.'],
+    m: ['Anh đi đờn ca tài tử, may cho anh bộ bà ba nghen em.', 'Tui về quê dự đám cưới thằng cháu, cần bộ bà ba cho đàng hoàng.',
+      'Chú làm hướng dẫn viên du lịch sông nước, cần bộ bà ba mặc dẫn khách.']
+  };
   G.newCommission = function (opts) {
     opts = opts || {};
     const rng = opts.rng || Math.random;
@@ -383,7 +399,17 @@
     }
     const cl = G.pickClient(opts);
     G.state.lastClient = cl.id;
-    G.state.commission = G.makeCommission(Object.assign({ client: cl.id }, opts));
+    let extra = {};
+    // most walk-ins come for something: an occasion told in their own words, with wishes to match
+    const occ = G.OCCASION_ORDER.filter((k) => G.OCCASIONS[k].sex !== 'f' || !cl.male);
+    if (!opts.noOccasion && occ.length && rng() < 0.55) {
+      const key = occ[Math.floor(rng() * occ.length)], oc = G.OCCASIONS[key];
+      extra = { occasion: key, title: oc.title, line: G.rpick(rng, oc.lines), reqs: oc.reqs, garment: oc.garment, bonus: 0.05 };
+    } else if (!opts.noBaba && rng() < (cl.likes.includes('truyenthong') ? 0.2 : 0.1)) {
+      // now and then a client simply wants an áo bà ba (more often those who love the traditional look)
+      extra = { garment: 'baba', title: 'Áo bà ba', line: G.rpick(rng, cl.male ? G.BABA_LINES.m : G.BABA_LINES.f) };
+    }
+    G.state.commission = G.makeCommission(Object.assign({ client: cl.id }, opts, extra));
     G.save();
     return G.state.commission;
   };
@@ -436,9 +462,10 @@
   G.job = null;
   G.startJob = function () {
     const com = G.state.commission;
+    const garment = C.GARMENTS[com.garment] ? com.garment : 'aodai', gdef = C.GARMENTS[garment].def;
     G.job = {
-      com, measured: null, fit: 1,
-      part: com.male ? { co: 'dung', dang: 'nam', tay: 'dai', ta: 'nam_dai', quan: 'quan' } : { co: 'dung', dang: 'om', tay: 'dai', ta: 'dai_thang', quan: 'quan' },
+      com, measured: null, fit: 1, garment,
+      part: gdef ? Object.assign({}, gdef) : com.male ? { co: 'dung', dang: 'nam', tay: 'dai', ta: 'nam_dai', quan: 'quan' } : { co: 'dung', dang: 'om', tay: 'dai', ta: 'dai_thang', quan: 'quan' },
       fabs: { than: null, tay: null, co: null, quan: null },
       decor: { items: [] },
       cutScore: [], sew: []

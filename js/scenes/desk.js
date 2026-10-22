@@ -548,8 +548,8 @@ G.scenes.desk = {
       const r0 = com.reqs[0];
       U.fitText(c, r0 ? G.reqText(r0) + (com.reqs.length > 1 ? ` +${com.reqs.length - 1}` : '') : 'Tuỳ em may', x + 90, yy + 80, w - 100, { size: 12 });
       G.text(c, st.appt ? '📌 Hẹn trước' : `${st.phone ? '📱 Zalo · ' : '⌛ '}chờ thêm ${st.patience} ngày`, x + 90, yy + 98, { size: 12, weight: 700, color: urgent ? U.T.bad : U.T.soft });
-      const tk = st.vip ? 'vip' : com.kind;
-      if (com.title) { G.rr(c, x + w - 84, yy - 10, 78, 20, 10); c.fillStyle = { arc: '#d6698a', event: '#c9952e', story: '#b23a48', copy: '#6b5bb8', vip: '#b8862a' }[tk] || U.T.accent; c.fill(); U.fitText(c, { arc: 'Tâm sự', event: 'Sự kiện', story: 'Truyện', copy: 'Y chang', vip: 'Khách sang' }[tk] || '', x + w - 45, yy, 70, { size: 10, weight: 800, align: 'center', color: '#fff' }); }
+      const tk = st.vip ? 'vip' : com.kind, rb = !st.vip && G.comRibbon(com);
+      if (com.title) { G.rr(c, x + w - 84, yy - 10, 78, 20, 10); c.fillStyle = rb ? rb[0] : { arc: '#d6698a', event: '#c9952e', story: '#b23a48', copy: '#6b5bb8', vip: '#b8862a' }[tk] || U.T.accent; c.fill(); U.fitText(c, rb ? rb[1] : { arc: 'Tâm sự', event: 'Sự kiện', story: 'Truyện', copy: 'Y chang', vip: 'Khách sang' }[tk] || '', x + w - 45, yy, 70, { size: 10, weight: 800, align: 'center', color: '#fff' }); }
     });
     if (!seats.length) G.text(c, 'Hôm nay không còn ai chờ. Đóng cửa để sang ngày mới.', 640, 590, { size: 17, weight: 700, align: 'center', color: '#fbe9cf' });
     U.primary(c, 'close', 'Đóng cửa sớm', () => this.closeDay());

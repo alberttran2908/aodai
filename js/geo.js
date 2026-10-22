@@ -46,9 +46,10 @@ G.geo = (function () {
     no:     { nx: 6.5, nd: 3.5, band: 0, collar: 'no' },
     yem:    { nx: 4.5, nd: 10, band: 0, bare: 'yem' },
     trevai: { nx: 15.2, nd: 10.5, band: 0, bare: 'trevai' },
-    lechvai:{ nx: 6.5, nd: 2.5, band: 0, bare: 'lechvai' }
+    lechvai:{ nx: 6.5, nd: 2.5, band: 0, bare: 'lechvai' },
+    baba:   { nx: 7, nd: 5.5, band: 0 } // áo bà ba: a soft round neck, collarless, opening down the front
   };
-  const LENGTH = { got: 149, chan: 130, goi: 100, ngan: 80, nam: 114, namngan: 102, ao: 60 }; // ao = an everyday shirt to the hip // 'got' sweeps the floor; nam* = men's, below / at the knee
+  const LENGTH = { got: 149, chan: 130, goi: 100, ngan: 80, nam: 114, namngan: 102, ao: 60, baba: 70 }; // baba = áo bà ba, just below the hip // ao = an everyday shirt to the hip // 'got' sweeps the floor; nam* = men's, below / at the knee
   // the side slit of a real ao dai opens at the waist, so the panels fall free from there
   // never above the waist (y≈39): the slit must start where the waist is narrowest, or the waist disappears
   const SLIT = { thap: 52, vua: 45, cao: 40 };
@@ -59,7 +60,10 @@ G.geo = (function () {
     nguthan: [[19, 13.9], [24, 14.8], [31, 13.1], [39, 11], [47, 13], [56, 14.8], [70, 15.5], [200, 16.2]],
     nam: [[19, 13.9], [24, 14.5], [40, 14.5], [54, 14.8], [70, 15.2], [200, 15.6]], // men's: straight, no waist
     namom: [[19, 13.9], [24, 14.3], [31, 13.4], [40, 12.5], [50, 13.5], [56, 14.1], [70, 14.5], [200, 14.9]],  // men's modern: lightly fitted
-    namthan: [[19, 14.1], [24, 14.8], [40, 14.9], [54, 15.3], [70, 15.8], [200, 16.2]]  // men's ngũ thân: roomy and straight
+    namthan: [[19, 14.1], [24, 14.8], [40, 14.9], [54, 15.3], [70, 15.8], [200, 16.2]],  // men's ngũ thân: roomy and straight
+    // áo bà ba: easy through the body but still drawn in at the waist, flaring a touch to the short slits
+    baba: [[19, 13.9], [24, 14.7], [31, 13.7], [39, 12.6], [47, 13.5], [56, 14.4], [70, 14.8], [200, 15]],
+    babanam: [[19, 14.1], [24, 14.8], [40, 14.9], [56, 15.4], [70, 15.9], [200, 16.2]] // the men's bà ba hangs straight
   };
   // hem half-width the flaps open to (fitted cut sweeps wide; straight cuts fall almost straight)
   const FULL = { om: 22, suong: 23, nguthan: 24.5, nam: 19, namom: 16.5 };
@@ -72,7 +76,8 @@ G.geo = (function () {
   const NV = V(-Math.cos(ARM), Math.sin(ARM)); // across the arm (inward)
 
   // men keep a straight, loose ngũ thân; the women's version is waisted
-  const fitKey = (d) => (d.male && d.fit === 'nguthan' ? 'namthan' : d.fit);
+  const fitKey = (d) => (d.male && d.fit === 'nguthan' ? 'namthan' : d.male && d.fit === 'baba' ? 'babanam' : d.fit);
+  const isBaba = (d) => d.garment === 'baba';
   function widthAt(fit, y) {
     const k = FIT[fit] || FIT.om;
     if (y <= k[0][0]) return k[0][1];
@@ -89,7 +94,7 @@ G.geo = (function () {
   // eo/hong = cm added to the half-width at waist/hip, xoe = cm added to the hem sweep, xe = where the slit opens
   const SHAPE = { eo: [-1, 2.5], hong: [-1.5, 2.5], xoe: [-6, 8], xe: [40, 54] };
   function shapeOf(d) {
-    const s = d.shape || {}, o = {};
+    const s = isBaba(d) ? {} : d.shape || {}, o = {}; // the bà ba keeps its own short cut
     for (const k in SHAPE) o[k] = typeof s[k] === 'number' ? G.clamp(s[k], SHAPE[k][0], SHAPE[k][1]) : k === 'xe' ? null : 0;
     return o;
   }
@@ -151,6 +156,7 @@ G.geo = (function () {
     let hw = Math.max(hipW, xs) + (full - Math.max(hipW, xs)) * G.clamp((Lside - HIP) / 93, 0.25, 1);
     if (d.hem === 'xoe') hw += 13;
     if (d.casual) hw = xs + 0.4; // an everyday shirt: no slit, the side seam runs straight to the hem
+    if (isBaba(d)) hw = xs + 0.6; // áo bà ba: short side slits that open just a little
     const flap = slitY < HIP - 4 && Lside > HIP + 20
       ? catmull([V(xs, slitY), V(hipW, HIP), V(hipW + (hw - hipW) * 0.42, HIP + (Lside - HIP) * 0.5), V(hw, Lside)], 7)
       : catmull([V(xs, slitY), V(xs + (hw - xs) * 0.2, slitY + (Lside - slitY) * 0.14), V(xs + (hw - xs) * 0.55, slitY + (Lside - slitY) * 0.52), V(hw, Lside)], 6);
@@ -181,7 +187,7 @@ G.geo = (function () {
     else cY = L + 1.5;
     // áo ngũ thân is slit low, from the hip
     const xe = shapeOf(d).xe;
-    const slitY = d.casual ? Math.min(LR, LL) - 1 : Math.min(xe !== null ? xe : d.fit === 'nguthan' ? SLIT.thap : SLIT[d.slit] || 54, Math.min(LR, LL) - 14);
+    const slitY = d.casual ? Math.min(LR, LL) - 1 : isBaba(d) ? Math.min(LR, LL) - 13 : Math.min(xe !== null ? xe : d.fit === 'nguthan' ? SLIT.thap : SLIT[d.slit] || 54, Math.min(LR, LL) - 14);
     const R = half(d, back, LR, cY, slitY, 'R');
     const Lh = half(d, back, LL, cY, slitY, 'L');
     const left = mirror(Lh.pts).reverse();
@@ -189,7 +195,7 @@ G.geo = (function () {
     return {
       poly, slitY: R.slitY, hemY: Math.max(LR, LL, cY), Lside: Math.min(LR, LL), cY,
       hemLine: join(R.hem, mirror(Lh.hem).reverse()),
-      slitR: R.flap, slitL: mirror(Lh.flap), A: R.A,
+      slitR: R.flap, slitL: mirror(Lh.flap), A: R.A, halfR: R.pts, halfL: Lh.pts,
       cfgR: R.cfg, cfgL: Lh.cfg,
       neckFull: join(mirror(Lh.cfg.neck).reverse(), R.cfg.neck)
     };
@@ -342,7 +348,14 @@ G.geo = (function () {
       if (sl && sl.band) seams.push({ name: 'Bo tay ' + side, pts: m ? mirror(line(sl.band[0], sl.band[1], 6)) : line(sl.band[0], sl.band[1], 6) }); // puff sleeve cuff
     }
     // the hem is turned up and stitched all along its shape: straight, a deep U, a V point, knife pleats, a slant…
-    if (!d.casual) seams.push({ name: d.hem === 'kep' ? 'Lai tà ngoài' : 'Lai tà', pts: F.hemLine });
+    // áo bà ba: the front opens down the middle (a button stand), with a patch pocket low on each side
+    const baba = isBaba(d), L0 = F.Lside;
+    const pocket = (m) => { const x0 = 3.6, x1 = 11.2, y0 = L0 - 22, y1 = L0 - 9; return [V(x0 * m, y0), V(x0 * m, y1 - 1), V((x0 + 1) * m, y1), V((x1 - 1) * m, y1), V(x1 * m, y1 - 1), V(x1 * m, y0)]; };
+    if (baba) {
+      seams.push({ name: 'Nẹp nút', pts: line(V(0.9, N.nd + 0.3), V(0.9, F.cY - 0.8), 20) });
+      for (const [m, side] of [[1, 'phải'], [-1, 'trái']]) seams.push({ name: 'Túi ' + side, pts: pocket(m) }); // sewn on three sides, open at the top
+    }
+    if (!d.casual) seams.push({ name: baba ? 'Lai áo' : d.hem === 'kep' ? 'Lai tà ngoài' : 'Lai tà', pts: F.hemLine });
     seams.forEach((sm) => { sm.pts = scA(sm.pts); });
     // buttons along the right opening
     const cR = F.cfgR;
@@ -353,8 +366,17 @@ G.geo = (function () {
     // set-in men's cut: buttons across the chest to the underarm, then down the side
     else if (setIn && cR.sleeved && !N.bare) buttons = [lerpP(cR.A, U, 0.35), lerpP(cR.A, U, 0.7), V(U.x - 0.7, U.y + 1.4), V(W(d, 27) - 0.9, 27)];
     if (N.band) buttons.unshift(V(N.nx - 1.6, -N.band * 0.5));
-    // flat pattern pieces
-    const defs = [
+    // bà ba: five buttons straight down the front opening
+    if (baba) buttons = [0, 1, 2, 3, 4].map((i) => V(0.9, N.nd + 2.2 + i * ((L0 - N.nd - 10) / 4)));
+    // flat pattern pieces (the bà ba's front is two halves that overlap at the button stand)
+    const halfPanel = (pts) => join(pts, [V(-2.2, pts[pts.length - 1].y), V(-2.2, pts[0].y)]);
+    const defs = baba ? [
+      { id: 'frontR', slot: 'than', name: 'Vạt trước phải', poly: sc(halfPanel(F.halfR)) },
+      { id: 'frontL', slot: 'than', name: 'Vạt trước trái', poly: sc(mirror(halfPanel(F.halfL))) },
+      { id: 'back', slot: 'than', name: 'Vạt sau', poly: sc(B.poly) },
+      { id: 'pocketR', slot: 'than', name: 'Túi phải', poly: sc([V(0, 0), V(9.6, 0), V(9.6, 14.5), V(0, 14.5)]) },
+      { id: 'pocketL', slot: 'than', name: 'Túi trái', poly: sc([V(0, 0), V(9.6, 0), V(9.6, 14.5), V(0, 14.5)]) }
+    ] : [
       { id: 'front', slot: 'than', name: 'Vạt trước', poly: sc(F.poly) },
       { id: 'back', slot: 'than', name: 'Vạt sau', poly: sc(B.poly) }
     ];
@@ -412,6 +434,9 @@ G.geo = (function () {
       sheerSleeves: !!(slR && slR.sheer),
       neckType: d.neck, nx: N.nx * sx, nd: N.nd * s, bare: N.bare || null, neckFront: scA(F.neckFull),
       buttons: scA(buttons), seams, slitY: SY(F.slitY) * s, flap: SY(F.hemY) * s, hemY: SY(F.hemY) * s, SY: (y) => SY(y / s) * s,
+      garment: baba ? 'baba' : 'aodai', pockets: baba ? [scA(pocket(1)), scA(pocket(-1))] : null,
+      frontR: baba ? scA(F.halfR) : null, frontL: baba ? mirror(scA(F.halfL)) : null, // the two front halves, for pinning
+      opening: baba ? scA(line(V(0, N.nd), V(0, F.cY), 12)) : null,
       capeR, capeL, topY: ({ nonla: -50, quaithao: -44, khanxep: -38 }[d.head] || -36) * s, botY: Math.max(SY(154), SY(F.hemY) + 11) * s, floorY: SY(152) * s,
       bounds: bounds(all), defs
     };
