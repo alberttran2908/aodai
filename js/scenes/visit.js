@@ -54,7 +54,7 @@ G.scenes.visit = {
       c.fillStyle = sp; c.fillRect(x - 20, y - 10, cw + 40, h - 40);
       const asm = G.geo.build(v.design, v.scale, false), z = Math.min((h - 90) / (asm.botY - asm.topY), (cw - 30) / asm.bounds.w, 2.6);
       c.save(); c.translate(x + cw / 2, y - asm.topY * z); c.scale(z, z);
-      G.art.garment(c, asm, v.fabs, { mannequin: true, t: this.t + i * 1.7, decorItems: v.decorItems });
+      G.art.garment(c, asm, v.fabs, { mannequin: true, cache: true, t: this.t + i * 1.7, decorItems: v.decorItems });
       c.restore();
       const cl = v.client && G.client(v.client);
       U.fitText(c, [cl ? 'cho ' + cl.name : 'Áo trong tủ kính', pl.quality ? `chất lượng ${pl.quality}` : null].filter(Boolean).join(' · '), x + cw / 2, y + h - 66, cw, { size: 14, weight: 800, align: 'center' });

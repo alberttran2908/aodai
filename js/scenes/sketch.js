@@ -228,7 +228,7 @@ G.scenes.sketch = {
     this.pv = { asm, z, ox: G.W * 0.33 + 200, oy: 80 - asm.topY * z };
     c.save(); c.beginPath(); c.rect(G.W * 0.33 + 2, 66, 400, G.H - 158); c.clip();
     c.translate(this.pv.ox, this.pv.oy); c.scale(z, z);
-    G.art.garment(c, asm, G.jobFabs({ fabs }), { mannequin: true, t: this.t });
+    G.art.garment(c, asm, G.jobFabs({ fabs }), { mannequin: true, cache: true, t: this.t });
     c.restore();
     const shaping = this.shaping();
     const reg = shaping ? null : this.regionAt(G.pointer);

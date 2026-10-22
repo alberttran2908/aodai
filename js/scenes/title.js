@@ -19,7 +19,7 @@ G.scenes.title = {
       const z = i === 1 ? 3.3 : 3;
       c.translate(800 + i * 175, (i === 1 ? 705 : 690) - asm.botY * z);
       c.scale(z, z);
-      G.art.garment(c, asm, it.fab, { mannequin: true, decorItems: it.decor, t: this.t + i });
+      G.art.garment(c, asm, it.fab, { mannequin: true, cache: true, decorItems: it.decor, t: this.t + i });
       c.restore();
     });
     const cx = 380;

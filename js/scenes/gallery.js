@@ -29,7 +29,7 @@ G.scenes.gallery = {
       const asm = G.geo.build(it.design, it.scale || 1, false), z = Math.min((ph - 10) / (asm.botY - asm.topY), (pw - 10) / asm.bounds.w);
       c.save(); c.beginPath(); c.rect(px, py, pw, ph); c.clip();
       c.translate(px + pw / 2, py + 6 - asm.topY * z); c.scale(z, z);
-      G.art.garment(c, asm, it.fabs || it.fab, { mannequin: true, noSheen: true, t: this.t + i, decorItems: it.decorItems });
+      G.art.garment(c, asm, it.fabs || it.fab, { mannequin: true, cache: true, noSheen: true, t: this.t + i, decorItems: it.decorItems });
       c.restore();
       if (P.light === 1) { c.save(); c.globalCompositeOperation = 'multiply'; c.fillStyle = 'rgba(255,214,170,0.7)'; c.fillRect(px, py, pw, ph); c.restore(); }
       else if (P.light === 2) { const vg = c.createRadialGradient(px + pw / 2, py + ph * 0.45, 30, px + pw / 2, py + ph / 2, ph * 0.7); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,6,4,0.5)'); c.fillStyle = vg; c.fillRect(px, py, pw, ph); }

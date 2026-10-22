@@ -101,7 +101,7 @@ G.studio = (function () {
   function loadImage(rec, src, onReady) {
     const img = new Image();
     rec.img = img; rec.ready = false;
-    img.onload = () => { rec.ready = true; onReady && onReady(); };
+    img.onload = () => { rec.ready = true; if (G.art) G.art.flushGarments(); onReady && onReady(); };
     img.onerror = () => { rec.bad = true; };
     img.src = src;
     return rec;

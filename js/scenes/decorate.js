@@ -74,7 +74,7 @@ G.scenes.decorate = {
     // the dress
     const v = this.view(), asm = G.geo.build(design, G.jobScale(), false);
     c.save(); c.translate(v.ox, v.oy); c.scale(v.z, v.z);
-    G.art.garment(c, asm, G.jobFabs(), { mannequin: true, t: this.t, decorItems: j.decor.items });
+    G.art.garment(c, asm, G.jobFabs(), { mannequin: true, cache: !this.drag, t: this.t, decorItems: j.decor.items });
     c.restore();
     // just stamped: a ring bursts out from the new motif
     if (this.pop) { const k = this.pop.t / 0.4, r = (this.pop.it.size * v.z) / 2 + 6 + k * 30; c.beginPath(); c.arc(v.ox + this.pop.it.x * v.z, v.oy + this.pop.it.y * v.z, r, 0, 7); c.strokeStyle = `rgba(246,205,106,${1 - k})`; c.lineWidth = 4 * (1 - k) + 1; c.stroke(); }
@@ -159,7 +159,7 @@ G.scenes.decorate = {
     else { const male = !!G.job.com.male;
       const d = Object.assign({}, G.DATA.defaultDesign, { head: group === 'dau' ? id : 'none', deco: group === 'dinh' ? id : 'none', cape: group === 'choang' ? id : 'none' }, male ? { male: true, fit: 'nam', length: 'nam' } : {});
       const asm = G.geo.build(d, 1, false); const z = group === 'dau' ? 1.5 : 0.36; c.translate(0, group === 'dau' ? 34 : -28); c.scale(z, z);
-      G.art.garment(c, asm, { mat: 'lua', color: 'trang', print: 'tron' }, { mannequin: true, still: true, noSheen: true }); }
+      G.art.garment(c, asm, { mat: 'lua', color: 'trang', print: 'tron' }, { mannequin: true, cache: true, still: true, noSheen: true }); }
     c.restore();
   }
 };

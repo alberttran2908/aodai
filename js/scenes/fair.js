@@ -40,7 +40,7 @@ G.scenes.fair = {
       if (snap) {
         const asm = G.geo.build(snap.design, snap.scale || 1, false), z = Math.min(300 / (asm.botY - asm.topY), 2.6);
         c.save(); c.translate(x + w / 2, 186 - asm.topY * z); c.scale(z, z);
-        G.art.garment(c, asm, snap.fabs, { mannequin: true, still: true, noSheen: true, decorItems: snap.decorItems });
+        G.art.garment(c, asm, snap.fabs, { mannequin: true, cache: true, still: true, noSheen: true, decorItems: snap.decorItems });
         c.restore();
       }
       // price tag

@@ -44,7 +44,7 @@ G.scenes.studio = {
     c.fillStyle = 'rgba(80,50,30,0.18)'; c.beginPath(); c.ellipse(x + w / 2, y + h - 22, 90, 12, 0, 0, 7); c.fill();
     const asm = this.asm, z = Math.min(2.9, (h - 50) / (asm.botY - asm.topY));
     c.translate(x + w / 2, y + h - 26 - asm.botY * z); c.scale(z, z);
-    G.art.garment(c, asm, { mat: f.mat, color: f.color, print: f.print }, { mannequin: true, t: this.t });
+    G.art.garment(c, asm, { mat: f.mat, color: f.color, print: f.print }, { mannequin: true, cache: true, t: this.t });
     c.restore();
   },
 

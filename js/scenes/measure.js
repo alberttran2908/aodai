@@ -72,7 +72,7 @@ G.scenes.measure = {
     U.bg(c);
     // model in a plain fitting slip
     c.save(); c.translate(this.ox, this.oy); c.scale(this.z, this.z);
-    G.art.garment(c, this.asm, { mat: 'lua', color: 'be', print: 'tron' }, { mannequin: true, still: true, buttons: false });
+    G.art.garment(c, this.asm, { mat: 'lua', color: 'be', print: 'tron' }, { mannequin: true, cache: true, still: true, buttons: false });
     c.restore();
     // guide lines and recorded tapes
     this.lines.forEach((l, i) => {

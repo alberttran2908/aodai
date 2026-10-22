@@ -22,7 +22,7 @@ G.scenes.viewer = {
     c.fillStyle = sp; c.fillRect(0, 50, 760, 670);
     const asm = G.geo.build(v.design, v.scale, false), z = Math.min(620 / (asm.botY - asm.topY), 3.4);
     c.save(); c.translate(360, 62 - asm.topY * z); c.scale(z, z);
-    G.art.garment(c, asm, v.fabs, { mannequin: true, t: this.t, decorItems: v.decorItems });
+    G.art.garment(c, asm, v.fabs, { mannequin: true, cache: true, t: this.t, decorItems: v.decorItems });
     c.restore();
     U.card(c, 760, 70, 496, 470);
     G.text(c, 'May tại', 784, 102, { size: 13, color: U.T.soft });

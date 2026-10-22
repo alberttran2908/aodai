@@ -183,7 +183,7 @@ G.scenes.finish = {
     if (P.frame === 1) { z *= 1.75; ty = 380 - (asm.topY + (asm.botY - asm.topY) * 0.27) * z; }
     c.save(); c.beginPath(); c.rect(0, 50, 700, G.H - 50); c.clip();
     c.translate(330, ty); c.scale(z, z);
-    G.art.garment(c, asm, v ? v.fabs : G.jobFabs(), { mannequin: true, t: this.t, decorItems: v ? v.decorItems : j.decor.items });
+    G.art.garment(c, asm, v ? v.fabs : G.jobFabs(), { mannequin: true, cache: true, t: this.t, decorItems: v ? v.decorItems : j.decor.items });
     c.restore();
     // the light: soft daylight, warm late-afternoon sun, or a contrasty studio spot
     c.save(); c.beginPath(); c.rect(0, 50, 700, G.H - 50); c.clip();

@@ -372,6 +372,7 @@ G.art = (function () {
   // fab: {mat,color,print}; o: {motifs, border, mannequin, trousers, buttons, still, t, noSheen}
   function garment(c, asm, fabIn, o) {
     o = o || {};
+    if (o.cache) return garmentCached(c, asm, fabIn, o);
     // per-part fabrics: {than, tay, co, quan}; a single fabric object means the whole outfit
     const FB = fabIn.than ? fabIn : { than: fabIn, tay: fabIn, co: fabIn, quan: null };
     const fab = FB.than, fTay = FB.tay || fab, fCo = FB.co || fab, fQuan = FB.quan;
@@ -920,6 +921,43 @@ G.art = (function () {
       c.restore();
     }
     }
+  }
+
+  // A dress on a stand is ~4,000 canvas calls; scenes that show one every frame draw it once into an
+  // offscreen bitmap at the screen's pixel scale and blit it after. The hem sway is kept as a cheap
+  // shear of the part below the slit. Keyed by asm (geo.build caches it per design), fabrics, options.
+  const GC = { ids: new WeakMap(), n: 0, map: new Map(), px: 0, MAXPX: 16e6 };
+  function garmentCached(c, asm, fabIn, o) {
+    const m = c.getTransform(), k = Math.ceil(Math.hypot(m.a, m.b) * 4) / 4;
+    if (!k || k > 14 || asm.design.skin) return garment(c, asm, fabIn, o);
+    let id = GC.ids.get(asm); if (!id) GC.ids.set(asm, (id = ++GC.n));
+    const oo = Object.assign({}, o); delete oo.cache; delete oo.t;
+    const key = id + '|' + k + '|' + JSON.stringify(fabIn) + '|' + JSON.stringify(oo);
+    const s = asm.s;
+    let e = GC.map.get(key);
+    if (e) { GC.map.delete(key); GC.map.set(key, e); } // most recently used goes last
+    else {
+      // measured: everything drawn (heads, capes, the wedding train) stays within ±38 and 16 below the floor
+      const x0 = -60 * s, y0 = asm.topY - 25 * s, y1 = (asm.floorY || 152 * s) + 24 * s;
+      const w = Math.ceil(120 * s * k), h = Math.ceil((y1 - y0) * k);
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      const g = cv.getContext('2d');
+      g.setTransform(k, 0, 0, k, -x0 * k, -y0 * k);
+      garment(g, asm, fabIn, Object.assign({}, oo, { still: true, t: 0 }));
+      e = { cv, x0, y0, w: w / k, h: h / k };
+      GC.map.set(key, e); GC.px += w * h;
+      for (const [kk, v] of GC.map) { if (GC.px <= GC.MAXPX || v === e) break; GC.px -= v.cv.width * v.cv.height; v.cv.width = v.cv.height = 0; GC.map.delete(kk); }
+    }
+    const sy = asm.slitY, hy = asm.hemY;
+    const amp = o.still ? 0 : 1.3 * s, t = o.t !== undefined ? o.t : performance.now() / 1000;
+    const sh = amp && hy > sy ? (amp * Math.sin(t * 1.3)) / (hy - sy) : 0;
+    if (!sh || !(sy > e.y0)) { c.drawImage(e.cv, e.x0, e.y0, e.w, e.h); return; }
+    // above the slit as drawn; below it the panels lean a little with the breeze
+    const r = e.cv.width / e.w, cut = Math.round((sy - e.y0) * r);
+    c.drawImage(e.cv, 0, 0, e.cv.width, cut, e.x0, e.y0, e.w, cut / r);
+    c.save(); c.transform(1, 0, sh, 1, -sh * (e.y0 + cut / r), 0);
+    c.drawImage(e.cv, 0, cut, e.cv.width, e.cv.height - cut, e.x0, e.y0 + cut / r, e.w, e.h - cut / r);
+    c.restore();
   }
 
   // fashion-illustration head: scaled up around the chin so it reads at the right proportion
@@ -1615,5 +1653,7 @@ G.art = (function () {
     c.fillStyle = 'rgba(0,0,0,0.1)'; c.fillRect(0, 640, G.W, 4);
   }
 
-  return { fabric, fillFabric, pathPoly, coin, flower, star, lock, motif, patch, borderAlong, customer, garment, shopBg, tableBg, studioBg, mix, rgba, isLight, formTorso: mannequinTorso };
+  function flushGarments() { for (const v of GC.map.values()) v.cv.width = v.cv.height = 0; GC.map.clear(); GC.px = 0; }
+
+  return { fabric, fillFabric, pathPoly, coin, flower, star, lock, motif, patch, borderAlong, customer, garment, flushGarments, shopBg, tableBg, studioBg, mix, rgba, isLight, formTorso: mannequinTorso };
 })();

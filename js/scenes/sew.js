@@ -382,7 +382,7 @@ G.scenes.sew = {
     c.save();
     c.beginPath(); c.rect(0, 50, 900, G.H - 50); c.clip();
     c.translate(this.ovx, this.ovy); c.scale(this.oz, this.oz); c.translate(-this.ocx, -this.ocy);
-    G.art.garment(c, asm, G.jobFabs(), { trousers: false, buttons: done, still: true });
+    G.art.garment(c, asm, G.jobFabs(), { trousers: false, cache: true, buttons: done, still: true });
     c.restore();
     // seams: sewn ones show the real stitches, the selected one glows
     asm.seams.forEach((sm, i) => {

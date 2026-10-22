@@ -76,7 +76,7 @@ G.scenes.iron = {
     c.restore();
     // the dress laid flat, then its creases (each fades as it is pressed)
     c.save(); c.translate(v.ox, v.oy); c.scale(v.z, v.z);
-    G.art.garment(c, asm, G.jobFabs(), { trousers: false, still: true, decorItems: [] });
+    G.art.garment(c, asm, G.jobFabs(), { trousers: false, cache: true, still: true, decorItems: [] });
     c.save(); G.art.pathPoly(c, asm.body); c.clip();
     for (const w of this.creases) {
       if (w.k <= 0.01) continue;

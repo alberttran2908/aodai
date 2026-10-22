@@ -30,7 +30,7 @@ G.scenes.parade = {
     else { design = w.design; fabs = w.fabs; scale = w.scale || 1; items = w.decorItems || []; }
     const asm = G.geo.build(design, scale, false), z = Math.min(560 / (asm.botY - asm.topY), 3.6);
     c.save(); c.translate(x, 70 - asm.topY * z + (w.bow && u > 0.4 ? Math.sin(Math.min(1, (u - 0.4) * 3) * Math.PI) * 18 : 0)); c.scale(z, z);
-    G.art.garment(c, asm, fabs, { mannequin: true, t: this.t, decorItems: items });
+    G.art.garment(c, asm, fabs, { mannequin: true, cache: true, t: this.t, decorItems: items });
     c.restore();
     // caption
     const cl = G.client(w.client);

@@ -13,7 +13,7 @@ G.scenes.paper = {
     c.fillStyle = '#e9e2d3'; c.fillRect(0, 0, cv.width, cv.height);
     const asm = G.geo.build(snap.design, snap.scale || 1, false), z = Math.min((cv.height - 24) / (asm.botY - asm.topY), 9);
     c.save(); c.translate(cv.width / 2, 12 - asm.topY * z); c.scale(z, z);
-    G.art.garment(c, asm, snap.fabs, { mannequin: true, still: true, decorItems: snap.decorItems });
+    G.art.garment(c, asm, snap.fabs, { mannequin: true, cache: true, still: true, decorItems: snap.decorItems });
     c.restore();
     c.globalCompositeOperation = 'saturation'; c.fillStyle = '#808080'; c.fillRect(0, 0, cv.width, cv.height);
     c.globalCompositeOperation = 'multiply'; c.fillStyle = '#e9d9b8'; c.fillRect(0, 0, cv.width, cv.height);

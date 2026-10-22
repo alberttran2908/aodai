@@ -61,7 +61,7 @@ G.Dialog = {
     const bg = c.createRadialGradient(x + w / 2, y + h * 0.35, 4, x + w / 2, y + h / 2, h * 0.75); bg.addColorStop(0, '#fff3d8'); bg.addColorStop(1, '#e9cfa6');
     c.fillStyle = bg; c.fill(); c.clip();
     c.translate(x + w / 2, y + 41 * z); c.scale(z, z);
-    G.art.garment(c, asm, look.fab, { mannequin: true, still: true, noSheen: true });
+    G.art.garment(c, asm, look.fab, { mannequin: true, cache: true, still: true, noSheen: true });
     c.restore();
     G.rr(c, x, y, w, h, 14); c.strokeStyle = G.INK; c.lineWidth = 2.2; c.stroke();
   },

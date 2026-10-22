@@ -100,7 +100,7 @@ G.scenes.desk = {
     c.beginPath(); c.rect(0, 50, G.W, 470); c.clip();
     c.translate(G.lerp(-200, 470, ease), 150 - asm.topY * z);
     c.scale(z, z);
-    G.art.garment(c, asm, look.fab, { mannequin: true, t: this.t });
+    G.art.garment(c, asm, look.fab, { mannequin: true, cache: true, t: this.t });
     c.restore();
   },
   // top-left toolbar of icon tiles; red badges for news
@@ -616,7 +616,7 @@ G.scenes.desk = {
       c.fillStyle = g; c.fillRect(cx - 150, topY - 40, 300, 330);
     }
     c.translate(cx, topY - asm.topY * z); c.scale(z, z);
-    G.art.garment(c, asm, look.fab, { mannequin: true, t: this.t });
+    G.art.garment(c, asm, look.fab, { mannequin: true, cache: true, t: this.t });
     c.restore();
   },
   // thought bubble over a client's head
