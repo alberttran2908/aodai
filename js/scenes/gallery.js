@@ -53,8 +53,10 @@ G.scenes.gallery = {
       G.text(c, `${this.page + 1}/${pages}`, 640, G.H - 104, { size: 13, weight: 700, align: 'center' });
       G.button(c, 'pn', 'Sau ›', 700, G.H - 120, 100, 32, () => this.page++, { style: 'ghost', size: 13, r: 16, enabled: this.page < pages - 1 });
     }
+    // the whole shop in one link: friends open it to see your sign and three best dresses
+    if (!s.isDaily) G.button(c, 'shoplink', '🏮 Khoe cả tiệm', G.W - 236 - 14 - 230, G.H - 66, 230, 50, () => G.share.copyShop(), { style: 'gold', size: 15, r: 25, enabled: s.collection.some((it) => it.success && G.share.canShare(it)) });
     U.primary(c, 'back', '← Về quầy', () => G.go('desk'));
-    U.hint(c, '🔗 sao chép link xem áo · 🖼 tải thẻ ảnh để khoe');
+    U.hint(c, '🔗 link một áo · 🖼 thẻ ảnh · 🏮 link cả tiệm: bạn bè ghé xem và nhận quà');
     U.topbar(c, 'Album áo');
   }
 };

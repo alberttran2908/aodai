@@ -300,7 +300,7 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
       // a shared fabric link (#f=…) opens the fabric studio with that design
       const fab = /^#f=/.test(location.hash) && G.studio ? G.studio.dec(location.hash.slice(3)) : null;
       if (fab) G.go('studio', { back: 'title', design: fab, shared: true });
-      else G.go(/^#d=/.test(location.hash) && G.scenes.viewer ? 'viewer' : 'title');
+      else G.go(/^#d=/.test(location.hash) && G.scenes.viewer ? 'viewer' : /^#s=/.test(location.hash) && G.scenes.visit ? 'visit' : 'title');
       requestAnimationFrame(frame);
     };
     (G.loadAssets ? G.loadAssets() : Promise.resolve()).then(start, start);

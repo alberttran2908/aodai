@@ -6,7 +6,7 @@ G.share = {
   r1: (x) => Math.round(x * 10) / 10,
 
   // album snapshot → compact payload
-  encode(snap) {
+  encode(snap, max) {
     const C = G.CAT, p = snap.part, f = snap.fabIds, o = snap.decorOne || {};
     const payload = {
       v: 1, p: C.PART_ORDER.map((k) => p[k]), f: Object.keys(C.SLOTS).map((k) => f[k] || null),
@@ -16,7 +16,7 @@ G.share = {
       c: snap.client || null, q: snap.quality || 0, k: snap.kim || 0, sh: snap.shop || G.state.shopName, d: snap.date || G.dateKeyVN()
     };
     // keep links short: drop the smallest embroideries if needed
-    while (JSON.stringify(payload).length > 1500 && payload.i.length) { payload.i.sort((a, b) => b[4] - a[4]); payload.i.pop(); }
+    while (JSON.stringify(payload).length > (max || 1500) && payload.i.length) { payload.i.sort((a, b) => b[4] - a[4]); payload.i.pop(); }
     return payload;
   },
   canShare: (snap) => !!(snap && snap.part && snap.fabIds),
@@ -26,6 +26,9 @@ G.share = {
   decode(hash) {
     let raw;
     try { raw = JSON.parse(this.b64d(String(hash).replace(/^#?d=/, ''))); } catch (e) { return null; }
+    return this.fromRaw(raw);
+  },
+  fromRaw(raw) {
     if (!raw || typeof raw !== 'object') return null;
     const C = G.CAT, cl = (x, a, b, d) => (typeof x === 'number' && isFinite(x) ? Math.min(b, Math.max(a, x)) : d);
     const male = raw.m === 1, def = male ? { co: 'dung', dang: 'nam', tay: 'dai', ta: 'nam_dai', quan: 'quan' } : { co: 'dung', dang: 'om', tay: 'dai', ta: 'dai_thang', quan: 'quan' };
@@ -100,6 +103,25 @@ G.share = {
   snapView(snap) {
     const pl = { part: snap.part, fabs: snap.fabIds, one: snap.decorOne || {}, items: snap.decorItems || [], male: !!snap.male, broad: !!snap.broad, scale: snap.scale || 1, client: snap.client };
     return this.view(pl);
+  },
+
+  // ---------- Ghé tiệm: the shop front in a link (#s=…) — name, rank, days open, and its three best dresses ----------
+  shopPayload() {
+    const s = G.state;
+    const best = s.collection.filter((it) => it.success && this.canShare(it)).sort((a, b) => (b.quality || 0) - (a.quality || 0)).slice(0, 3);
+    return { v: 1, sh: s.shopName, rk: G.rank(), dy: s.day, n: s.collection.length,
+      x: best.map((it) => { const p = this.encode(it, 700); delete p.sh; return p; }) };
+  },
+  shopUrl() { return G.CFG.baseUrl + '#s=' + this.b64e(JSON.stringify(this.shopPayload())); },
+  copyShop() { this.copy(this.shopUrl()); },
+  decodeShop(hash) {
+    let raw;
+    try { raw = JSON.parse(this.b64d(String(hash).replace(/^#?s=/, ''))); } catch (e) { return null; }
+    if (!raw || typeof raw !== 'object') return null;
+    const cl = (x, a, b) => (typeof x === 'number' && isFinite(x) ? Math.min(b, Math.max(a, Math.round(x))) : a);
+    const shop = String(raw.sh || 'Một tiệm may').replace(/[^\p{L}\p{N} '&.-]/gu, '').slice(0, 24) || 'Một tiệm may';
+    const dresses = (Array.isArray(raw.x) ? raw.x : []).slice(0, 3).map((d) => this.fromRaw(Object.assign({}, d, { sh: shop }))).filter(Boolean);
+    return { shop, rank: cl(raw.rk, 1, 10), days: cl(raw.dy, 1, 9999), made: cl(raw.n, 0, 9999), dresses };
   },
 
   // "Đặt may y chang": a friend's shared dress becomes an order in this game
