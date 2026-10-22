@@ -355,6 +355,7 @@
         if (r.type === 'mat' && f.mat !== r.mat) return false;
         if (r.type === 'avoid' && f.color === r.color) return false;
         if (r.type === 'cols' && !r.colors.includes(f.color)) return false;
+        if (r.type === 'pick' && !r.opts.some((o) => o.colors.includes(f.color))) return false;
         if (r.type === 'cheap' && G.econ && G.econ.price(id) > r.val) return false;
       }
       return f.rank <= rank;
@@ -439,6 +440,8 @@
       else if (r[0] === 'decor') out.push({ type: 'decor', group: decorOk(r[1]) ? r[1] : 'theu' });
       // special briefs: colour family, no decoration, how alluring, cheap cloth only, deliberately rough sewing
       else if (r[0] === 'cols') out.push({ type: 'cols', colors: r[1], val: r[2], label: r[3] || null });
+      // an open brief: any one of 2–3 palettes, the tailor's reading of the occasion
+      else if (r[0] === 'pick') out.push({ type: 'pick', opts: r[1].map(([label, colors, win]) => ({ label, colors, win })), val: r[2] });
       else if (r[0] === 'plain') out.push({ type: 'plain' });
       else if (r[0] === 'gc') {
         const top = G.maxGoiCam(rank, male);
@@ -544,6 +547,7 @@
     if (r.type === 'avoid') return `Không dùng màu ${D.colors[r.color].name}`;
     if (r.type === 'decor') return r.group === 'va' ? 'Có miếng vá hoặc chỗ sờn' : `Có ${C.DECOR[r.group].name.toLowerCase()}`;
     if (r.type === 'cols') return `Ít nhất ${r.val}% màu ${r.label || r.colors.map((k) => D.colors[k].name.toLowerCase()).join(' / ')}`;
+    if (r.type === 'pick') return `Một sắc tuỳ em (≥ ${r.val}%): ${r.opts.map((o) => o.label).join(' / ')}`;
     if (r.type === 'plain') return 'Không thêu, viền, đính hay choàng';
     if (r.type === 'gc') return r.op === 'min' ? `Gợi cảm từ ${r.val}` : `Kín đáo: gợi cảm tối đa ${r.val}`;
     if (r.type === 'cheap') return `Vải rẻ: mọi vải ≤ ${r.val} xu/m`;
@@ -558,6 +562,12 @@
     if (r.type === 'max') return { ok: tags[r.tag] <= r.val, value: tags[r.tag] };
     const sh = G.fabricShare(fabs);
     if (r.type === 'cols') { const v = Math.round(r.colors.reduce((a, k) => a + (sh.cols[k] || 0), 0) * 100); return { ok: v >= r.val, value: v }; }
+    // the palette the dress leans to most is the one it is read as
+    if (r.type === 'pick') {
+      const vs = r.opts.map((o) => Math.round(o.colors.reduce((a, k) => a + (sh.cols[k] || 0), 0) * 100));
+      const pick = vs.indexOf(Math.max(...vs));
+      return { ok: vs[pick] >= r.val, value: vs[pick], pick, label: r.opts[pick].label };
+    }
     if (r.type === 'plain') {
       const d = decor || {}, ok = !(d.items || []).some((i) => i.group !== 'va') && !d.trim && !d.deco && !d.cape;
       return { ok, value: ok ? 1 : 0 };
@@ -681,7 +691,11 @@
     const streak = success && G.haggle ? Math.round(com.budget * G.haggle.streakTip()) : 0;
     // the tailor's eye: a tip of 5% of the price per flower, only from a happy client (it never decides success)
     const flair = G.flair(j), flairPay = success ? Math.round(com.budget * 0.05 * flair.pts) : 0;
-    return { grain, sew, fit, quality, qualOk, tags, checks, success, exceeded, trendHit, flair, flairPay,
+    // an open brief read with conviction (≥ 85% of the dress in the chosen palette) earns its own tip
+    const pc = checks.find((ck) => ck.r.type === 'pick' && ck.ok);
+    const interp = pc ? { label: pc.label, value: pc.value, full: pc.value >= 85, win: pc.r.opts[pc.pick].win } : null;
+    const interpPay = success && interp && interp.full ? Math.round(com.budget * 0.05) : 0;
+    return { grain, sew, fit, quality, qualOk, tags, checks, success, exceeded, trendHit, flair, flairPay, interp, interpPay,
       pay, trendPay: success && trendHit ? Math.round(com.budget * 0.1) : 0, tip: (success && quality >= 90 ? Math.round(com.budget * (G.week && G.week.is('cuoi') ? 0.3 : 0.15)) : 0) + streak };
   };
 

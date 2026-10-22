@@ -63,7 +63,7 @@ window.AP = {
     const C = G.CAT, reqs = com.reqs, mins = reqs.filter((r) => r.type === 'min'), maxes = reqs.filter((r) => r.type === 'max'), g = com.garment || 'aodai', male = !!com.male;
     const opts = {};
     for (const p of C.PART_ORDER) opts[p] = Object.keys(C.PARTS[p].opts).filter((k) => { const o = C.PARTS[p].opts[k]; return C.optRank(o, g) <= rank && C.partFits(o, male) && C.garmentAllows(p, k, o, g); });
-    const ok = (id) => { const f = C.FABRICS[id]; return f.rank <= rank && reqs.every((r) => (r.type !== 'mat' || f.mat === r.mat) && (r.type !== 'avoid' || f.color !== r.color) && (r.type !== 'cols' || r.colors.includes(f.color))); };
+    const ok = (id) => { const f = C.FABRICS[id]; return f.rank <= rank && reqs.every((r) => (r.type !== 'mat' || f.mat === r.mat) && (r.type !== 'avoid' || f.color !== r.color) && (r.type !== 'cols' || r.colors.includes(f.color)) && (r.type !== 'pick' || r.opts.some((o) => o.colors.includes(f.color)))); };
     let best = null;
     for (const f of Object.keys(C.FABRICS).filter(ok)) {
       const part = {}; for (const p of C.PART_ORDER) part[p] = opts[p][0];

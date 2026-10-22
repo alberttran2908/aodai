@@ -346,7 +346,8 @@ G.UI = (function () {
     const cl = G.client(com.client);
     const tagReqs = com.reqs.filter((r) => r.type === 'min' || r.type === 'max');
     const rules = com.reqs.filter((r) => r.type !== 'min' && r.type !== 'max');
-    const h = 96 + (live ? C_KEYS().length * 22 : tagReqs.length * 22) + rules.length * 22;
+    // an open brief takes a second line for its palettes
+    const h = 96 + (live ? C_KEYS().length * 22 : tagReqs.length * 22) + rules.length * 22 + rules.filter((r) => r.type === 'pick').length * 22;
     card(c, x, y, w, h);
     // ribbon for special orders: personal story (pink), event (gold), chapter (red), daily (blue), copy (violet)
     if (com.title) {
@@ -384,15 +385,28 @@ G.UI = (function () {
       for (const r of tagReqs) { G.text(c, '• ' + G.reqText(r), x + 16, yy, { size: 13, weight: 600 }); yy += 22; }
     }
     for (const r of rules) {
-      let mark = '•', col = T.ink, txt = G.reqText(r);
+      let mark = '•', col = T.ink, txt = G.reqText(r), lead = -1;
       if (live && r.type === 'decor' && live.stage === 'sketch') { mark = '◦'; col = T.soft; txt += ' (ở bước trang trí)'; }
       else if (live && r.type === 'qmax') { mark = '◦'; col = T.soft; txt += ' (khi may xong)'; }
       else if (live) {
         const ck = G.reqCheck(r, live.tags, live.fabs, live.decor);
         mark = ck.ok ? '✓' : '✗'; col = ck.ok ? T.ok : T.bad;
         if (r.type === 'gc' || r.type === 'cols' || r.type === 'cheap') txt += ` · đang ${ck.value}${r.type === 'cols' ? '%' : ''}`;
+        if (r.type === 'pick') { txt = `Một sắc tuỳ em (≥ ${r.val}%)` + (ck.value ? ` · đang “${ck.label}” ${ck.value}%` : ''); lead = ck.value ? ck.pick : -1; }
       }
+      if (r.type === 'pick' && !live) txt = `Một sắc tuỳ em (≥ ${r.val}%):`;
       fitText(c, `${mark} ${txt}`, x + 16, yy, w - 28, { size: 13, weight: 600, color: col }); yy += 22;
+      // the palettes: a few dots of each and its name; the one the dress leans to is underlined
+      if (r.type === 'pick') {
+        let px = x + 28; const pw = (w - 40) / r.opts.length;
+        r.opts.forEach((o, i) => {
+          o.colors.slice(0, 3).forEach((k, d) => { c.beginPath(); c.arc(px + 5 + d * 8, yy, 4, 0, 7); c.fillStyle = G.DATA.colors[k].hex; c.fill(); c.strokeStyle = 'rgba(43,29,24,0.35)'; c.lineWidth = 1; c.stroke(); });
+          const lx = px + 5 + Math.min(3, o.colors.length) * 8 + 1, isLead = lead === i;
+          fitText(c, o.label, lx, yy, pw - (lx - px) - 6, { size: 12, weight: isLead ? 800 : 600, color: isLead ? T.accent : T.soft });
+          px += pw;
+        });
+        yy += 22;
+      }
     }
     return h;
   }

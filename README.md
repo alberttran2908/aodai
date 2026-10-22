@@ -37,6 +37,12 @@ Sau đó mở http://localhost:8080. Mở thẳng file `index.html` sẽ không 
      - **Đặt hoa văn** (0–1 hoa): hoa văn phải nằm trên áo, không chồng lên nhau, và có chủ ý. Có chủ ý là một trong các cách sau: một cặp đối xứng, đa số đặt vào các chấm gợi ý, hoặc chỉ 1–2 điểm nhấn.
      - **Thưởng**: mỗi hoa thêm 5% giá áo khi khách hài lòng, và +1 thân tình dù khách hài lòng hay không.
      - **Hiện trực tiếp**: dòng "Thẩm mỹ" hiện ngay khi chọn vải và khi trang trí.
+   - **Lời đặt hàng mở** (luật `['pick', …]` trong `js/content/occasions.js`): bảy dịp cho chọn một trong 2–3 bảng màu.
+     - Các dịp: biển, kỷ yếu, Tết, chợ nổi, Festival Huế, quan họ, prom. Ví dụ Tết: Đỏ may mắn, Vàng phú quý hoặc Hồng đào.
+     - Đạt khi một bảng màu chiếm đủ phần trăm. Áo nghiêng về bảng nào nhiều nhất thì được hiểu là bảng đó.
+     - Khách đáp đúng cách hiểu ấy bằng câu riêng của bảng màu đó.
+     - Theo đuổi trọn một cách hiểu (≥ 85% áo trong bảng màu): thưởng "diễn giải" +5% giá áo và +2 thân tình.
+     - Thẻ đặt hàng hiện chấm màu của từng bảng; khi đang thiết kế, bảng áo đang nghiêng về được tô đậm.
    - **Nhận xét của khách** nói về chính thiết kế: chi tiết góp nhiều nhất cho gu khách muốn, hoặc nếu thiếu thì nên đổi chỗ nào.
 
 Đơn hàng luôn làm được ở hạng hiện tại: chỉ khách có gu mà người chơi đáp ứng được mới đến, và mức trần phong cách được kiểm tra bằng bộ giải `G.minCapped`.

@@ -29,7 +29,7 @@ G.scenes.finish = {
     }
     const cl = G.client(j.com.client);
     // paid now (so closing the tab loses nothing), but the purse shows it only when she pays, after the photo
-    const paid = r.pay + r.tip + r.trendPay + (r.flairPay || 0);
+    const paid = r.pay + r.tip + r.trendPay + (r.flairPay || 0) + (r.interpPay || 0);
     G.addCoins(paid); this.held = G.ui.coinHold = paid;
     // the day ends (bills at month end use the rank the month was worked at), then reputation grows
     G.econ.advanceDay();
@@ -39,13 +39,15 @@ G.scenes.finish = {
     s.prestige += this.gain;
     s.served++;
     const kim = G.press.kim(r, j.com);
-    this.snap = G.snapOf(j, r, { kim });
+    this.snap = G.snapOf(j, r, { kim, interp: r.interp ? r.interp.label : null });
     s.collection.push(this.snap);
     if (s.collection.length > 60) s.collection.shift();
     this.bond = G.bond.onDelivery(r, j);
     if (this.bond && fm.bond) { G.bond.add(j.com.client, fm.bond); this.bond.gained += fm.bond; }
     // she notices the eye behind the dress (flowers of Thẩm mỹ), happy with it or not
     if (this.bond && r.flair && r.flair.pts) { G.bond.add(j.com.client, r.flair.pts); this.bond.gained += r.flair.pts; }
+    // an open brief answered with conviction: she feels understood
+    if (this.bond && r.interp && r.interp.full && r.success) { G.bond.add(j.com.client, 2); this.bond.gained += 2; }
     this.arcRw = j.com.kind === 'arc' && r.success ? G.bond.arcDone(j) : [];
     this.press = G.press.onDelivery(r, j, this.snap.id);
     G.story.onDelivery(r, j, kim);
@@ -63,6 +65,8 @@ G.scenes.finish = {
     // an occasion is answered about that occasion: the beach wedding, meeting the in-laws, the night of the contest…
     const oc = j.com.occasion && G.OCCASIONS && G.OCCASIONS[j.com.occasion];
     if (oc && !th) this.say = r.success ? G.pick(oc.win) : !r.qualOk ? oc.lose.q || this.say : (miss && oc.lose[miss.r.type]) || this.say;
+    // an open brief: she answers the palette the tailor chose
+    if (oc && !th && r.success && r.interp && r.interp.win) this.say = r.interp.win;
     // …and then she talks about the design itself
     if (this.kind !== 'tang' && r.qualOk) { const note = this.comment(r, j); if (note) this.say += ' ' + note; }
     G.sfx.good();
@@ -334,7 +338,7 @@ G.scenes.finish = {
     let y = 118 + G.wrap(c, '“' + this.say + '”', 800, 118, 432, 20, { size: 14, maxLines: 4 }) + 20;
     // her wishes first (that is what she judges), then the craft, then the money
     for (const ck of r.checks) {
-      const extra = ['min', 'max', 'mat', 'gc', 'cols', 'cheap', 'qmax'].includes(ck.r.type) ? ` (đạt ${ck.value})` : '';
+      const extra = ck.r.type === 'pick' ? ` (đạt ${ck.value}% “${ck.label}”)` : ['min', 'max', 'mat', 'gc', 'cols', 'cheap', 'qmax'].includes(ck.r.type) ? ` (đạt ${ck.value})` : '';
       G.text(c, `${ck.ok ? '✓' : '✗'} ${G.reqText(ck.r)}${extra}`, 724, y, { size: 14, weight: 700, color: ck.ok ? U.T.ok : U.T.bad }); y += 22;
     }
     y += 2; c.fillStyle = U.T.line; c.fillRect(724, y, 508, 1.5); y += 20;
@@ -366,7 +370,7 @@ G.scenes.finish = {
       y += 20;
     }
     y += 4; c.fillStyle = U.T.line; c.fillRect(724, y, 508, 1.5); y += 20;
-    const extra = [r.tip ? `thưởng${r.quality >= 90 && G.week && G.week.is('cuoi') ? ' mùa cưới' : ''} +${r.tip}` : '', r.flairPay ? `thẩm mỹ +${r.flairPay}` : '', r.trendPay ? `hợp mốt +${r.trendPay}` : ''].filter(Boolean).join(' · ');
+    const extra = [r.tip ? `thưởng${r.quality >= 90 && G.week && G.week.is('cuoi') ? ' mùa cưới' : ''} +${r.tip}` : '', r.flairPay ? `thẩm mỹ +${r.flairPay}` : '', r.interpPay ? `diễn giải +${r.interpPay}` : '', r.trendPay ? `hợp mốt +${r.trendPay}` : ''].filter(Boolean).join(' · ');
     const pk = G.easeOut((at - 0.8) / 0.8), payShown = Math.round(r.pay * pk);
     // she pays: the purse in the top bar counts up with a tick per handful of coins
     if (this.held) {

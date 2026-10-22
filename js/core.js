@@ -253,7 +253,7 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
     else if (G.tut && G.state) G.tut.draw(ctx, dt); // first-order coaching from Bà Tư
     // toasts: top centre just under the beam, stacking downwards (the bottom row holds the main buttons)
     let ty = 64;
-    G.toasts = G.toasts.filter((t) => (t.t += dt) < 2.4);
+    G.toasts = G.toasts.filter((t) => (t.t += dt) < 2.4).slice(-3); // at most three at once, newest kept
     for (const t of G.toasts) {
       const a = t.t < 0.2 ? t.t / 0.2 : t.t > 2 ? (2.4 - t.t) / 0.4 : 1, pop = 0.7 + 0.3 * G.easeBack(t.t / 0.3);
       ctx.save();
