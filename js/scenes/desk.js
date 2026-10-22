@@ -118,7 +118,8 @@ G.scenes.desk = {
       // tiles was too cramped to read or tap on a phone); red dot when any of them wants a look
       if (G.contract && G.contract.on()) G.contract.tick();
       if (G.vip && G.vip.tick() === 'came') { const cl = G.client(s.vip.client); G.toast(`${cl ? cl.name : 'Khách sang'} tới đúng hẹn, đang chờ ở ghế!`, G.C.green); G.sfx.bell(); }
-      if (this.hubRows().length) items.push({ id: 'today', label: 'Hôm nay', icon: 'tasks', cb: () => { this.hubOpen = true; }, dot: this.hubRows().some((r) => r.dot) });
+      // (not while the first-day tutorial is running: one thing at a time for a new player)
+      if (!(s.tut && s.tut.on) && this.hubRows().length) items.push({ id: 'today', label: 'Hôm nay', icon: 'tasks', cb: () => { this.hubOpen = true; }, dot: this.hubRows().some((r) => r.dot) });
       if (s.mode === 'challenge') items.push({ id: 'quit', label: 'Thoát', icon: 'exit', cb: () => G.go('title') });
     }
     G.UI.dock(c, items, 24, 68);

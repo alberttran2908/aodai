@@ -45,6 +45,6 @@ G.vip = {
     if (v.state === 'came') return { title: `${name} đã tới`, sub: 'Đang chờ ở ghế (hẹn trước) · trả gấp rưỡi', dot: false };
     if (v.state === 'missed') return { title: `Lỡ hẹn với ${name}`, sub: `Hẹn ${slot} nhưng tiệm đóng cửa · mai có hẹn mới`, dot: false };
     const left = v.start - Date.now(), h = Math.floor(left / 3600e3), m = Math.ceil((left % 3600e3) / 60e3);
-    return { title: `${name} hẹn ${slot} hôm nay`, sub: left > 0 ? `Mở tiệm trong khung giờ đó để đón · còn ${h ? h + ' giờ ' : ''}${m} phút` : 'Đang trong giờ hẹn!', dot: left <= 0 };
+    return { title: `${name} hẹn ${slot} hôm nay`, sub: left > 0 ? `còn ${h ? h + ' giờ ' : ''}${m} phút · mở game đúng giờ để đón` : 'Đang trong giờ hẹn!', dot: left <= 0 };
   }
 };
