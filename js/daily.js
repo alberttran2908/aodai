@@ -46,7 +46,7 @@ G.daily = {
     const keys = Object.keys(D.results).sort();
     while (keys.length > 21) delete D.results[keys.shift()];
     G.save();
-    try { G.net.submitDaily({ date: key, score, firstTry: first, payload: G.share.encode(snap) }); } catch (e) { /* offline */ }
+    Promise.resolve().then(() => G.net.submitDaily({ date: key, score, firstTry: first, payload: G.share.encode(snap, 1500) })).catch(() => {}); // offline is fine
     this.last = { key, score, first, res, snap };
     return this.last;
   },

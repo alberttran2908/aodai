@@ -120,7 +120,14 @@ Cân bằng hiện tại (simbot, chế độ Kinh doanh, sau 60 ngày):
   - Cả nước nhận cùng một khách và cùng yêu cầu mỗi ngày, theo giờ Việt Nam.
   - Chơi trong "hộp cát" nên không đụng tới bản lưu thật. Lượt đầu là điểm chính thức.
   - Có chuỗi ngày chơi, thưởng xu và nút sao chép kết quả kiểu Wordle.
-- **`js/net.js`**: bản giả lập chạy cục bộ, cùng giao diện với backend Supabase/Firebase sau này. Lược đồ dữ liệu có trong tài liệu thiết kế.
+- **`js/net.js`**: bản giả lập chạy cục bộ (mặc định).
+- **Bật bảng xếp hạng cả nước (Supabase, gói miễn phí)** — `js/net-supabase.js`:
+  1. Tạo dự án ở supabase.com. Vào Authentication › Sign In / Providers, bật **Allow anonymous sign-ins**.
+  2. Mở SQL Editor, dán toàn bộ [docs/supabase.sql](docs/supabase.sql) rồi bấm Run.
+  3. Vào Project Settings › API, chép **Project URL** và khoá **anon public** vào `G.CFG.supabase` trong `js/config.js`, rồi đẩy lên GitHub.
+  - Khi đó: điểm Đơn ngày (lượt đầu) và giá trị tiệm ở Thử thách tuần được gửi lên máy chủ. Bảng "Thử thách" có thêm nút **🏆 Bảng xếp hạng**, và các tiệm thật hiện làm "tiệm bóng" trong Bảng hẻm.
+  - Khoá anon là khoá công khai. Dữ liệu được bảo vệ bằng row-level security: người chơi chỉ ghi qua các hàm SQL có kiểm tra (đúng ngày, điểm 0–100, lượt đầu là chính thức).
+  - Mất mạng hoặc máy chủ lỗi thì game vẫn chơi offline bình thường.
 - **Nhân vật nhại vui**: có lời miễn trừ. Cấu hình cố định cho mọi người (G.CFG.parody = 'safe' trong js/config.js), không phải công tắc của từng người chơi.
   - Mặc định là *An toàn*: ẩn nhân vật bị đánh dấu `risk: 'high'`.
   - "Chủ tịch Phương Thoa" đã được thay bằng nhân vật gốc **Bà Chủ Hột Xoàn**.

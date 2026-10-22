@@ -292,7 +292,7 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
   G.boot = function () {
     const start = () => {
       G.load();
-      try { if (G.net) G.net.init(); } catch (e) { /* offline is fine */ }
+      if (G.net) Promise.resolve().then(() => G.net.init()).catch(() => { G.net.online = false; }); // offline is fine
       if (G.studio) G.studio.fetchCommunity(); // community bolts (published from GitHub Discussions)
       // the shop kept going while the player was away (shown at the desk)
       if (G.idle) { G.idle.arrive(G.state.idleLast); G.idle.stamp(); G.idle.init(); }

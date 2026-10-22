@@ -345,6 +345,7 @@ G.scenes.desk = {
     if (this.gift && com) this.giftPanel(c);
     if (this.quote && com) this.quotePanel(c);
     if (this.challenges) this.challengePanel(c);
+    if (this.boards) this.boardPanel(c);
     U.topbar(c, s.isDaily ? 'Đơn ngày ' + G.daily.label(s.dailyKey) : 'Quầy tiếp khách');
     if (G.idle && G.idle.pending && !(G.Dialog && G.Dialog.active)) this.awayCard(c);
     else if (G.idle && !(G.Dialog && G.Dialog.active) && !(G.tut && G.tut.active()) && G.idle.checkinDue()) this.checkinCard(c);
@@ -431,6 +432,39 @@ G.scenes.desk = {
     const ch = G.readSlot('challenge'), week = G.econ.weekKey(), live = ch && ch.seed === 'week-' + week && !(ch.econ && (ch.econ.bankrupt || ch.econ.finished));
     card('chWeek', 658, `Thử thách tuần ${week.slice(5)}`, ['30 ngày kinh doanh từ con số 0.', 'Mọi người cùng khách, cùng giá vải, cùng thị trường.', 'So “Giá trị tiệm” với các tiệm trong hẻm.'],
       live ? `Tiếp tục (ngày ${ch.day})` : 'Bắt đầu thử thách', () => { this.challenges = false; G.startChallenge(); G.go('desk'); });
+    // the nationwide boards, once the game has a server (G.CFG.supabase)
+    if (G.CFG.net === 'supabase') G.button(c, 'chBoard', '🏆 Bảng xếp hạng', 828, 166, 180, 36, () => { this.challenges = false; this.openBoards(); }, { style: 'gold', size: 14, r: 18 });
+  },
+  openBoards() {
+    const day = G.daily.key(), week = G.econ.weekKey();
+    this.boards = { day, week, daily: null, weekly: null, err: false };
+    const b = this.boards;
+    G.net.dailyBoard(day, { limit: 10 }).then((r) => { b.daily = r || []; }, () => { b.err = true; b.daily = []; });
+    G.net.challengeBoard(week, { limit: 10 }).then((r) => { b.weekly = r || []; }, () => { b.err = true; b.weekly = []; });
+  },
+  boardPanel(c) {
+    const U = G.UI, b = this.boards, w = 820, h = 470, x = (G.W - w) / 2, y = (G.H - h) / 2;
+    c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'b_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.boards = null; } });
+    U.card(c, x, y, w, h);
+    G.ui.hits.push({ id: 'b_card', x, y, w, h, enabled: true, cb: () => {} });
+    U.ribbon(c, 'Bảng xếp hạng cả nước', G.W / 2, y + 4, { size: 17 });
+    const col = (cx, title, rows, val) => {
+      G.text(c, title, cx, y + 64, { size: 17, weight: 800, font: G.GAME, color: U.T.accent });
+      if (!rows) { G.text(c, 'Đang tải…', cx, y + 100, { size: 14, color: U.T.soft }); return; }
+      if (!rows.length) { G.text(c, b.err ? 'Chưa kết nối được máy chủ.' : 'Chưa ai ghi điểm — hãy là người đầu tiên!', cx, y + 100, { size: 14, color: U.T.soft }); return; }
+      rows.forEach((r, i) => {
+        const ry = y + 96 + i * 30;
+        if (r.me) { G.rr(c, cx - 10, ry - 15, 370, 28, 8); c.fillStyle = '#fbe9cf'; c.fill(); }
+        G.text(c, `${i + 1}.`, cx, ry, { size: 15, weight: 800, color: i < 3 ? U.T.gold : U.T.soft });
+        U.fitText(c, r.name + (r.me ? ' (bạn)' : ''), cx + 34, ry, 230, { size: 15, weight: r.me ? 800 : 600 });
+        G.text(c, val(r), cx + 350, ry, { size: 15, weight: 800, align: 'right' });
+      });
+    };
+    col(x + 40, `Đơn ngày ${G.daily.label(b.day)}`, b.daily, (r) => `${r.score} điểm`);
+    col(x + 430, `Thử thách tuần ${b.week.slice(5)}`, b.weekly, (r) => `${Math.round(r.worth).toLocaleString('vi-VN')} xu`);
+    G.text(c, 'Đơn ngày: lượt đầu là điểm chính thức · Thử thách tuần: giá trị tiệm tốt nhất', G.W / 2, y + h - 66, { size: 13, align: 'center', color: U.T.soft });
+    G.button(c, 'b_close', 'Đóng', x + w - 104, y + h - 46, 80, 32, () => { this.boards = null; }, { style: 'ghost', size: 14, r: 16 });
   },
   // the waiting bench: one card per waiting client; click to invite them to the counter
   benchCards(c) {

@@ -13,7 +13,7 @@ G.scenes.ledger = {
       if (!best[wk] || worth > best[wk]) best[wk] = worth;
       try { localStorage.setItem(this.BEST_KEY, JSON.stringify(best)); } catch (err) { /* ignore */ }
       this.best = best[wk];
-      try { G.net.submitChallenge && G.net.submitChallenge({ week: wk, worth, days: s.day - 1, bankrupt: e.bankrupt }); } catch (err) { /* offline */ }
+      Promise.resolve().then(() => G.net.submitChallenge({ week: wk, worth, days: s.day - 1, bankrupt: e.bankrupt })).catch(() => {}); // offline is fine
     }
   },
   update(dt) { this.t += dt; },
