@@ -485,8 +485,8 @@ G.scenes.desk = {
     const ch = G.readSlot('challenge'), week = G.econ.weekKey(), live = ch && ch.seed === 'week-' + week && !(ch.econ && (ch.econ.bankrupt || ch.econ.finished));
     card('chWeek', 658, `Thử thách tuần ${week.slice(5)}`, ['30 ngày kinh doanh từ con số 0.', 'Mọi người cùng khách, cùng giá vải, cùng thị trường.', 'So “Giá trị tiệm” với các tiệm trong hẻm.'],
       live ? `Tiếp tục (ngày ${ch.day})` : 'Bắt đầu thử thách', () => { this.challenges = false; G.startChallenge(); G.go('desk'); });
-    // the nationwide boards, once the game has a server (G.CFG.supabase)
-    if (G.CFG.net === 'supabase') G.button(c, 'chBoard', '🏆 Bảng xếp hạng', 828, 166, 180, 36, () => { this.challenges = false; this.openBoards(); }, { style: 'gold', size: 14, r: 18 });
+    // the nationwide boards, once the game has a server (G.CFG.firebase)
+    if (G.CFG.net !== 'local') G.button(c, 'chBoard', '🏆 Bảng xếp hạng', 828, 166, 180, 36, () => { this.challenges = false; this.openBoards(); }, { style: 'gold', size: 14, r: 18 });
   },
   openBoards() {
     const day = G.daily.key(), week = G.econ.weekKey();

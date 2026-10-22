@@ -158,12 +158,19 @@ Theo giờ thật. Tính từ 5 phút vắng, tối đa 8 giờ; không cộng �
   - Chơi trong "hộp cát" nên không đụng tới bản lưu thật. Lượt đầu là điểm chính thức.
   - Có chuỗi ngày chơi, thưởng xu và nút sao chép kết quả kiểu Wordle.
 - **`js/net.js`**: bản giả lập chạy cục bộ (mặc định).
-- **Bật bảng xếp hạng cả nước (Supabase, gói miễn phí)** — `js/net-supabase.js`:
-  1. Tạo dự án ở supabase.com. Vào Authentication › Sign In / Providers, bật **Allow anonymous sign-ins**.
-  2. Mở SQL Editor, dán toàn bộ [docs/supabase.sql](docs/supabase.sql) rồi bấm Run.
-  3. Vào Project Settings › API, chép **Project URL** và khoá **anon public** vào `G.CFG.supabase` trong `js/config.js`, rồi đẩy lên GitHub.
-  - Khi đó: điểm Đơn ngày (lượt đầu) và giá trị tiệm ở Thử thách tuần được gửi lên máy chủ. Bảng "Thử thách" có thêm nút **🏆 Bảng xếp hạng**, và các tiệm thật hiện làm "tiệm bóng" trong Bảng hẻm.
-  - Khoá anon là khoá công khai. Dữ liệu được bảo vệ bằng row-level security: người chơi chỉ ghi qua các hàm SQL có kiểm tra (đúng ngày, điểm 0–100, lượt đầu là chính thức).
+- **Bật bảng xếp hạng cả nước (Firebase, gói miễn phí Spark)** — `js/net-firebase.js`, không cần SDK:
+  1. Vào console.firebase.google.com, tạo dự án (có thể tắt Google Analytics).
+  2. **Build › Authentication** › Get started › tab Sign-in method, bật **Anonymous**.
+  3. **Build › Firestore Database** › Create database. Chọn vị trí `asia-southeast1` (Singapore) và chế độ production.
+  4. Ở tab **Rules** của Firestore, dán toàn bộ [firestore.rules](firestore.rules), rồi bấm Publish.
+  5. Vào ⚙ Project settings › General › Your apps, bấm nút web `</>` để thêm ứng dụng web. Chép **apiKey** và **projectId** vào `G.CFG.firebase` trong `js/config.js`, rồi đẩy lên GitHub.
+  - Khi đó:
+    - Điểm Đơn ngày (lượt đầu) và giá trị tiệm ở Thử thách tuần được gửi lên máy chủ.
+    - Bảng "Thử thách" có thêm nút **🏆 Bảng xếp hạng**.
+    - Các tiệm thật hiện làm "tiệm bóng" trong Bảng hẻm.
+  - apiKey của Firebase web là khoá công khai. Dữ liệu được bảo vệ bằng security rules:
+    - Mỗi người chỉ ghi điểm của chính mình, đúng ngày, điểm 0–100.
+    - Điểm Đơn ngày chỉ ghi được một lần. Điểm Thử thách tuần chỉ được tăng, tối đa 1 lần mỗi phút.
   - Mất mạng hoặc máy chủ lỗi thì game vẫn chơi offline bình thường.
 - **Nhân vật nhại vui**: có lời miễn trừ. Cấu hình cố định cho mọi người (G.CFG.parody = 'safe' trong js/config.js), không phải công tắc của từng người chơi.
   - Mặc định là *An toàn*: ẩn nhân vật bị đánh dấu `risk: 'high'`.

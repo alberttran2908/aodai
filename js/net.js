@@ -1,5 +1,5 @@
 // Network adapter. The public build runs fully static (GitHub Pages), so this is the local stub:
-// same async interface a Supabase/Firebase adapter will implement later (see docs/GAME_DESIGN.md §6.4–6.5).
+// same async interface as the Firebase adapter (js/net-firebase.js), which takes over once configured.
 // UI code always awaits these inside try/catch and treats failure as "offline", never blocking play.
 G.net = {
   kind: 'local', online: false,

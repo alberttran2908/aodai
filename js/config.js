@@ -1,9 +1,9 @@
 // Build-wide settings, identical for every player (it is an online game: same rules, comparable scores).
 // parody: 'on' all famous (parody) clients · 'safe' hides the ones flagged risk:'high' · 'off' none.
 G.CFG = { parody: 'safe', net: 'local', baseUrl: location.origin + location.pathname,
-  // online boards: paste the Supabase project's URL and its public "anon" key here (see docs/supabase.sql);
+  // online boards: paste the Firebase web app's apiKey and projectId here (see README, firestore.rules);
   // left empty, the game stays fully offline
-  supabase: { url: '', anonKey: '' } };
+  firebase: { apiKey: '', projectId: '' } };
 
 G.parody = () => G.CFG.parody;
 G.clientAllowed = function (cl) {

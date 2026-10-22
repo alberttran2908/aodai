@@ -1,0 +1,50 @@
+rules_version = '2';
+// Tiệm May Áo Dài · Firestore security rules for the online boards.
+// Paste into Firebase console › Firestore Database › Rules, then Publish.
+// Everyone (signed in anonymously by the game) can read the boards; each player writes only their own score.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn(uid) { return request.auth != null && request.auth.uid == uid; }
+    function goodName(n) { return n is string && n.size() >= 1 && n.size() <= 24; }
+    function stampedNow() { return request.resource.data.at == request.time; }
+
+    // daily/{YYYY-MM-DD}/scores/{uid}: the first try of the day, created once, never changed
+    match /daily/{date}/scores/{uid} {
+      allow read: if true;
+      allow create: if signedIn(uid)
+        && date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        // only today's or yesterday's order (a day either side of UTC covers Vietnam time)
+        && request.time > timestamp.date(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2])) - duration.value(1, 'd')
+        && request.time < timestamp.date(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2])) + duration.value(2, 'd')
+        && request.resource.data.keys().hasOnly(['name', 'score', 'at'])
+        && goodName(request.resource.data.name)
+        && request.resource.data.score is int && request.resource.data.score >= 0 && request.resource.data.score <= 100
+        && stampedNow();
+      allow update, delete: if false;
+    }
+
+    // challenge/{week}/scores/{uid}: the best net worth of the week; a lower one is refused
+    match /challenge/{week}/scores/{uid} {
+      allow read: if true;
+      function valid() {
+        return week.size() <= 16
+          && request.resource.data.keys().hasOnly(['name', 'worth', 'days', 'bankrupt', 'at'])
+          && goodName(request.resource.data.name)
+          && request.resource.data.worth is int && request.resource.data.worth >= -1000000 && request.resource.data.worth <= 1000000
+          && request.resource.data.days is int && request.resource.data.days >= 0 && request.resource.data.days <= 60
+          && request.resource.data.bankrupt is bool
+          && stampedNow();
+      }
+      allow create: if signedIn(uid) && valid();
+      // at most one submission a minute, and only to raise the score
+      allow update: if signedIn(uid) && valid()
+        && request.resource.data.worth >= resource.data.worth
+        && request.time > resource.data.at + duration.value(1, 'm');
+      allow delete: if false;
+    }
+
+    // nothing else is readable or writable
+    match /{document=**} { allow read, write: if false; }
+  }
+}

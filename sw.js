@@ -1,6 +1,6 @@
 // Offline support for the installed game. Network first, so every visit gets the newest build; when the
 // network is gone, the last copy of each file is served from the cache. The scripts listed in index.html are
-// cached at install, everything else (images, fonts) as it is first loaded. Online services (Supabase, GitHub)
+// cached at install, everything else (images, fonts) as it is first loaded. Online services (Firebase, GitHub)
 // are never cached.
 const CACHE = 'aodai-v1';
 
