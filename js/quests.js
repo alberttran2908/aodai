@@ -10,6 +10,7 @@ G.quests = {
     { id: 'ui', ev: 'ui', n: 1, text: 'Ủi phẳng hết nếp một chiếc áo', gift: { coins: 80 }, needs: () => (G.state.tools.iron || 0) > 0 },
     { id: 'sapsi', ev: 'sapsi', n: 1, text: 'Đặt một xe vải sỉ', gift: { coins: 40 } },
     { id: 'trangtri', ev: 'trangtri', n: 3, text: 'Đặt 3 hoạ tiết trang trí lên một áo', gift: { coins: 60 } },
+    { id: 'khoe', ev: 'khoe', n: 1, text: 'Khoe tiệm với bạn bè (Album › Khoe cả tiệm)', gift: { coins: 50 }, needs: () => G.state.collection.some((it) => it.success && G.share.canShare(it)) },
     { id: 'donshop', ev: 'donshop', n: 1, text: 'Giao một đơn hàng shop', gift: { coins: 100 }, needs: () => !!(G.contract && G.contract.on() && G.contract.st().offer) }
   ],
   on() { const s = G.state; return !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge'; },

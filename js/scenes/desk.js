@@ -114,14 +114,10 @@ G.scenes.desk = {
       if (G.story.unlocked('mail')) items.push({ id: 'mail', label: 'Hộp thư', icon: 'mail', cb: () => G.go('mail'), dot: G.mail.unread() > 0 });
       if (s.mode !== 'challenge') items.push({ id: 'challenges', label: 'Thử thách', icon: 'trophy', cb: () => { this.challenges = true; }, dot: !G.daily.played() });
       if (G.econ.on()) items.push({ id: 'ledger', label: 'Sổ sách', icon: 'ledger', cb: () => G.go('ledger'), dot: s.econ.debt > 0 });
-      // today's quests and this week's happening (red dot: a gift to claim / a week not yet read)
-      if (G.quests && G.quests.today()) items.push({ id: 'quests', label: 'Nhiệm vụ', icon: 'tasks', cb: () => { this.questsOpen = true; }, dot: G.quests.ready() > 0 });
-      // a boutique's order for ready-to-wear dresses (red dot: new, or the rack can fill it)
-      if (G.contract && G.contract.on()) {
-        const K = G.contract; K.tick();
-        if (K.st().offer) items.push({ id: 'contract', label: 'Đơn shop', icon: 'box', cb: () => { this.contractOpen = true; K.st().seen = true; G.save(); }, dot: !K.st().seen || K.ready() });
-      }
-      if (G.week && G.week.current()) items.push({ id: 'week', label: 'Tin tuần', icon: 'lantern', cb: () => { this.weekOpen = true; s.weekSeen = G.week.num(); G.save(); }, dot: s.weekSeen !== G.week.num() });
+      // "Hôm nay": one tile for today's quests, a boutique's order and this week's happening (a toolbar of eleven
+      // tiles was too cramped to read or tap on a phone); red dot when any of them wants a look
+      if (G.contract && G.contract.on()) G.contract.tick();
+      if (this.hubRows().length) items.push({ id: 'today', label: 'Hôm nay', icon: 'tasks', cb: () => { this.hubOpen = true; }, dot: this.hubRows().some((r) => r.dot) });
       if (s.mode === 'challenge') items.push({ id: 'quit', label: 'Thoát', icon: 'exit', cb: () => G.go('title') });
     }
     G.UI.dock(c, items, 24, 68);
@@ -134,17 +130,48 @@ G.scenes.desk = {
     U.fitText(c, ch.title, 42, y + 24, 266, { size: 15, weight: 800, font: G.GAME, color: U.T.accent });
     goals.forEach((g, i) => U.fitText(c, `${g.done ? '✓' : '○'} ${g.t} (${g.have}/${g.n})`, 42, y + 48 + i * 22, 266, { size: 13, weight: 600, color: g.done ? U.T.ok : U.T.ink }));
   },
-  // the panels behind the dock's "Nhiệm vụ" (today's three goals) and "Tin tuần" (this week's happening)
+  // the rows of the "Hôm nay" hub: what each holds at a glance, and what opens its own panel
+  hubRows() {
+    const s = G.state, rows = [], Q = G.quests, t = Q && Q.today(), K = G.contract, W = G.week, wk = W && W.current();
+    if (t) {
+      const done = t.list.filter((q) => Q.done(q)).length, ready = Q.ready();
+      rows.push({ id: 'h_q', icon: 'tasks', title: 'Nhiệm vụ hôm nay', sub: ready ? `${done}/${t.list.length} xong · ${ready} quà chờ nhận` : `${done}/${t.list.length} xong`, dot: ready > 0, open: () => { this.questsOpen = true; } });
+    }
+    const o = K && K.on() && K.st().offer;
+    if (o) rows.push({ id: 'h_k', icon: 'box', title: `Đơn shop: ${o.shop}`, sub: `${K.matching().length}/${o.n} áo hợp đơn · ${K.leftText()}`, dot: !K.st().seen || K.ready(), open: () => { this.contractOpen = true; K.st().seen = true; G.save(); } });
+    if (wk) rows.push({ id: 'h_w', icon: 'lantern', title: `Tin tuần: ${wk.name}`, sub: W.leftText(), dot: s.weekSeen !== W.num(), open: () => { this.weekOpen = true; s.weekSeen = W.num(); G.save(); } });
+    return rows;
+  },
+  // the hub, or one of the panels it opens ("Đóng" on a panel goes back to the hub)
   questChip(c) {
     const Q = G.quests, t = Q && Q.today(), wk = G.week && G.week.current();
     const o = G.contract && G.contract.on() && G.contract.st().offer;
     if (this.questsOpen && t) this.questPanel(c, t);
     else if (this.weekOpen && wk) this.weekPanel(c, wk);
     else if (this.contractOpen && o) this.contractPanel(c, o);
+    else if (this.hubOpen) { this.contractOpen = false; this.hubPanel(c); }
     else this.contractOpen = false;
   },
+  hubPanel(c) {
+    const U = G.UI, rows = this.hubRows(), rh = 78, w = 560, h = 104 + rows.length * (rh + 10), x = (G.W - w) / 2, y = (G.H - h) / 2;
+    c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'h_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.hubOpen = false; } });
+    U.card(c, x, y, w, h);
+    G.ui.hits.push({ id: 'h_card', x, y, w, h, enabled: true, cb: () => {} });
+    U.ribbon(c, 'Hôm nay ở tiệm', G.W / 2, y + 4, { size: 17 });
+    rows.forEach((r, i) => {
+      const ry = y + 48 + i * (rh + 10);
+      G.button(c, r.id, '', x + 24, ry, w - 48, rh, r.open, { style: 'ghost', r: 14 });
+      U.icon(c, r.icon, x + 64, ry + rh / 2, 40);
+      U.fitText(c, r.title, x + 100, ry + 30, w - 190, { size: 17, weight: 800, color: U.T.accent });
+      U.fitText(c, r.sub, x + 100, ry + 56, w - 190, { size: 14, weight: 600, color: U.T.soft });
+      G.text(c, '›', x + w - 50, ry + rh / 2 + 2, { size: 30, weight: 800, align: 'center', color: U.T.soft });
+      if (r.dot) U.badge(c, x + w - 34, ry + 6);
+    });
+    G.button(c, 'h_close', 'Đóng', x + w - 104, y + h - 46, 80, 32, () => { this.hubOpen = false; }, { style: 'ghost', size: 14, r: 16 });
+  },
   contractPanel(c, o) {
-    const U = G.UI, K = G.contract, w = 600, h = 340, x = (G.W - w) / 2, y = (G.H - h) / 2;
+    const U = G.UI, K = G.contract, w = 600, h = 364, x = (G.W - w) / 2, y = (G.H - h) / 2;
     const have = K.matching().length, rack = G.state.rack.filter((it) => !it.sold).length, ok = have >= o.n;
     c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
     G.ui.hits.push({ id: 'k_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.contractOpen = false; } });
@@ -153,11 +180,12 @@ G.scenes.desk = {
     U.ribbon(c, 'Đơn hàng shop', G.W / 2, y + 4, { size: 17 });
     U.icon(c, 'box', x + 66, y + 96, 52);
     U.fitText(c, o.shop, x + 110, y + 80, w - 140, { size: 22, weight: 800, font: G.GAME, color: U.T.accent });
-    U.fitText(c, `Đặt ${K.needText(o)}`, x + 110, y + 108, w - 140, { size: 15, weight: 700 });
-    G.text(c, `Trả ${o.pay} xu · ${K.leftText()}`, x + 110, y + 134, { size: 15, weight: 800, color: U.T.gold });
-    G.rr(c, x + 24, y + 160, w - 48, 74, 12); c.fillStyle = ok ? '#eef6ea' : '#f7efe2'; c.fill();
-    G.text(c, `Trên sạp có ${have}/${o.n} áo hợp đơn${rack > have ? ` (${rack - have} áo khác chưa đạt)` : ''}`, x + 44, y + 184, { size: 15, weight: 800, color: ok ? U.T.ok : U.T.ink });
-    G.wrap(c, ok ? 'Đủ rồi! Giao ngay kẻo shop đổi ý.' : 'May áo bán sẵn ở quầy, hoặc để thợ phụ may khi bạn vắng (cần vải trơn trong kho).', x + 44, y + 210, w - 88, 18, { size: 13, color: U.T.soft, maxLines: 2 });
+    U.fitText(c, `Đặt ${o.n} áo bán sẵn`, x + 110, y + 108, w - 140, { size: 15, weight: 700 });
+    U.fitText(c, `Chất lượng từ ${o.q}${o.mat ? ' · may bằng ' + G.CAT.MATS[o.mat].name.toLowerCase() : ''}`, x + 110, y + 132, w - 140, { size: 15, weight: 700 });
+    G.text(c, `Trả ${o.pay} xu · ${K.leftText()}`, x + 110, y + 158, { size: 15, weight: 800, color: U.T.gold });
+    G.rr(c, x + 24, y + 182, w - 48, 76, 12); c.fillStyle = ok ? '#eef6ea' : '#f7efe2'; c.fill();
+    U.fitText(c, `Trên sạp có ${have}/${o.n} áo hợp đơn${rack > have ? ` (${rack - have} áo khác chưa đạt)` : ''}`, x + 44, y + 206, w - 88, { size: 15, weight: 800, color: ok ? U.T.ok : U.T.ink });
+    G.wrap(c, ok ? 'Đủ rồi! Giao ngay kẻo shop đổi ý.' : 'May áo bán sẵn ở quầy, hoặc để thợ phụ may khi bạn vắng (cần vải trơn trong kho).', x + 44, y + 232, w - 88, 18, { size: 13, color: U.T.soft, maxLines: 2 });
     G.button(c, 'k_go', ok ? `Giao ${o.n} áo · +${o.pay} xu` : `Còn thiếu ${o.n - have} áo`, x + 24, y + h - 70, 300, 46, () => { if (K.deliver()) this.contractOpen = false; }, { style: 'green', size: 16, r: 23, enabled: ok });
     G.button(c, 'k_no', 'Từ chối', x + w - 236, y + h - 66, 100, 38, () => { K.decline(); this.contractOpen = false; }, { style: 'ghost', size: 14, r: 19 });
     G.button(c, 'k_close', 'Đóng', x + w - 124, y + h - 66, 100, 38, () => { this.contractOpen = false; }, { style: 'ghost', size: 14, r: 19 });
@@ -357,7 +385,8 @@ G.scenes.desk = {
   // "while you were away": what the shop did in real time, collected with a shower of coins
   awayCard(c) {
     const U = G.UI, P = G.idle.pending, w = 600, x = (G.W - w) / 2;
-    const n = Math.max(1, P.lines.length), h = 190 + n * 40, y = (G.H - h) / 2;
+    // a long report packs its lines closer so the card always fits the screen
+    const n = Math.max(1, P.lines.length), lh = Math.max(28, Math.min(40, Math.floor((G.H - 70 - 190) / n))), h = 190 + n * lh, y = (G.H - h) / 2;
     c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
     G.ui.hits.push({ id: 'away_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => {} });
     U.card(c, x, y, w, h);
@@ -368,11 +397,11 @@ G.scenes.desk = {
       G.wrap(c, 'Tiệm đóng cửa, chưa có ai trông. ' + G.idle.idleTip(), x + 30, ly - 12, w - 60, 20, { size: 14, color: U.T.ink, maxLines: 3 });
     }
     for (const l of P.lines) {
-      U.icon(c, { dress: 'album', fabric: 'fabric', mail: 'mail' }[l.icon] || 'workshop', x + 44, ly, 28);
+      U.icon(c, { dress: 'album', fabric: 'fabric', mail: 'mail' }[l.icon] || 'workshop', x + 44, ly, Math.min(28, lh - 6));
       U.fitText(c, l.text, x + 70, ly, w - 200, { size: 15, weight: 600 });
       if (l.coins) { G.art.coin(c, x + w - 98, ly, 9); G.text(c, `+${l.coins}`, x + w - 84, ly, { size: 16, weight: 800, font: G.GAME, color: U.T.gold }); }
       else G.text(c, l.note || '', x + w - 30, ly, { size: 14, weight: 800, align: 'right', color: U.T.ok });
-      ly += 40;
+      ly += lh;
     }
     if (P.coins) { c.fillStyle = U.T.line; c.fillRect(x + 30, ly - 14, w - 60, 1.5); G.text(c, `Tổng: +${P.coins} xu`, x + w - 30, ly + 8, { size: 18, weight: 800, font: G.GAME, align: 'right', color: U.T.gold }); }
     G.button(c, 'away_ok', P.coins ? `Nhận ${P.coins} xu` : 'Mở cửa tiệm', G.W / 2 - 110, y + h - 62, 220, 46, () => {

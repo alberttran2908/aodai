@@ -113,7 +113,7 @@ G.share = {
       x: best.map((it) => { const p = this.encode(it, 700); delete p.sh; return p; }) };
   },
   shopUrl() { return G.CFG.baseUrl + '#s=' + this.b64e(JSON.stringify(this.shopPayload())); },
-  copyShop() { this.copy(this.shopUrl()); },
+  copyShop() { this.copy(this.shopUrl()); if (G.quests) G.quests.event('khoe'); },
   decodeShop(hash) {
     let raw;
     try { raw = JSON.parse(this.b64d(String(hash).replace(/^#?s=/, ''))); } catch (e) { return null; }

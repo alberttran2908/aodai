@@ -51,7 +51,10 @@ G.idle = {
       if (it.sold || sold.length >= (night ? 3 : 2)) continue;
       if (Math.random() < 1 - Math.pow(night ? 0.9 : 0.95, hours)) { const p = Math.round(G.fair.value(it) * (night ? 0.9 : 0.8)); sold.push({ it, p }); }
     }
-    for (const x of sold) { coins += x.p; lines.push({ icon: 'dress', text: night ? 'Chợ đêm bán một áo trên sạp' : 'Tủ kính bán một áo cho khách qua đường', coins: x.p }); }
+    if (sold.length) {
+      const sum = sold.reduce((a, x) => a + x.p, 0), one = sold.length === 1 ? 'một áo' : `${sold.length} áo`;
+      coins += sum; lines.push({ icon: 'dress', text: night ? `Chợ đêm bán ${one} trên sạp` : `Tủ kính bán ${one} cho khách qua đường`, coins: sum });
+    }
     // a boutique's order came in (or an old one lapsed) while you were out
     const offer = G.contract && G.contract.tick();
     if (offer) lines.push({ icon: 'mail', text: `${offer.shop} đặt ${offer.n} áo bán sẵn`, coins: 0, note: 'đơn mới' });
