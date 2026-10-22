@@ -104,4 +104,25 @@ Object.assign(G.OCCASIONS, {
     win: ['Đạo diễn hô “cắt!” rồi khen áo đẹp nhất đoàn phim!', 'Lên hình sang như bà hoàng thật, cảnh này chắc hot lắm.'],
     lose: { decor: 'Không có tranh thêu, lên hình trống trơn…', min: 'Chưa ra chất cung đình, đạo diễn chắc bắt quay lại…', q: 'Quay cận mà đường may lộ thì hỏng cảnh…' } }
 });
+// the Kinh Bắc dress: áo tứ thân over a yếm, with the nón quai thao (from rank 2)
+Object.assign(G.OCCASIONS, {
+  quanHo: { title: 'Hát quan họ hội Lim', sex: 'f', garment: 'tuthan', minRank: 2, ribbon: ['#7a5a2a', 'Tứ thân'],
+    lines: ['Mười ba tháng Giêng em hát quan họ ở hội Lim. Áo tứ thân màu nâu non, yếm thắm, nón quai thao, đủ bộ nha chị!',
+      'Liền anh liền chị hẹn nhau ở hội Lim rồi. Em cần bộ tứ thân màu đất, mặc vào hát “Người ơi người ở đừng về”.'],
+    reqs: [['min', 'truyenthong', 'auto'], ['cols', ['camdat', 'be', 'reu', 'mutat', 'ruou'], 50, 'nâu đất, be hoặc rêu']],
+    win: ['Hát xong câu “Người ơi người ở đừng về”, cả hội vỗ tay, liền anh xin hẹn năm sau!', 'Nón quai thao, yếm thắm, áo nâu non… đúng chất Kinh Bắc!'],
+    lose: { cols: 'Màu này lạ quá, các cụ ở hội Lim nhìn không ra quan họ…', min: 'Chưa ra chất Kinh Bắc, mặc lên hát thấy ngượng…', q: 'Đang hát mà vạt áo tuột chỉ thì ngại lắm…' } },
+  hoiLang: { title: 'Hội làng đầu xuân', sex: 'f', garment: 'tuthan', minRank: 2, ribbon: ['#7a5a2a', 'Tứ thân'],
+    lines: ['Làng em mở hội đầu xuân, chị em trong làng mặc tứ thân đi rước. Vải đũi mộc thôi, đừng màu đen.',
+      'Hội làng năm nay em được khiêng kiệu, bộ tứ thân đũi cho thoáng, nhìn mộc mạc mà duyên.'],
+    reqs: [['min', 'truyenthong', 'auto'], ['mat', 'dui'], ['avoid', 'den']],
+    win: ['Đi rước cả buổi mà vẫn mát, các cụ khen “con bé mặc đúng nếp làng”!', 'Mộc mạc mà duyên, đi giữa đoàn rước ai cũng ngoái nhìn.'],
+    lose: { mat: 'Vải này đi rước cả buổi chắc nực lắm…', avoid: 'Đầu xuân mặc đen đi hội, bà nội không chịu đâu…', min: 'Chưa ra nếp làng chút nào…', q: 'Khiêng kiệu mà sợ bung đường may…' } },
+  duongLam: { title: 'Chụp ảnh ở làng cổ Đường Lâm', sex: 'f', garment: 'tuthan', minRank: 2, ribbon: ['#7a5a2a', 'Tứ thân'],
+    lines: ['Cuối tuần em đi Đường Lâm chụp ảnh bên giếng làng, cổng đá ong. Áo tứ thân phải thật duyên, yếm hơi điệu một chút.',
+      'Em làm bộ ảnh “Thiếu nữ Bắc Bộ” ở làng cổ, cần bộ tứ thân nhẹ nhàng mà thanh lịch.'],
+    reqs: [['min', 'truyenthong', 'auto'], ['min', 'thanhlich', 'auto']],
+    win: ['Đứng bên tường đá ong, ảnh ra như tranh Đông Hồ vậy!', 'Bộ ảnh lên mạng được cả nghìn lượt thích, ai cũng hỏi may ở đâu.'],
+    lose: { min: 'Đẹp mà chưa đủ duyên cho bộ ảnh làng cổ…', q: 'Chụp cận là thấy đường may lỗi ngay…' } }
+});
 G.OCCASION_ORDER = Object.keys(G.OCCASIONS);

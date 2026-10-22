@@ -22,7 +22,14 @@ G.scenes.sketch = {
     const map = { co: 'neck', tay: 'sleeve', dang: 'fit', quan: 'bottom' }[part];
     return G.DATA.style[map].opts[key].name;
   },
-  hasCollar(partSel) { return ['dung', 'thap', 'nhatbinh'].includes((partSel || G.job.part).co); },
+  // (the tứ thân's 'co' cloth is its yếm)
+  slotLabel(k) {
+    const g = G.CAT.GARMENTS[G.job.garment];
+    if (k === 'co' && g && g.coLabel) return g.coLabel;
+    if (k === 'quan' && ['chanvay', 'tuyn'].includes(G.job.part.quan)) return 'Váy';
+    return this.SLOT_LABEL[k];
+  },
+  hasCollar(partSel) { return ['dung', 'thap', 'nhatbinh', 'tuthan'].includes((partSel || G.job.part).co); },
   slots(partSel) { return Object.keys(G.CAT.SLOTS).filter((k) => k !== 'co' || this.hasCollar(partSel)); },
   // the commission's hard fabric rules, for badges on the fabric cards
   rules() {
@@ -67,11 +74,13 @@ G.scenes.sketch = {
   },
 
   // ---------- clicking the dress picks a fabric slot ----------
+  // what the "co" cloth covers: the standing collar, the Nhật Bình's great collar, or the tứ thân's yếm
+  coPolys(a) { return [a.collar, a.yem].concat(a.nbCollar || []).filter(Boolean); },
   regionAt(p) {
     const v = this.pv;
     if (!v || p.x < 426 || p.x > 826 || p.y < 66 || p.y > G.H - 92) return null;
     const a = v.asm, q = { x: (p.x - v.ox) / v.z, y: (p.y - v.oy) / v.z }, inP = G.geo.pointInPoly;
-    if (a.collar && this.hasCollar() && inP(q, a.collar)) return 'co';
+    if (this.hasCollar() && this.coPolys(a).some((poly) => inP(q, poly))) return 'co';
     if ((a.sleeveR && inP(q, a.sleeveR)) || (a.sleeveL && inP(q, a.sleeveL))) return 'tay';
     if (inP(q, a.body)) return 'than';
     if (q.y > a.slitY && q.y < a.floorY && Math.abs(q.x) < 20 * a.s * (a.mx || 1)) return 'quan';
@@ -81,7 +90,7 @@ G.scenes.sketch = {
     const v = this.pv, a = v.asm;
     c.save(); c.translate(v.ox, v.oy); c.scale(v.z, v.z);
     c.setLineDash(dash ? [4 / v.z, 3 / v.z] : []); c.strokeStyle = col; c.lineWidth = 2.2 / v.z; c.lineJoin = 'round';
-    const polys = r === 'than' ? [a.body] : r === 'tay' ? [a.sleeveR, a.sleeveL] : r === 'co' ? [a.collar] : [];
+    const polys = r === 'than' ? [a.body] : r === 'tay' ? [a.sleeveR, a.sleeveL] : r === 'co' ? this.coPolys(a) : [];
     for (const poly of polys) { if (!poly) continue; c.beginPath(); poly.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y))); c.closePath(); c.stroke(); }
     if (r === 'quan') { const w = 20 * a.s * (a.mx || 1); c.strokeRect(-w, a.slitY, 2 * w, a.floorY - a.slitY); }
     c.restore();
@@ -227,8 +236,8 @@ G.scenes.sketch = {
     if (shaping) this.drawHandles(c);
     if (reg) {
       this.outlineRegion(c, reg, U.T.accent, false);
-      if (drag) U.tooltip(c, [this.SLOT_LABEL[reg], 'Thả để dùng ' + C.FABRICS[drag.id].name]);
-      else U.tooltip(c, [this.SLOT_LABEL[reg], j.fabs[reg] ? C.FABRICS[j.fabs[reg]].name : 'Chưa có vải — bấm để chọn']);
+      if (drag) U.tooltip(c, [this.slotLabel(reg), 'Thả để dùng ' + C.FABRICS[drag.id].name]);
+      else U.tooltip(c, [this.slotLabel(reg), j.fabs[reg] ? C.FABRICS[j.fabs[reg]].name : 'Chưa có vải — bấm để chọn']);
     }
     // one click to use the same fabric for the whole áo (trousers are usually a different fabric)
     const cur = j.fabs[this.slot], aoSlots = this.slots().filter((k) => k !== 'quan');
@@ -437,7 +446,7 @@ G.scenes.sketch = {
       U.tile(c, sx, sy, 97, 72, { sel, hov: G.inRect(G.pointer, { x: sx, y: sy, w: 97, h: 72 }) });
       if (j.fabs[k]) U.swatch(c, j.fabs[k], sx + 8, sy + 7, 81, 40, 8);
       else { G.rr(c, sx + 8, sy + 7, 81, 40, 8); c.setLineDash([4, 4]); c.strokeStyle = U.T.soft; c.stroke(); c.setLineDash([]); G.text(c, '+', sx + 48, sy + 27, { size: 20, align: 'center', color: U.T.soft }); }
-      G.text(c, this.SLOT_LABEL[k], sx + 48, sy + 60, { size: 12, weight: 700, align: 'center' });
+      G.text(c, this.slotLabel(k), sx + 48, sy + 60, { size: 12, weight: 700, align: 'center' });
     });
     // filters: owned / everything / one material
     const F = [['own', 'Đã có'], ['all', 'Tất cả']].concat(Object.keys(C.MATS).map((m) => [m, C.MATS[m].name]));

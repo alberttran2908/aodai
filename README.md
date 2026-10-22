@@ -219,7 +219,7 @@ Những thứ không đưa lên web:
 - `screenshots/` và `.claude/` cũng được bỏ qua (đã khai báo trong `.gitignore`).
 
 ## Nội dung (`js/catalog.js`)
-- **Loại đồ** (`G.CAT.GARMENTS`): áo dài, **áo bà ba**, **áo dài cưới ngũ thân** và **áo Nhật Bình**. Khách đặt loại nào thì trong sổ phác thảo chỉ hiện kiểu hợp với loại đó.
+- **Loại đồ** (`G.CAT.GARMENTS`): áo dài, **áo bà ba**, **áo dài cưới ngũ thân**, **áo Nhật Bình** và **áo tứ thân**. Khách đặt loại nào thì trong sổ phác thảo chỉ hiện kiểu hợp với loại đó.
   - **Áo dài cưới ngũ thân** (đơn cưới từ hạng 2):
     - May hai lớp, lớp lót màu nhấn lộ ở gấu và đường xẻ. Có cổ đứng, tay rộng hoặc tay dài.
     - **Khăn đóng** được cắt từ vải cổ áo: cô dâu đội khăn vành cuộn tròn, chú rể đội khăn đóng xếp nếp.
@@ -229,6 +229,12 @@ Những thứ không đưa lên web:
     - Cổ Nhật Bình lớn phủ vai xuống ngực, viền vàng, có tua ở hai đầu, cắt từ vải cổ áo.
     - Dài qua gối, xẻ hông, mặc với chân váy.
     - Rập có hai vạt trước, vạt sau và một dải cổ dài.
+  - **Áo tứ thân** (Kinh Bắc, cho nữ, đơn từ hạng 2):
+    - Bốn vạt: hai vạt sau ghép sống lưng, hai vạt trước mở chữ V tới eo, lộ yếm.
+    - Yếm cắt từ ô vải "Yếm" (trong game đây là ô vải cổ áo). Thắt lưng lụa theo màu nhấn, nút thắt ở eo, hai đuôi buông.
+    - Mặc với váy dài và nón quai thao (cố định, nên mục "Đội đầu" bị khoá).
+    - Khi ghim lên ma-nơ-canh: yếm trước, rồi hai vạt sau, hai vạt trước, hai tay.
+    - Đường may có viền vạt và nẹp vạt.
   - Áo bà ba dài ngang hông, xẻ tà ngắn, cài nút giữa, có hai túi trước; có cả bản nam.
   - Rập áo bà ba gồm: hai vạt trước, vạt sau, hai túi.
   - Đường may riêng của áo bà ba: nẹp nút, may túi, lai áo.
@@ -236,7 +242,7 @@ Những thứ không đưa lên web:
 - **Dịp mặc** (`js/content/occasions.js`): khoảng một nửa khách vãng lai kể dịp mặc bằng lời. Có 11 dịp, trong đó 3 dịp đòi áo bà ba:
   - Đám cưới ở biển, ra mắt nhà chồng, chụp kỷ yếu, lễ chùa đầu năm, thuyết trình, thi hoa khôi, áo Tết, mừng thọ.
   - Đờn ca tài tử, chợ nổi, dẫn khách du lịch (áo bà ba).
-  - Lễ cưới theo lễ xưa, lễ ăn hỏi (áo cưới, từ hạng 2). Chụp ảnh ở Đại Nội, diễu hành Festival Huế, đóng phim cổ trang (Nhật Bình, từ hạng 3).
+  - Lễ cưới theo lễ xưa, lễ ăn hỏi (áo cưới, từ hạng 2). Chụp ảnh ở Đại Nội, diễu hành Festival Huế, đóng phim cổ trang (Nhật Bình, từ hạng 3). Hát quan họ hội Lim, hội làng đầu xuân, chụp ảnh ở làng cổ Đường Lâm (tứ thân, từ hạng 2).
   - Yêu cầu của đơn đi theo dịp. Khi nhận áo, khách khen hoặc chê đúng chuyện của dịp đó.
 - **5 phong cách**: Truyền thống, Thanh lịch, Sang trọng, Rực rỡ, Hiện đại
 - **Các phần áo**: 11 kiểu cổ, 3 dáng, 9 kiểu tay, 7 kiểu tà (gồm cả độ dài), 4 kiểu quần/váy. Mỗi lựa chọn mang điểm phong cách và mở theo hạng.

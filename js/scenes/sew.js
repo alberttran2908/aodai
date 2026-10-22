@@ -36,7 +36,8 @@ G.scenes.sew = {
     this.bake();
     // first the cut pieces are pinned onto the dress form, one by one (back, front, sleeves, collar)
     // (an áo bà ba pins its two front halves and then its patch pockets)
-    const ORDER = ['back', 'front', 'frontR', 'frontL', 'sleeveR', 'sleeveL', 'collar', 'nbcollar', 'pocketR', 'pocketL'];
+    // (the tứ thân: its yếm first, then the two back panels, the two front ones and the sleeves)
+    const ORDER = ['yem', 'back', 'backR', 'backL', 'front', 'frontR', 'frontL', 'sleeveR', 'sleeveL', 'collar', 'nbcollar', 'pocketR', 'pocketL'];
     j.pinned = j.pinned || {};
     this.pinList = j.pieces.filter((p) => ORDER.includes(p.id)).sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
     if (this.pinList.some((p) => !j.pinned[p.id])) this.mode = 'pin';
@@ -54,7 +55,7 @@ G.scenes.sew = {
     this.baked = { cv, x0, y0, R };
     // patch pockets are pinned on their own: the panels underneath are shown without them
     this.bakedBare = this.baked;
-    if (a.pockets || a.nbCollar) {
+    if (a.pockets || a.nbCollar || a.yem) {
       const cb = document.createElement('canvas'); cb.width = cv.width; cb.height = cv.height;
       const c2 = cb.getContext('2d'); c2.scale(R, R); c2.translate(-x0, -y0);
       G.art.garment(c2, a, G.jobFabs(), { trousers: false, buttons: false, still: true, noSheen: true, pockets: false });
@@ -241,7 +242,7 @@ G.scenes.sew = {
   pinPolys(id) {
     const a = this.asm;
     const pk = a.pockets || [];
-    return ({ back: [a.body], front: [a.body], frontR: [a.frontR], frontL: [a.frontL], sleeveR: [a.sleeveR], sleeveL: [a.sleeveL], collar: [a.collar], nbcollar: a.nbCollar || [], pocketR: [pk[0]], pocketL: [pk[1]] }[id] || []).filter(Boolean);
+    return ({ back: [a.body], backR: [a.frontR], backL: [a.frontL], yem: [a.yem], front: [a.body], frontR: [a.frontR], frontL: [a.frontL], sleeveR: [a.sleeveR], sleeveL: [a.sleeveL], collar: [a.collar], nbcollar: a.nbCollar || [], pocketR: [pk[0]], pocketL: [pk[1]] }[id] || []).filter(Boolean);
   },
   // the front is on the form (in one piece, or both bà ba halves): the back no longer shows through
   frontDone() { const p = this.j.pinned; return !!(p.front || (p.frontR && p.frontL)); },
@@ -257,12 +258,13 @@ G.scenes.sew = {
       const pop = this.pinPop[id] !== undefined ? this.pinPop[id] : 1, k = 1 + 0.06 * (1 - G.easeOut(pop * 3));
       c.save(); c.scale(k, k); c.beginPath();
       for (const poly of polys) { poly.forEach((q, n) => (n ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y))); c.closePath(); }
-      const src = /^pocket|^nbcollar/.test(id) ? B : this.bakedBare || B;
+      const src = /^pocket|^nbcollar|^yem/.test(id) ? B : this.bakedBare || B;
       c.clip(); c.drawImage(src.cv, src.x0, src.y0, src.cv.width / src.R, src.cv.height / src.R);
       if (dark) { c.fillStyle = 'rgba(0,0,0,0.22)'; c.fillRect(-60 * s, -20 * s, 120 * s, 120 * s); }
       c.restore();
     };
-    if (j.pinned.back && !this.frontDone()) piece('back', true);
+    if (!this.frontDone()) for (const id of ['back', 'backR', 'backL']) if (j.pinned[id]) piece(id, true);
+    if (j.pinned.yem) piece('yem');
     for (const id of ['front', 'frontR', 'frontL', 'sleeveR', 'sleeveL', 'collar', 'nbcollar', 'pocketR', 'pocketL']) if (j.pinned[id]) piece(id);
     // where the piece in hand will go
     if (this.pinDrag) {
@@ -274,7 +276,7 @@ G.scenes.sew = {
     // pins along the edges of every pinned piece
     const cols = ['#c2414b', '#3f7fbf', '#e0b23c'];
     for (const p of this.pinList) {
-      if (!j.pinned[p.id] || (p.id === 'back' && this.frontDone())) continue;
+      if (!j.pinned[p.id] || (/^back/.test(p.id) && this.frontDone())) continue;
       for (const poly of this.pinPolys(p.id)) for (let k = 0; k < 6; k++) {
         const q = this.toScreen(poly[Math.floor((poly.length - 1) * (k + 0.5) / 6)]);
         this.pin(c, q.x - 4, q.y - 4, cols[k % 3]);

@@ -91,7 +91,8 @@ G.CAT = (function () {
       yem: { rank: 5, tags: { rucro: 12, hiendai: 10 } }, trevai: { rank: 6, tags: { hiendai: 18, rucro: 8 } },
       lechvai: { rank: 7, tags: { hiendai: 22, rucro: 6 } },
       baba: { rank: 1, sex: 'mf', garment: 'baba', name: 'Cổ tròn bà ba', tags: { truyenthong: 14, thanhlich: 6 } },
-      nhatbinh: { rank: 1, garment: 'nhatbinh', name: 'Cổ Nhật Bình', tags: { truyenthong: 24, sangtrong: 12 } }
+      nhatbinh: { rank: 1, garment: 'nhatbinh', name: 'Cổ Nhật Bình', tags: { truyenthong: 24, sangtrong: 12 } },
+      tuthan: { rank: 1, garment: 'tuthan', name: 'Xẻ chữ V, lộ yếm', tags: { truyenthong: 20, rucro: 6 } }
     } },
     tay: { name: 'Tay áo', key: 'sleeve', opts: {
       dai: { rank: 1, sex: 'mf', tags: { truyenthong: 14, thanhlich: 8 } }, lung: { rank: 1, sex: 'mf', tags: { thanhlich: 12, hiendai: 4 } },
@@ -109,7 +110,8 @@ G.CAT = (function () {
       namom: { rank: 2, sex: 'm', name: 'Dáng nam cách tân', tags: { hiendai: 12, thanhlich: 6 } },
       baba: { rank: 1, sex: 'mf', garment: 'baba', name: 'Dáng bà ba', tags: { truyenthong: 10, thanhlich: 6 } },
       cuoi: { rank: 1, sex: 'mf', garment: 'cuoi', name: 'Ngũ thân cưới', tags: { truyenthong: 20, sangtrong: 10 } },
-      nhatbinh: { rank: 1, garment: 'nhatbinh', name: 'Dáng Nhật Bình', tags: { truyenthong: 16, sangtrong: 10 } }
+      nhatbinh: { rank: 1, garment: 'nhatbinh', name: 'Dáng Nhật Bình', tags: { truyenthong: 16, sangtrong: 10 } },
+      tuthan: { rank: 1, garment: 'tuthan', name: 'Bốn vạt, thắt lưng', tags: { truyenthong: 18, thanhlich: 4 } }
     } },
     ta: { name: 'Tà áo', key: 'ta', opts: {
       dai_thang: { rank: 1, set: { length: 'got', hem: 'thang' }, name: 'Tà dài chấm gót', tags: { truyenthong: 12, thanhlich: 8 } },
@@ -126,7 +128,8 @@ G.CAT = (function () {
       // the wedding ngũ thân: an outer áo over an inner one in the accent colour, peeking at the hem and slits
       cuoi_got: { rank: 1, garment: 'cuoi', set: { length: 'got', hem: 'thang', layer: 'hai', garment: 'cuoi' }, name: 'Hai lớp chấm gót', tags: { truyenthong: 14, sangtrong: 10 } },
       cuoi_nam: { rank: 1, sex: 'm', garment: 'cuoi', set: { length: 'nam', hem: 'thang', layer: 'hai', garment: 'cuoi' }, name: 'Hai lớp qua gối', tags: { truyenthong: 14, sangtrong: 8 } },
-      nb_dai: { rank: 1, garment: 'nhatbinh', set: { length: 'nb', hem: 'thang', garment: 'nhatbinh' }, name: 'Qua gối, xẻ hông', tags: { truyenthong: 14, sangtrong: 8 } }
+      nb_dai: { rank: 1, garment: 'nhatbinh', set: { length: 'nb', hem: 'thang', garment: 'nhatbinh' }, name: 'Qua gối, xẻ hông', tags: { truyenthong: 14, sangtrong: 8 } },
+      tt_dai: { rank: 1, garment: 'tuthan', set: { length: 'tt', hem: 'thang', garment: 'tuthan' }, name: 'Vạt qua gối, thắt vạt', tags: { truyenthong: 14, rucro: 4 } }
     } },
     quan: { name: 'Quần / váy', key: 'bottom', opts: {
       quan: { rank: 1, sex: 'mf', tags: { truyenthong: 8 } }, ongrong: { rank: 2, sex: 'mf', tags: { hiendai: 10 } },
@@ -149,7 +152,12 @@ G.CAT = (function () {
     // áo Nhật Bình: the Nguyễn court robe for women — the great collar, bell sleeves, worn over a long skirt
     nhatbinh: { name: 'Áo Nhật Bình', short: 'Nhật Bình', women: true,
       allow: { co: ['nhatbinh'], dang: ['nhatbinh'], tay: ['thung'], ta: ['nb_dai'], quan: ['chanvay', 'quan'] },
-      def: { co: 'nhatbinh', dang: 'nhatbinh', tay: 'thung', ta: 'nb_dai', quan: 'chanvay' } }
+      def: { co: 'nhatbinh', dang: 'nhatbinh', tay: 'thung', ta: 'nb_dai', quan: 'chanvay' } },
+    // áo tứ thân: the Kinh Bắc dress — four panels open over a yếm (cut from the "Yếm" cloth), a silk sash in
+    // the accent colour, a long skirt, and the nón quai thao
+    tuthan: { name: 'Áo tứ thân', short: 'Tứ thân', women: true, head: 'quaithao', coLabel: 'Yếm',
+      allow: { co: ['tuthan'], dang: ['tuthan'], tay: ['dai', 'lung'], ta: ['tt_dai'], quan: ['chanvay'] },
+      def: { co: 'tuthan', dang: 'tuthan', tay: 'dai', ta: 'tt_dai', quan: 'chanvay' } }
   };
   const garmentAllows = (part, key, o, garment) => {
     const g = GARMENTS[garment] ? garment : 'aodai';

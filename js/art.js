@@ -399,7 +399,7 @@ G.art = (function () {
     };
     // a men's áo dài hangs straight: no godet waves, the back panel stays close behind
     // an everyday shirt, a bà ba or the Nhật Bình robe: a plain hem, no trailing back panel
-    const short = d.casual || d.garment === 'baba' || d.garment === 'nhatbinh';
+    const short = d.casual || ['baba', 'nhatbinh', 'tuthan'].includes(d.garment);
     const mk = asm.male || short ? 0 : 1;
     const sw = swF(0, { flare: 0.07, drop: 1.2, wave: 1.3 * mk, wph: 0 });
     const swB0 = swF(1.6, { flare: 0.1, drop: 6, wave: 0.9 * mk, wph: Math.PI, lamK: 1.7 });
@@ -770,6 +770,40 @@ G.art = (function () {
         for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(tip.x, tip.y); c.quadraticCurveTo(tip.x + k * 0.25 * s, tip.y + 2 * s, tip.x + k * 0.45 * s, tip.y + 4.2 * s); c.stroke(); }
         c.beginPath(); c.arc(tip.x, tip.y + 0.4 * s, 0.6 * s, 0, 7); c.fillStyle = gold; c.fill();
       }
+    }
+    // áo tứ thân: the yếm in the V of the open front (its top edge across the chest, thin ties up to the neck),
+    // then the silk sash wound round the waist, knotted at the front with both ends hanging
+    if (asm.yem && o.pockets !== false) { // (like the pockets, shown once it is pinned on)
+      const tri = asm.yem, a = tri[1].x, y0 = tri[0].y, yb = tri[2].y, top = 5.6 * s;
+      const halfAt = (y) => (a * (yb - y)) / (yb - y0);
+      c.save(); pathPoly(c, tri); c.clip();
+      c.beginPath(); c.rect(-30 * s, top, 60 * s, yb - top + 2 * s); c.clip();
+      pathPoly(c, tri); fillFabric(c, fCo.mat, fCo.color, tile, fCo.print);
+      const yg = c.createLinearGradient(0, top, 0, yb); yg.addColorStop(0, 'rgba(255,255,255,0.08)'); yg.addColorStop(1, 'rgba(0,0,0,0.12)');
+      c.fillStyle = yg; c.fill();
+      c.restore();
+      const yc = fabric(fCo.mat, fCo.color, fCo.print).hex, w = halfAt(top);
+      c.strokeStyle = mix(yc, '#000000', 0.25); c.lineWidth = 0.35 * s; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-w, top); c.lineTo(w, top); c.stroke();
+      for (const m of [-1, 1]) { c.beginPath(); c.moveTo(m * w * 0.72, top); c.quadraticCurveTo(m * w * 0.9, top * 0.45, m * (a - 1.2 * s), y0 + 0.4 * s); c.stroke(); }
+    }
+    if (asm.sashY) {
+      const y = asm.sashY, hex = accentHex, dk = mix(hex, '#000000', 0.3), lt = mix(hex, '#ffffff', 0.3);
+      c.save(); pathPoly(c, body); c.clip();
+      const sg = c.createLinearGradient(0, y - 1.8 * s, 0, y + 1.8 * s); sg.addColorStop(0, lt); sg.addColorStop(0.5, hex); sg.addColorStop(1, dk);
+      c.fillStyle = sg; c.fillRect(-30 * s, y - 1.8 * s, 60 * s, 3.6 * s);
+      c.strokeStyle = 'rgba(0,0,0,0.15)'; c.lineWidth = 0.15 * s;
+      for (let k = -1; k <= 1; k += 2) { c.beginPath(); c.moveTo(-30 * s, y + k * 0.6 * s); c.lineTo(30 * s, y + k * 0.6 * s); c.stroke(); }
+      c.restore();
+      // the knot and the two hanging ends
+      for (const m of [-1, 1]) {
+        c.beginPath(); c.moveTo(m * 0.6 * s, y + 0.8 * s);
+        c.bezierCurveTo(m * 2.2 * s, y + 6 * s, m * 1.2 * s, y + 11 * s, m * 2.6 * s, y + 17 * s);
+        c.lineTo(m * 4.4 * s, y + 16.4 * s);
+        c.bezierCurveTo(m * 3.2 * s, y + 10.5 * s, m * 3.8 * s, y + 5.5 * s, m * 1.8 * s, y + 0.6 * s); c.closePath();
+        c.fillStyle = m > 0 ? hex : mix(hex, '#000000', 0.12); c.fill(); c.strokeStyle = rgba(dk, 0.5); c.lineWidth = 0.15 * s; c.stroke();
+      }
+      c.beginPath(); c.ellipse(0, y, 1.7 * s, 2.1 * s, 0, 0, 7); c.fillStyle = lt; c.fill(); c.strokeStyle = rgba(dk, 0.6); c.stroke();
     }
     // buttons (the bà ba always shows its front buttons: cloth knots when no button is chosen)
     const bt = ST.buttons.opts[d.buttons] && ST.buttons.opts[d.buttons].hex ? ST.buttons.opts[d.buttons] : asm.opening ? { hex: mix(F.hex, '#000000', 0.25) } : null;
