@@ -16,8 +16,12 @@ G.ach = {
     { id: 'ghe5', key: 'ghe', n: 5, text: 'Ghé 5 tiệm bạn bè', coins: 100 }
   ],
   on() { const s = G.state; return !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge'; },
-  // (a shop that existed before this counts the dresses it has already delivered)
-  st() { const s = G.state; if (!s.stats) s.stats = { giao: s.served || 0 }; s.achGot = s.achGot || {}; return s; },
+  // (a shop that existed before this counts the clients' dresses already in its album that pleased them)
+  st() {
+    const s = G.state;
+    if (!s.stats) s.stats = { giao: (s.collection || []).filter((it) => it.success && it.kind !== 'rack' && it.kind !== 'daily').length };
+    s.achGot = s.achGot || {}; return s;
+  },
   val(a) { return Math.min(a.n, this.st().stats[a.key] || 0); },
   done(a) { return this.val(a) >= a.n; },
   // something happened n times (or, for a "max" counter, reached level n)
