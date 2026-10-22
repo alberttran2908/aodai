@@ -450,12 +450,14 @@ G.scenes.sketch = {
       G.text(c, this.slotLabel(k), sx + 48, sy + 60, { size: 12, weight: 700, align: 'center' });
     });
     // filters: owned / everything / one material
+    const R = this.rules();
     const F = [['own', 'Đã có'], ['all', 'Tất cả']].concat(Object.keys(C.MATS).map((m) => [m, C.MATS[m].name]));
     F.forEach(([key, label], i) => {
       const fx = x0 + (i % 5) * 83, fy = 198 + Math.floor(i / 5) * 34;
       G.button(c, 'flt' + key, label, fx, fy, 78, 28, () => { this.filter = key; this.page = 0; }, { style: this.filter === key ? 'primary' : 'ghost', size: 12, r: 14 });
+      // the material the client asked for is marked on its filter, not on every bolt of it
+      if (key === R.mat) { c.beginPath(); c.arc(fx + 72, fy + 3, 7, 0, 7); c.fillStyle = U.T.ok; c.fill(); G.text(c, '✓', fx + 72, fy + 3, { size: 9, weight: 800, align: 'center', color: '#fff' }); }
     });
-    const R = this.rules();
     let ids = Object.keys(C.FABRICS).filter((id) => C.FABRICS[id].rank <= rk);
     if (this.filter === 'own') ids = ids.filter((id) => s.roll[id] > 0);
     else if (this.filter !== 'all') ids = ids.filter((id) => C.FABRICS[id].mat === this.filter);
@@ -473,7 +475,7 @@ G.scenes.sketch = {
     ids.slice(this.page * per, this.page * per + per).forEach((id, i) => {
       const f = C.FABRICS[id], cx = x0 + (i % 4) * 105, cy = 270 + Math.floor(i / 4) * 92, cw = 97, chh = 86;
       const sel = j.fabs[this.slot] === id, hov = G.inRect(G.pointer, { x: cx, y: cy, w: cw, h: chh });
-      const avoid = R.avoid && f.colors.includes(R.avoid), matOk = R.mat && f.mat === R.mat;
+      const avoid = R.avoid && f.colors.includes(R.avoid);
       this.fabTiles.push({ id, x: cx, y: cy, w: cw, h: chh }); // click to use, or drag onto a part of the dress
       if (hov && !sel) this.hover = { kind: 'fab', id };
       U.tile(c, cx, cy, cw, chh, { sel, hov, r: 10 });
@@ -482,7 +484,6 @@ G.scenes.sketch = {
         G.rr(c, cx + 6, cy + 6, cw - 12, 40, 7); c.fillStyle = 'rgba(184,50,63,0.35)'; c.fill();
         G.text(c, 'Khách tránh màu này', cx + cw / 2, cy + 26, { size: 10, weight: 800, align: 'center', color: '#fff' });
       }
-      if (matOk) { c.beginPath(); c.arc(cx + cw - 12, cy + 12, 8, 0, 7); c.fillStyle = U.T.ok; c.fill(); G.text(c, '✓', cx + cw - 12, cy + 12, { size: 11, weight: 800, align: 'center', color: '#fff' }); }
       const have = s.roll[id] || 0;
       G.text(c, have ? `${(have / 100).toFixed(1)} m` : G.econ.priceLabel(id), cx + 6, cy + 58, { size: 11, weight: 800, color: have ? U.T.ok : U.T.gold });
       U.pills(c, f.tags, cx + 6, cy + 75, cw - 12, mult);
