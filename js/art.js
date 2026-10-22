@@ -399,7 +399,7 @@ G.art = (function () {
     };
     // a men's áo dài hangs straight: no godet waves, the back panel stays close behind
     // an everyday shirt, a bà ba or the Nhật Bình robe: a plain hem, no trailing back panel
-    const short = d.casual || ['baba', 'nhatbinh', 'tuthan'].includes(d.garment);
+    const short = d.casual || ['baba', 'nhatbinh', 'tuthan', 'vest'].includes(d.garment);
     const mk = asm.male || short ? 0 : 1;
     const sw = swF(0, { flare: 0.07, drop: 1.2, wave: 1.3 * mk, wph: 0 });
     const swB0 = swF(1.6, { flare: 0.1, drop: 6, wave: 0.9 * mk, wph: Math.PI, lamK: 1.7 });
@@ -804,6 +804,46 @@ G.art = (function () {
         c.fillStyle = m > 0 ? hex : mix(hex, '#000000', 0.12); c.fill(); c.strokeStyle = rgba(dk, 0.5); c.lineWidth = 0.15 * s; c.stroke();
       }
       c.beginPath(); c.ellipse(0, y, 1.7 * s, 2.1 * s, 0, 0, 7); c.fillStyle = lt; c.fill(); c.strokeStyle = rgba(dk, 0.6); c.stroke();
+    }
+    // vest: a white shirt with its collar points and a tie (accent colour) in the V, the lapels in the "Ve áo"
+    // cloth with a soft roll shadow, flap pockets and a breast-pocket welt
+    if (asm.shirtV) {
+      const tri = asm.shirtV, a = tri[1].x, y0 = tri[0].y, yb = tri[2].y;
+      c.save(); pathPoly(c, tri); c.fillStyle = '#f7f5f0'; c.fill();
+      const sg = c.createLinearGradient(-a, 0, a, 0); sg.addColorStop(0, 'rgba(0,0,0,0.1)'); sg.addColorStop(0.5, 'rgba(0,0,0,0)'); sg.addColorStop(1, 'rgba(0,0,0,0.1)');
+      c.fillStyle = sg; c.fill();
+      // shirt collar points either side of the knot
+      c.fillStyle = '#ffffff'; c.strokeStyle = 'rgba(0,0,0,0.2)'; c.lineWidth = 0.12 * s;
+      for (const m of [-1, 1]) { c.beginPath(); c.moveTo(m * 0.3 * s, y0 + 0.4 * s); c.lineTo(m * (a - 0.6 * s), y0 + 0.2 * s); c.lineTo(m * 1.6 * s, y0 + 3.6 * s); c.closePath(); c.fill(); c.stroke(); }
+      // the tie: a knot, then the blade widening down to its point inside the V
+      const th = accentHex, td = mix(th, '#000000', 0.3);
+      c.beginPath(); c.moveTo(-0.9 * s, y0 + 1.2 * s); c.lineTo(0.9 * s, y0 + 1.2 * s); c.lineTo(0.6 * s, y0 + 2.9 * s); c.lineTo(-0.6 * s, y0 + 2.9 * s); c.closePath(); c.fillStyle = td; c.fill();
+      c.beginPath(); c.moveTo(-0.6 * s, y0 + 2.9 * s); c.lineTo(0.6 * s, y0 + 2.9 * s); c.lineTo(1.5 * s, yb - 3 * s); c.lineTo(0, yb - 1.2 * s); c.lineTo(-1.5 * s, yb - 3 * s); c.closePath();
+      const tg = c.createLinearGradient(-1.5 * s, 0, 1.5 * s, 0); tg.addColorStop(0, td); tg.addColorStop(0.5, th); tg.addColorStop(1, td);
+      c.fillStyle = tg; c.fill();
+      c.restore();
+    }
+    if (asm.lapels && o.pockets !== false) { // (shown once pinned on)
+      for (const lp of asm.lapels) {
+        c.save(); pathPoly(c, lp); fillFabric(c, fCo.mat, fCo.color, tile, fCo.print);
+        c.fillStyle = 'rgba(255,255,255,0.07)'; c.fill(); c.clip();
+        c.lineWidth = 1.4 * s; c.strokeStyle = 'rgba(0,0,0,0.16)'; if (hq) c.filter = 'blur(1px)'; pathPoly(c, lp); c.stroke();
+        c.restore();
+        pathPoly(c, lp); c.strokeStyle = 'rgba(30,15,10,0.35)'; c.lineWidth = 0.18 * s; c.stroke();
+      }
+    }
+    if (asm.flaps && o.pockets !== false) {
+      for (const fp of asm.flaps.concat([asm.chestPocket])) {
+        const q = fp.map(sw);
+        c.save(); pathPoly(c, q); fillFabric(c, fab.mat, fab.color, tile, basePrint);
+        c.fillStyle = 'rgba(0,0,0,0.1)'; c.fill(); c.strokeStyle = 'rgba(30,15,10,0.35)'; c.lineWidth = 0.16 * s; c.stroke();
+        c.restore();
+      }
+    }
+    // evening gown: the waist seam, a whisper of a line where bodice meets skirt
+    if (asm.waistLine) {
+      pathPoly(c, asm.waistLine, false); c.strokeStyle = 'rgba(30,15,10,0.22)'; c.lineWidth = 0.25 * s; c.stroke();
+      c.save(); c.translate(0, 0.35 * s); pathPoly(c, asm.waistLine, false); c.strokeStyle = 'rgba(255,255,255,0.14)'; c.lineWidth = 0.2 * s; c.stroke(); c.restore();
     }
     // buttons (the bà ba always shows its front buttons: cloth knots when no button is chosen)
     const bt = ST.buttons.opts[d.buttons] && ST.buttons.opts[d.buttons].hex ? ST.buttons.opts[d.buttons] : asm.opening ? { hex: mix(F.hex, '#000000', 0.25) } : null;

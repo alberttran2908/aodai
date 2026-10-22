@@ -92,7 +92,10 @@ G.CAT = (function () {
       lechvai: { rank: 7, tags: { hiendai: 22, rucro: 6 } },
       baba: { rank: 1, sex: 'mf', garment: 'baba', name: 'Cổ tròn bà ba', tags: { truyenthong: 14, thanhlich: 6 } },
       nhatbinh: { rank: 1, garment: 'nhatbinh', name: 'Cổ Nhật Bình', tags: { truyenthong: 24, sangtrong: 12 } },
-      tuthan: { rank: 1, garment: 'tuthan', name: 'Xẻ chữ V, lộ yếm', tags: { truyenthong: 20, rucro: 6 } }
+      tuthan: { rank: 1, garment: 'tuthan', name: 'Xẻ chữ V, lộ yếm', tags: { truyenthong: 20, rucro: 6 } },
+      vest: { rank: 1, sex: 'mf', garment: 'vest', name: 'Ve chữ K', tags: { hiendai: 14, thanhlich: 12 } },
+      vestnhon: { rank: 1, sex: 'mf', garment: 'vest', name: 'Ve nhọn', tags: { sangtrong: 12, hiendai: 12 } },
+      cup: { rank: 1, garment: 'dam', name: 'Cúp ngực', tags: { sangtrong: 14, hiendai: 10 } }
     } },
     tay: { name: 'Tay áo', key: 'sleeve', opts: {
       dai: { rank: 1, sex: 'mf', tags: { truyenthong: 14, thanhlich: 8 } }, lung: { rank: 1, sex: 'mf', tags: { thanhlich: 12, hiendai: 4 } },
@@ -101,7 +104,8 @@ G.CAT = (function () {
       bong: { rank: 4, tags: { hiendai: 10, rucro: 8 } }, canhtien: { rank: 5, tags: { rucro: 10, thanhlich: 6 } },
       khong: { rank: 6, tags: { hiendai: 16, rucro: 6 } },
       rong: { rank: 1, sex: 'mf', garment: 'cuoi', name: 'Tay rộng', tags: { truyenthong: 12, sangtrong: 6 } },
-      thung: { rank: 1, garment: 'nhatbinh', name: 'Tay thụng', tags: { sangtrong: 14, truyenthong: 12 } }
+      thung: { rank: 1, garment: 'nhatbinh', name: 'Tay thụng', tags: { sangtrong: 14, truyenthong: 12 } },
+      damkhong: { rank: 1, garment: 'dam', name: 'Không tay', tags: { sangtrong: 6, hiendai: 8 } }
     } },
     dang: { name: 'Dáng thân', key: 'fit', opts: {
       om: { rank: 1, tags: { thanhlich: 10, truyenthong: 6 } }, suong: { rank: 1, tags: { hiendai: 8, thanhlich: 6 } },
@@ -111,7 +115,9 @@ G.CAT = (function () {
       baba: { rank: 1, sex: 'mf', garment: 'baba', name: 'Dáng bà ba', tags: { truyenthong: 10, thanhlich: 6 } },
       cuoi: { rank: 1, sex: 'mf', garment: 'cuoi', name: 'Ngũ thân cưới', tags: { truyenthong: 20, sangtrong: 10 } },
       nhatbinh: { rank: 1, garment: 'nhatbinh', name: 'Dáng Nhật Bình', tags: { truyenthong: 16, sangtrong: 10 } },
-      tuthan: { rank: 1, garment: 'tuthan', name: 'Bốn vạt, thắt lưng', tags: { truyenthong: 18, thanhlich: 4 } }
+      tuthan: { rank: 1, garment: 'tuthan', name: 'Bốn vạt, thắt lưng', tags: { truyenthong: 18, thanhlich: 4 } },
+      vest: { rank: 1, sex: 'mf', garment: 'vest', name: 'Dáng vest may đo', tags: { hiendai: 16, thanhlich: 10 } },
+      dam: { rank: 1, garment: 'dam', name: 'Ôm eo', tags: { sangtrong: 14, rucro: 6 } }
     } },
     ta: { name: 'Tà áo', key: 'ta', opts: {
       dai_thang: { rank: 1, set: { length: 'got', hem: 'thang' }, name: 'Tà dài chấm gót', tags: { truyenthong: 12, thanhlich: 8 } },
@@ -129,7 +135,10 @@ G.CAT = (function () {
       cuoi_got: { rank: 1, garment: 'cuoi', set: { length: 'got', hem: 'thang', layer: 'hai', garment: 'cuoi' }, name: 'Hai lớp chấm gót', tags: { truyenthong: 14, sangtrong: 10 } },
       cuoi_nam: { rank: 1, sex: 'm', garment: 'cuoi', set: { length: 'nam', hem: 'thang', layer: 'hai', garment: 'cuoi' }, name: 'Hai lớp qua gối', tags: { truyenthong: 14, sangtrong: 8 } },
       nb_dai: { rank: 1, garment: 'nhatbinh', set: { length: 'nb', hem: 'thang', garment: 'nhatbinh' }, name: 'Qua gối, xẻ hông', tags: { truyenthong: 14, sangtrong: 8 } },
-      tt_dai: { rank: 1, garment: 'tuthan', set: { length: 'tt', hem: 'thang', garment: 'tuthan' }, name: 'Vạt qua gối, thắt vạt', tags: { truyenthong: 14, rucro: 4 } }
+      tt_dai: { rank: 1, garment: 'tuthan', set: { length: 'tt', hem: 'thang', garment: 'tuthan' }, name: 'Vạt qua gối, thắt vạt', tags: { truyenthong: 14, rucro: 4 } },
+      vest_hong: { rank: 1, sex: 'mf', garment: 'vest', set: { length: 'vest', hem: 'thang', garment: 'vest' }, name: 'Dài ngang hông', tags: { thanhlich: 10, hiendai: 8 } },
+      dam_xoe: { rank: 1, garment: 'dam', set: { length: 'got', hem: 'damxoe', garment: 'dam' }, name: 'Xoè chấm đất', tags: { sangtrong: 14, rucro: 8 } },
+      dam_duoica: { rank: 1, garment: 'dam', set: { length: 'got', hem: 'duoica', garment: 'dam' }, name: 'Đuôi cá', tags: { sangtrong: 12, hiendai: 10 } }
     } },
     quan: { name: 'Quần / váy', key: 'bottom', opts: {
       quan: { rank: 1, sex: 'mf', tags: { truyenthong: 8 } }, ongrong: { rank: 2, sex: 'mf', tags: { hiendai: 10 } },
@@ -157,7 +166,15 @@ G.CAT = (function () {
     // the accent colour, a long skirt, and the nón quai thao
     tuthan: { name: 'Áo tứ thân', short: 'Tứ thân', women: true, head: 'quaithao', coLabel: 'Yếm',
       allow: { co: ['tuthan'], dang: ['tuthan'], tay: ['dai', 'lung'], ta: ['tt_dai'], quan: ['chanvay'] },
-      def: { co: 'tuthan', dang: 'tuthan', tay: 'dai', ta: 'tt_dai', quan: 'chanvay' } }
+      def: { co: 'tuthan', dang: 'tuthan', tay: 'dai', ta: 'tt_dai', quan: 'chanvay' } },
+    // vest: a tailored two-button jacket over a shirt and tie, with trousers; lapels in the "Ve áo" cloth
+    vest: { name: 'Vest', short: 'Vest', coLabel: 'Ve áo',
+      allow: { co: ['vest', 'vestnhon'], dang: ['vest'], tay: ['dai'], ta: ['vest_hong'], quan: ['quan'] },
+      def: { co: 'vest', dang: 'vest', tay: 'dai', ta: 'vest_hong', quan: 'quan' } },
+    // đầm dạ hội: a fitted bodice joined at the waist to a floor-length skirt, flared or mermaid
+    dam: { name: 'Đầm dạ hội', short: 'Đầm', women: true,
+      allow: { co: ['cup', 'thuyen', 'tim', 'vuong', 'yem', 'trevai', 'lechvai'], dang: ['dam'], tay: ['damkhong', 'voan', 'canhtien', 'ngan', 'dai'], ta: ['dam_xoe', 'dam_duoica'], quan: ['chanvay', 'tuyn'] },
+      def: { co: 'cup', dang: 'dam', tay: 'damkhong', ta: 'dam_xoe', quan: 'chanvay' } }
   };
   const garmentAllows = (part, key, o, garment) => {
     const g = GARMENTS[garment] ? garment : 'aodai';

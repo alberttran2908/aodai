@@ -29,7 +29,7 @@ G.scenes.sketch = {
     if (k === 'quan' && ['chanvay', 'tuyn'].includes(G.job.part.quan)) return 'Váy';
     return this.SLOT_LABEL[k];
   },
-  hasCollar(partSel) { return ['dung', 'thap', 'nhatbinh', 'tuthan'].includes((partSel || G.job.part).co); },
+  hasCollar(partSel) { return ['dung', 'thap', 'nhatbinh', 'tuthan', 'vest', 'vestnhon'].includes((partSel || G.job.part).co); },
   slots(partSel) { return Object.keys(G.CAT.SLOTS).filter((k) => k !== 'co' || this.hasCollar(partSel)); },
   // the commission's hard fabric rules, for badges on the fabric cards
   rules() {
@@ -75,7 +75,7 @@ G.scenes.sketch = {
 
   // ---------- clicking the dress picks a fabric slot ----------
   // what the "co" cloth covers: the standing collar, the Nhật Bình's great collar, or the tứ thân's yếm
-  coPolys(a) { return [a.collar, a.yem].concat(a.nbCollar || []).filter(Boolean); },
+  coPolys(a) { return [a.collar, a.yem].concat(a.nbCollar || [], a.lapels || []).filter(Boolean); },
   regionAt(p) {
     const v = this.pv;
     if (!v || p.x < 426 || p.x > 826 || p.y < 66 || p.y > G.H - 92) return null;

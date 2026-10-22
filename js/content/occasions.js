@@ -125,4 +125,37 @@ Object.assign(G.OCCASIONS, {
     win: ['Đứng bên tường đá ong, ảnh ra như tranh Đông Hồ vậy!', 'Bộ ảnh lên mạng được cả nghìn lượt thích, ai cũng hỏi may ở đâu.'],
     lose: { min: 'Đẹp mà chưa đủ duyên cho bộ ảnh làng cổ…', q: 'Chụp cận là thấy đường may lỗi ngay…' } }
 });
+// modern wear: the vest (any rank) and the evening gown (from rank 2)
+Object.assign(G.OCCASIONS, {
+  phongVan: { title: 'Phỏng vấn xin việc', sex: 'mf', garment: 'vest', ribbon: ['#3a4f6a', 'Vest'],
+    lines: ['Thứ hai tui phỏng vấn ở ngân hàng, cần bộ vest may đo cho chỉn chu. Đừng màu mè, đừng đỏ nha.',
+      'Lần đầu đi phỏng vấn tập đoàn lớn, mặc vest đi chợ thì kỳ quá. May giùm bộ vừa vặn, lịch sự.'],
+    reqs: [['min', 'thanhlich', 'auto'], ['max', 'rucro', 20], ['avoid', 'do']],
+    win: ['Người phỏng vấn khen “bạn ăn mặc rất chuyên nghiệp”. Đậu rồi nha!', 'Vest vừa như in, bước vô phòng phỏng vấn mà tự tin hẳn.'],
+    lose: { max: 'Màu mè quá, đi phỏng vấn ngân hàng chắc bị đánh giá…', avoid: 'Vest đỏ đi phỏng vấn… người ta tưởng tui đi đám cưới.', min: 'Chưa đủ chỉn chu, sợ gây ấn tượng không tốt…', q: 'Đường may xộc xệch, ngồi xuống là thấy liền…' } },
+  phuRe: { title: 'Làm phù dâu phù rể', sex: 'mf', garment: 'vest', ribbon: ['#3a4f6a', 'Vest'],
+    lines: ['Bạn thân cưới, tui làm phù rể. Cả dãy phù rể mặc vest hiện đại, cà vạt theo màu đám cưới.',
+      'Em làm phù dâu mà cô dâu muốn tụi em mặc vest nữ cho cá tính. Hiện đại, thanh lịch nha chị!'],
+    reqs: [['min', 'hiendai', 'auto'], ['min', 'thanhlich', 'auto']],
+    win: ['Dãy phù rể đứng chụp ảnh mà như bước ra từ tạp chí!', 'Cô dâu nói “chọn tiệm này là đúng nhất”, cả đám cưới khen.'],
+    lose: { min: 'Đứng cạnh mấy người kia nhìn mình cũ kỹ quá…', q: 'Đang nhảy mà vai áo bung chỉ thì quê chết…' } },
+  daTiec: { title: 'Dạ tiệc cuối năm', sex: 'f', garment: 'dam', minRank: 2, ribbon: ['#6a2a4a', 'Đầm dạ hội'],
+    lines: ['Công ty tổ chức tiệc tất niên ở khách sạn, có thảm đỏ chụp ảnh. Em cần đầm dạ hội thật sang, có đính kết lấp lánh.',
+      'Dạ tiệc cuối năm, ai cũng đầm dạ hội. Chị muốn bộ thật lộng lẫy, đi qua là người ta ngoái nhìn.'],
+    reqs: [['min', 'sangtrong', 'auto'], ['decor', 'dinh']],
+    win: ['Em được bầu “quý cô của đêm tiệc”! Sếp tổng còn xin chụp chung.', 'Đi tới đâu đèn chiếu lấp lánh tới đó, cả công ty xôn xao.'],
+    lose: { decor: 'Trơn quá, dưới đèn tiệc chìm nghỉm luôn…', min: 'Chưa đủ sang cho dạ tiệc khách sạn…', q: 'Đang khiêu vũ mà khoá kéo bung thì chết…' } },
+  thamDo: { title: 'Thảm đỏ ra mắt phim', sex: 'f', garment: 'dam', minRank: 3, ribbon: ['#6a2a4a', 'Đầm dạ hội'],
+    lines: ['Phim của em ra mắt! Đi thảm đỏ phải táo bạo, lộng lẫy, cánh báo chí chụp lia lịa.',
+      'Lễ trao giải tuần sau, em muốn bộ đầm thảm đỏ gợi cảm mà vẫn sang, lên báo hết trang nhất.'],
+    reqs: [['min', 'sangtrong', 'auto'], ['gc', 'min', 'auto']],
+    win: ['Hôm sau em lên trang nhất mục “mặc đẹp nhất thảm đỏ”!', 'Đèn flash nháy liên tục, ai cũng hỏi đầm của nhà thiết kế nào.'],
+    lose: { gc: 'Kín quá, lên thảm đỏ chìm giữa các sao khác…', min: 'Chưa đủ lộng lẫy cho thảm đỏ chị ơi…', q: 'Lên ảnh cận là thấy đường may lỗi…' } },
+  prom: { title: 'Prom cuối cấp', sex: 'f', garment: 'dam', minRank: 2, ribbon: ['#6a2a4a', 'Đầm dạ hội'],
+    lines: ['Prom cuối cấp của trường em! Em muốn đầm màu pastel, voan bay bay, trẻ trung mà vẫn điệu.',
+      'Đêm prom chia tay lớp mười hai, em cần bộ đầm hiện đại màu nhạt, nhảy được nha chị.'],
+    reqs: [['min', 'hiendai', 'auto'], ['cols', ['hongphan', 'champagne', 'thien', 'hoaca', 'be', 'trang'], 60, 'màu pastel']],
+    win: ['Em được bầu “nữ hoàng prom”! Cả lớp vỗ tay rần rần.', 'Xoay một vòng là váy xoè như hoa, bạn bè quay clip quá trời.'],
+    lose: { cols: 'Màu này đậm quá, nhìn như đi tiệc của người lớn…', min: 'Hơi cũ, bạn bè mặc trẻ trung hơn nhiều…', q: 'Đang nhảy mà sợ bung chỉ quá…' } }
+});
 G.OCCASION_ORDER = Object.keys(G.OCCASIONS);

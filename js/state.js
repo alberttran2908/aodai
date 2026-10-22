@@ -200,8 +200,8 @@
   // ---------- "gợi cảm" (how revealing / alluring a dress reads), 0–100 ----------
   // open necklines, bare arms, a short tà, a high slit, a nipped waist and sheer fabric all add up
   const GC = {
-    neck: { yem: 30, trevai: 28, lechvai: 24, tim: 18, thuyen: 12, vuong: 10, tron: 6 },
-    sleeve: { khong: 20, canhtien: 12, ngan: 10, voan: 8, bong: 4 },
+    neck: { yem: 30, trevai: 28, cup: 26, lechvai: 24, tim: 18, thuyen: 12, vuong: 10, tron: 6 },
+    sleeve: { khong: 20, damkhong: 18, canhtien: 12, ngan: 10, voan: 8, bong: 4 },
     length: { ngan: 22, goi: 10, namngan: 4 },
     hem: { xeo: 4, nhon: 3 },
     fit: { om: 6, namom: 3, nguthan: -6 },
@@ -212,7 +212,7 @@
     let v = 0;
     for (const k in GC) v += GC[k][d[k]] || 0;
     const xe = typeof sh.xe === 'number' ? sh.xe : d.fit === 'nguthan' ? 52 : 45; // the slit opens nearer the waist = higher
-    if (d.garment !== 'baba') v += G.clamp((52 - xe) * 1.2, 0, 14); // the bà ba's little slits show nothing
+    if (!d.garment || d.garment === 'cuoi') v += G.clamp((52 - xe) * 1.2, 0, 14); // only the áo dài's long slits show the waist
     if (typeof sh.eo === 'number' && sh.eo < 0) v += -sh.eo * 3;
     if (fabs) { const m = G.fabricShare(fabs).mats; v += ((m.voan || 0) + (m.ren || 0)) * 20; } // sheer cloth
     return Math.round(G.clamp(v, 0, 100));
