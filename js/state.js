@@ -75,6 +75,10 @@
     if (com && com.baseBudget === undefined) { com.baseBudget = com.budget; com.qualityBase = com.quality; com.quote = 1; }
     if (!s || (s.v || 3) < 4) G.state.bench.day = G.state.day;
     G.state.v = 4;
+    // dresses the window sold while you were away (already paid) used to wait on the rack for the fair,
+    // which paid them again; outside a fair in progress, anything sold has been paid
+    const fp = G.state.econ && G.state.econ.fairPending;
+    if (fp === null || fp === undefined) G.state.rack = (G.state.rack || []).filter((it) => !it.sold);
     if (G.studio) G.studio.registerAll();
     if (G.skins) G.skins.load(); // the player's own designed bolts, before the roll is checked
     for (const id in G.state.roll) if (!C.FABRICS[id]) delete G.state.roll[id];

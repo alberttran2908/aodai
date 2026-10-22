@@ -52,6 +52,9 @@ G.idle = {
       if (Math.random() < 1 - Math.pow(night ? 0.9 : 0.95, hours)) { const p = Math.round(G.fair.value(it) * (night ? 0.9 : 0.8)); sold.push({ it, p }); }
     }
     for (const x of sold) { coins += x.p; lines.push({ icon: 'dress', text: night ? 'Chợ đêm bán một áo trên sạp' : 'Tủ kính bán một áo cho khách qua đường', coins: x.p }); }
+    // a boutique's order came in (or an old one lapsed) while you were out
+    const offer = G.contract && G.contract.tick();
+    if (offer) lines.push({ icon: 'mail', text: `${offer.shop} đặt ${offer.n} áo bán sẵn`, coins: 0, note: 'đơn mới' });
     // a regular drops by with a present (once a Vietnam day, after 2 hours away): the closer the friend, the
     // likelier and the bigger — at "Tri kỷ" and up, a metre of their signature cloth too
     const gifts = [], today = G.dateKeyVN();
@@ -92,7 +95,9 @@ G.idle = {
   set pending(v) { if (G.state) G.state.idlePending = v; },
   collect() {
     const P = this.pending; if (!P) return;
-    for (const x of P.sold) { const it = G.state.rack[x.i]; if (it && !it.sold) { it.sold = true; it.soldFor = x.p; it.price = x.p; } }
+    // sold through the window: paid now, so they leave the rack (the month's fair must not pay for them again)
+    for (const x of P.sold) { const it = G.state.rack[x.i]; if (it && !it.sold) { it.sold = true; it.soldFor = x.p; it.price = x.p; it.paid = true; } }
+    G.state.rack = G.state.rack.filter((it) => !it.paid);
     for (const m of P.made || []) this.hangMade(m);
     for (const g of P.gifts || []) if (G.CAT.FABRICS[g.fid]) G.state.roll[g.fid] = (G.state.roll[g.fid] || 0) + g.cm;
     for (const com of P.calls || []) G.state.bench.seats.push({ com, patience: G.bench.patience() + 1, arrived: G.state.day, phone: true });

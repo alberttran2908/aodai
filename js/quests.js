@@ -9,7 +9,8 @@ G.quests = {
     { id: 'nhuom', ev: 'nhuom', n: 1, text: 'Nhuộm một mẻ vải ở Xưởng', gift: { coins: 60 }, needs: () => true },
     { id: 'ui', ev: 'ui', n: 1, text: 'Ủi phẳng hết nếp một chiếc áo', gift: { coins: 80 }, needs: () => (G.state.tools.iron || 0) > 0 },
     { id: 'sapsi', ev: 'sapsi', n: 1, text: 'Đặt một xe vải sỉ', gift: { coins: 40 } },
-    { id: 'trangtri', ev: 'trangtri', n: 3, text: 'Đặt 3 hoạ tiết trang trí lên một áo', gift: { coins: 60 } }
+    { id: 'trangtri', ev: 'trangtri', n: 3, text: 'Đặt 3 hoạ tiết trang trí lên một áo', gift: { coins: 60 } },
+    { id: 'donshop', ev: 'donshop', n: 1, text: 'Giao một đơn hàng shop', gift: { coins: 100 }, needs: () => !!(G.contract && G.contract.on() && G.contract.st().offer) }
   ],
   on() { const s = G.state; return !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge'; },
   // today's three, picked from the date so everyone gets the same ones (skipping goals this shop cannot do yet)

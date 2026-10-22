@@ -152,6 +152,13 @@ G.UI = (function () {
         box(-6, 10, 12, 4, 1.5, '#d9a441');
         line([[-2, 14], [-2, 19]], '#d9a441', 1.6); line([[2, 14], [2, 19]], '#d9a441', 1.6);
         break;
+      case 'box': // a cardboard parcel with tape and a shipping label
+        c.beginPath(); c.moveTo(-15, -6); c.lineTo(0, -13); c.lineTo(15, -6); c.lineTo(0, 1); c.closePath(); c.fillStyle = '#e2b77a'; c.fill(); c.stroke();
+        c.beginPath(); c.moveTo(-15, -6); c.lineTo(0, 1); c.lineTo(0, 16); c.lineTo(-15, 9); c.closePath(); c.fillStyle = '#c9965a'; c.fill(); c.stroke();
+        c.beginPath(); c.moveTo(15, -6); c.lineTo(0, 1); c.lineTo(0, 16); c.lineTo(15, 9); c.closePath(); c.fillStyle = '#b5824a'; c.fill(); c.stroke();
+        line([[-7.5, -9.5], [7.5, -2.5]], 'rgba(250,240,215,0.9)', 3);
+        c.save(); c.translate(-7.5, 6); c.transform(1, 0.47, 0, 1, 0, 0); c.fillStyle = '#fffaf0'; c.fillRect(-4, -3, 8, 6); c.restore();
+        break;
       case 'exit': // door
         box(-11, -15, 20, 30, 2, '#9a6a45'); c.beginPath(); c.arc(4, 1, 1.8, 0, 7); c.fillStyle = '#ffe08a'; c.fill();
         line([[12, 0], [19, 0]], G.INK, 2.4); line([[16, -4], [20, 0], [16, 4]], G.INK, 2.4);

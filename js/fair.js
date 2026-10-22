@@ -48,7 +48,8 @@ G.fair = {
   // after the fair: money in, unsold dresses age (and lose 10% value), the month's bills follow
   close(m) {
     const s = G.state, sold = s.rack.filter((it) => it.sold);
-    const total = sold.reduce((a, it) => a + it.soldFor, 0);
+    // (dresses already paid for elsewhere — the window while away, a shop's order — are not paid twice)
+    const total = sold.filter((it) => !it.paid).reduce((a, it) => a + it.soldFor, 0);
     if (total) G.addCoins(total);
     s.prestige += 0.25 * sold.length;
     for (const it of sold) s.fair.notes.push({ ratio: Math.round((it.soldFor / this.value(it)) * 100) / 100, sold: true });

@@ -116,6 +116,11 @@ G.scenes.desk = {
       if (G.econ.on()) items.push({ id: 'ledger', label: 'Sổ sách', icon: 'ledger', cb: () => G.go('ledger'), dot: s.econ.debt > 0 });
       // today's quests and this week's happening (red dot: a gift to claim / a week not yet read)
       if (G.quests && G.quests.today()) items.push({ id: 'quests', label: 'Nhiệm vụ', icon: 'tasks', cb: () => { this.questsOpen = true; }, dot: G.quests.ready() > 0 });
+      // a boutique's order for ready-to-wear dresses (red dot: new, or the rack can fill it)
+      if (G.contract && G.contract.on()) {
+        const K = G.contract; K.tick();
+        if (K.st().offer) items.push({ id: 'contract', label: 'Đơn shop', icon: 'box', cb: () => { this.contractOpen = true; K.st().seen = true; G.save(); }, dot: !K.st().seen || K.ready() });
+      }
       if (G.week && G.week.current()) items.push({ id: 'week', label: 'Tin tuần', icon: 'lantern', cb: () => { this.weekOpen = true; s.weekSeen = G.week.num(); G.save(); }, dot: s.weekSeen !== G.week.num() });
       if (s.mode === 'challenge') items.push({ id: 'quit', label: 'Thoát', icon: 'exit', cb: () => G.go('title') });
     }
@@ -132,8 +137,30 @@ G.scenes.desk = {
   // the panels behind the dock's "Nhiệm vụ" (today's three goals) and "Tin tuần" (this week's happening)
   questChip(c) {
     const Q = G.quests, t = Q && Q.today(), wk = G.week && G.week.current();
+    const o = G.contract && G.contract.on() && G.contract.st().offer;
     if (this.questsOpen && t) this.questPanel(c, t);
     else if (this.weekOpen && wk) this.weekPanel(c, wk);
+    else if (this.contractOpen && o) this.contractPanel(c, o);
+    else this.contractOpen = false;
+  },
+  contractPanel(c, o) {
+    const U = G.UI, K = G.contract, w = 600, h = 340, x = (G.W - w) / 2, y = (G.H - h) / 2;
+    const have = K.matching().length, rack = G.state.rack.filter((it) => !it.sold).length, ok = have >= o.n;
+    c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'k_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.contractOpen = false; } });
+    U.card(c, x, y, w, h);
+    G.ui.hits.push({ id: 'k_card', x, y, w, h, enabled: true, cb: () => {} });
+    U.ribbon(c, 'Đơn hàng shop', G.W / 2, y + 4, { size: 17 });
+    U.icon(c, 'box', x + 66, y + 96, 52);
+    U.fitText(c, o.shop, x + 110, y + 80, w - 140, { size: 22, weight: 800, font: G.GAME, color: U.T.accent });
+    U.fitText(c, `Đặt ${K.needText(o)}`, x + 110, y + 108, w - 140, { size: 15, weight: 700 });
+    G.text(c, `Trả ${o.pay} xu · ${K.leftText()}`, x + 110, y + 134, { size: 15, weight: 800, color: U.T.gold });
+    G.rr(c, x + 24, y + 160, w - 48, 74, 12); c.fillStyle = ok ? '#eef6ea' : '#f7efe2'; c.fill();
+    G.text(c, `Trên sạp có ${have}/${o.n} áo hợp đơn${rack > have ? ` (${rack - have} áo khác chưa đạt)` : ''}`, x + 44, y + 184, { size: 15, weight: 800, color: ok ? U.T.ok : U.T.ink });
+    G.wrap(c, ok ? 'Đủ rồi! Giao ngay kẻo shop đổi ý.' : 'May áo bán sẵn ở quầy, hoặc để thợ phụ may khi bạn vắng (cần vải trơn trong kho).', x + 44, y + 210, w - 88, 18, { size: 13, color: U.T.soft, maxLines: 2 });
+    G.button(c, 'k_go', ok ? `Giao ${o.n} áo · +${o.pay} xu` : `Còn thiếu ${o.n - have} áo`, x + 24, y + h - 70, 300, 46, () => { if (K.deliver()) this.contractOpen = false; }, { style: 'green', size: 16, r: 23, enabled: ok });
+    G.button(c, 'k_no', 'Từ chối', x + w - 236, y + h - 66, 100, 38, () => { K.decline(); this.contractOpen = false; }, { style: 'ghost', size: 14, r: 19 });
+    G.button(c, 'k_close', 'Đóng', x + w - 124, y + h - 66, 100, 38, () => { this.contractOpen = false; }, { style: 'ghost', size: 14, r: 19 });
   },
   weekPanel(c, wk) {
     const U = G.UI, W = G.week, w = 560, h = 300, x = (G.W - w) / 2, y = (G.H - h) / 2, nx = W.next();
