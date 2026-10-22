@@ -141,7 +141,11 @@ G.scenes.decorate = {
     });
     const cost = this.cost();
     G.text(c, `Chi phí trang trí: ${cost} xu`, 1050, 638, { size: 15, weight: 800, font: G.GAME, align: 'center', color: U.T.accent });
-    U.primary(c, 'done', `Hoàn thành áo`, () => { if (cost && !G.spend(cost)) return; G.go('finish'); });
+    U.primary(c, 'done', `Hoàn thành áo`, () => {
+      if (cost && !G.spend(cost)) return;
+      if (G.quests && (j.decor.items || []).length >= 3) G.quests.event('trangtri', 3);
+      G.go('finish');
+    });
     U.secondary(c, 'clear', 'Gỡ hết', () => { j.decor = { items: [] }; this.sel = null; });
     U.hint(c, grp.kind === 'place' ? 'Chọn mẫu rồi bấm lên áo (gần chấm vàng sẽ tự khớp) • kéo để dời • bấm hoạ tiết để xoay, đổi cỡ hay gỡ' : 'Bấm để chọn, bấm lần nữa để bỏ');
     U.topbar(c, 'Trang trí');

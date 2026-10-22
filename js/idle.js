@@ -97,6 +97,7 @@ G.idle = {
     s.roll[src] -= this.DYE_CM; if (s.roll[src] < 10) delete s.roll[src];
     this.orders().push({ fid: to, cm: this.DYE_CM, eta: Date.now() + this.DYE_ETA, kind: 'dye' });
     G.toast('Đã ngâm vải vào chậu nhuộm — 2 giờ nữa xong'); G.save();
+    if (G.quests) G.quests.event('nhuom');
     return true;
   },
   order(fid) {
@@ -104,6 +105,7 @@ G.idle = {
     if (!G.spend(this.bulkPrice(fid))) return false;
     this.orders().push({ fid, cm: this.BULK_CM, eta: Date.now() + this.BULK_ETA });
     G.toast('Đã đặt vải sỉ — xe giao sau 1 giờ'); G.save();
+    if (G.quests) G.quests.event('sapsi');
     return true;
   },
   // deliver whatever has arrived; returns the deliveries (the caller decides how to tell the player)

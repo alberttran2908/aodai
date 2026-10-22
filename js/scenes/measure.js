@@ -52,7 +52,10 @@ G.scenes.measure = {
     this.pop = { x: (d.x0 + d.x1) / 2, y: this.sy(l.y) - 40, t: 0, text: v.text + (v.key === 'ok' ? '' : ` · lệch ${Math.round(errCm)} cm`), col: v.col };
     G.sfx.snip(); G.sfx.done();
     this.cur++;
-    if (this.cur >= this.lines.length) G.job.fit = this.results.reduce((a, r) => a + r.score, 0) / this.results.length;
+    if (this.cur >= this.lines.length) {
+      G.job.fit = this.results.reduce((a, r) => a + r.score, 0) / this.results.length;
+      if (G.quests && this.results.every((r) => r.verdict.key === 'ok')) G.quests.event('dochuan');
+    }
   },
   // within 2 cm is right on (a few pixels of tape); up to 5 cm is a little off; more is wrong (the dress will not fit)
   verdict(errCm) {

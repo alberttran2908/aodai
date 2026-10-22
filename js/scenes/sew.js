@@ -138,6 +138,7 @@ G.scenes.sew = {
       const score = this.live();
       this.sd[this.sel] = { stitches: m.st, score };
       this.j.sew[this.sel] = score;
+      if (G.quests && this.grade(score).key === 'hoanhao') G.quests.event('hoanhao');
       m.done = 1.6; m.run = false; m.mouse = false; m.vel = 0;
       // the seam gets a tailor's stamp; a clean one also gets a little burst of sparkles
       this.stampT = 0; this.stampSfx = false;

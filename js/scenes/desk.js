@@ -126,6 +126,38 @@ G.scenes.desk = {
     U.fitText(c, ch.title, 42, y + 24, 266, { size: 15, weight: 800, font: G.GAME, color: U.T.accent });
     goals.forEach((g, i) => U.fitText(c, `${g.done ? '✓' : '○'} ${g.t} (${g.have}/${g.n})`, 42, y + 48 + i * 22, 266, { size: 13, weight: 600, color: g.done ? U.T.ok : U.T.ink }));
   },
+  // today's three goals: a chip under the chapter card, opening a panel with progress and gifts
+  questChip(c) {
+    const Q = G.quests, t = Q && Q.today(); if (!t || G.state.isDaily) return;
+    const U = G.UI, st = G.state.story, ch = G.story.chapter();
+    const y = ch && st.phase === 'play' ? 158 + 48 + G.story.goals().length * 22 + 12 : 158;
+    const done = t.list.filter((q) => Q.done(q)).length, ready = Q.ready();
+    G.button(c, 'quests', `Nhiệm vụ hôm nay · ${done}/${t.list.length}`, 24, y, 300, 38, () => { this.questsOpen = true; }, { style: ready ? 'gold' : 'ghost', size: 14, r: 19 });
+    if (ready) U.badge(c, 316, y + 4, String(ready));
+    if (this.questsOpen) this.questPanel(c, t);
+  },
+  questPanel(c, t) {
+    const U = G.UI, Q = G.quests, w = 620, h = 120 + t.list.length * 84, x = (G.W - w) / 2, y = (G.H - h) / 2;
+    c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'q_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.questsOpen = false; } });
+    U.card(c, x, y, w, h);
+    G.ui.hits.push({ id: 'q_card', x, y, w, h, enabled: true, cb: () => {} });
+    U.ribbon(c, 'Nhiệm vụ hôm nay', G.W / 2, y + 4, { size: 17 });
+    G.text(c, 'Cả hẻm cùng nhiệm vụ · làm mới mỗi ngày (giờ Việt Nam)', G.W / 2, y + 44, { size: 13, align: 'center', color: U.T.soft });
+    t.list.forEach((q, i) => {
+      const d = Q.def(q.id), qy = y + 74 + i * 84, done = Q.done(q);
+      G.rr(c, x + 24, qy, w - 48, 72, 12); c.fillStyle = done ? '#eef6ea' : '#f7efe2'; c.fill();
+      U.fitText(c, d.text, x + 44, qy + 22, 330, { size: 15, weight: 800, color: done ? U.T.ok : U.T.ink });
+      G.rr(c, x + 44, qy + 42, 260, 12, 6); c.fillStyle = '#e4d6c0'; c.fill();
+      G.rr(c, x + 44, qy + 42, Math.max(12, (260 * q.prog) / d.n), 12, 6); c.fillStyle = done ? U.T.ok : U.T.gold; c.fill();
+      G.text(c, `${q.prog}/${d.n}`, x + 316, qy + 48, { size: 13, weight: 800, color: U.T.soft });
+      const gf = d.gift.fabric && G.CAT.FABRICS[d.gift.fabric];
+      U.fitText(c, d.gift.coins ? `${d.gift.coins} xu` : `${(d.gift.cm / 100).toFixed(0)} m ${gf ? gf.name : ''}`, x + w - 168, qy + 22, 120, { size: 13, weight: 800, align: 'center', color: U.T.gold });
+      if (q.claimed) G.text(c, '✓ đã nhận', x + w - 108, qy + 50, { size: 13, weight: 800, align: 'center', color: U.T.ok });
+      else G.button(c, 'qc' + i, 'Nhận', x + w - 160, qy + 34, 104, 30, () => Q.claim(q), { style: 'green', size: 14, r: 15, enabled: done });
+    });
+    G.button(c, 'q_close', 'Đóng', x + w - 104, y + h - 46, 80, 32, () => { this.questsOpen = false; }, { style: 'ghost', size: 14, r: 16 });
+  },
   // a tear-off wall calendar, and the rent note pinned beside it
   calendarChip(c) {
     if (G.state.isDaily) return;
@@ -240,6 +272,7 @@ G.scenes.desk = {
     this.nav(c);
     this.chapterCard(c);
     this.calendarChip(c);
+    if (!(G.idle && (G.idle.pending || G.idle.checkinDue()))) this.questChip(c);
     if (this.gift && com) this.giftPanel(c);
     if (this.quote && com) this.quotePanel(c);
     if (this.challenges) this.challengePanel(c);

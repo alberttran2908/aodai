@@ -115,7 +115,7 @@ G.scenes.iron = {
     G.text(c, `${Math.round(pr * 100)}% · +${Math.round(tool.bonus * pr)} chất lượng`, x + 24, 290, { size: 15, weight: 800, color: pr > 0.97 ? U.T.ok : U.T.ink });
     const rough = j.com.reqs.some((r) => r.type === 'qmax');
     if (rough) G.wrap(c, 'Khách muốn áo trông cũ, nhàu — có thể bỏ qua bước ủi.', x + 24, 318, 330, 18, { size: 13, color: '#8a6d4b', maxLines: 2 });
-    const go = () => { j.pressed = this.pressed(); G.go('decorate'); };
+    const go = () => { j.pressed = this.pressed(); if (G.quests && j.pressed > 0.97) G.quests.event('ui'); G.go('decorate'); };
     U.primary(c, 'next', pr > 0.97 ? 'Trang trí →' : 'Xong, trang trí →', go);
     U.secondary(c, 'skip', 'Bỏ qua ủi', () => { j.pressed = 0; G.go('decorate'); });
     U.hint(c, G.touchUI ? 'Giữ ngón tay và rê bàn ủi qua nếp nhăn' : 'Giữ chuột và rê bàn ủi qua nếp nhăn');
