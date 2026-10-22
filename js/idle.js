@@ -24,6 +24,11 @@ G.idle = {
     if (G.staff.working()) {
       const h = G.staff.current(), n = Math.round((G.staff.side() / 3) * hours * (W.is('tho') ? 2 : 1));
       if (n > 0) { coins += n; lines.push({ icon: 'needle', text: `${h.name} nhận sửa đồ lặt vặt`, coins: n }); }
+      // and gets better at it (counted at once: the report stays pending, so it is never counted twice)
+      const st = s.staff, was = G.staff.step();
+      st.hours = (st.hours || 0) + hours;
+      const now = G.staff.step();
+      if (now > was) lines.push({ icon: 'needle', text: `${h.name} lên tay nghề bậc ${now}/${G.staff.STEPS.length}`, coins: 0, note: 'khéo hơn' });
     }
     // the helper also sews plain ready-to-wear áo dài from cloth on the roll (3 m each, one every 3 hours)
     // while the fair rack has room; they hang on the rack when you come back
@@ -35,7 +40,7 @@ G.idle = {
         const fid = Object.keys(left).filter((id) => C.FABRICS[id] && C.FABRICS[id].print === 'tron' && left[id] >= 320).sort((a, b) => left[b] - left[a])[0];
         if (!fid) break;
         left[fid] -= 300;
-        made.push({ fid, quality: Math.round(h.skill * 100 - 6 + Math.random() * 6), by: h.name });
+        made.push({ fid, quality: Math.round(G.staff.skill() * 100 - 6 + Math.random() * 6), by: h.name });
       }
       if (made.length) lines.push({ icon: 'dress', text: `${h.name} may ${made.length} áo bán sẵn, treo lên sạp`, coins: 0, note: 'lên sạp' });
     }

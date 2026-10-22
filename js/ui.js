@@ -134,6 +134,24 @@ G.UI = (function () {
         c.beginPath(); c.arc(3, 0, 6.5, 0, 7); c.fillStyle = '#f2c25a'; c.fill(); c.lineWidth = 1.6; c.stroke();
         G.text(c, 'đ', 3, 0.5, { size: 10, weight: 800, align: 'center', color: '#7a5420' });
         break;
+      case 'tasks': // clipboard with a ticked list
+        box(-12, -14, 24, 30, 3, '#b98a5a'); box(-9, -10, 18, 23, 1.5, '#fffaf0');
+        box(-5, -17, 10, 6, 2, '#8a8f96');
+        for (let i = 0; i < 3; i++) {
+          line([[-6, -5 + i * 6], [-4.5, -3.5 + i * 6], [-1.5, -7 + i * 6]], i < 2 ? '#3f8a4f' : 'rgba(74,44,34,0.35)', 1.6);
+          line([[1, -5 + i * 6], [6, -5 + i * 6]], 'rgba(74,44,34,0.5)', 1.4);
+        }
+        break;
+      case 'lantern': // a red paper lantern on a string, gold tassel
+        line([[0, -18], [0, -13]], G.INK, 1.6);
+        box(-6, -14, 12, 4, 1.5, '#d9a441');
+        c.beginPath(); c.ellipse(0, 0, 13, 11, 0, 0, 7);
+        { const g = c.createRadialGradient(-3, -3, 2, 0, 0, 14); g.addColorStop(0, '#ff8a6a'); g.addColorStop(1, '#b8283a'); c.fillStyle = g; } c.fill(); c.stroke();
+        line([[0, -11], [0, 11]], 'rgba(120,20,30,0.55)', 1.2);
+        c.beginPath(); c.ellipse(0, 0, 6, 11, 0, 0, 7); c.strokeStyle = 'rgba(120,20,30,0.55)'; c.lineWidth = 1.2; c.stroke(); c.strokeStyle = G.INK; c.lineWidth = 2;
+        box(-6, 10, 12, 4, 1.5, '#d9a441');
+        line([[-2, 14], [-2, 19]], '#d9a441', 1.6); line([[2, 14], [2, 19]], '#d9a441', 1.6);
+        break;
       case 'exit': // door
         box(-11, -15, 20, 30, 2, '#9a6a45'); c.beginPath(); c.arc(4, 1, 1.8, 0, 7); c.fillStyle = '#ffe08a'; c.fill();
         line([[12, 0], [19, 0]], G.INK, 2.4); line([[16, -4], [20, 0], [16, 4]], G.INK, 2.4);

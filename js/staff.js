@@ -4,7 +4,12 @@
 G.staff = {
   current() { const id = G.state.staff && G.state.staff.id; return id && G.HELPERS ? G.HELPERS[id] : null; },
   working() { return !!this.current() && !G.state.staff.idle && !G.state.isDaily; },
-  side() { const h = this.current(); return h ? Math.round(h.side * (1 + 0.1 * G.rank())) : 0; },
+  // tay nghề: the helper practises while the shop is shut — real hours worked while you are away raise
+  // them a step (5 steps); each step sews 1% better and earns 10% more from odd jobs
+  STEPS: [0, 4, 12, 24, 48],
+  step(hours) { const t = hours === undefined ? (G.state.staff && G.state.staff.hours) || 0 : hours; return this.STEPS.filter((x) => t >= x).length; },
+  skill() { const h = this.current(); return h ? h.skill + 0.01 * (this.step() - 1) : 0; },
+  side() { const h = this.current(); return h ? Math.round(h.side * (1 + 0.1 * G.rank()) * (1 + 0.1 * (this.step() - 1))) : 0; },
   hire(id) {
     const s = G.state, h = G.HELPERS[id];
     if (!h || this.current() || G.rank() < h.rank) return false;
@@ -49,6 +54,6 @@ G.staff = {
   },
   // sewing help: how many seams the helper may still redo on this dress, and their result
   helpLeft(job) { const h = this.current(); return this.working() && job ? h.maxSeams - (job.helped || 0) : 0; },
-  helpScore() { const h = this.current(); return h.skill * (0.97 + Math.random() * 0.03); },
+  helpScore() { return this.skill() * (0.97 + Math.random() * 0.03); },
   ironBonus() { const h = this.current(); return this.working() && h.ironBonus && !(G.state.tools.iron > 0) ? h.ironBonus : 0; }
 };

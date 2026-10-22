@@ -170,8 +170,17 @@ G.scenes.workshop = {
       G.text(c, h.name, x + 166, y + 44, { size: 20, font: G.SERIF, weight: 700, color: U.T.accent });
       G.wrap(c, h.role, x + 166, y + 58, w - 186, 17, { size: 12, color: U.T.soft });
       G.text(c, `Lương ${h.wage} xu/tháng`, x + 166, y + 112, { size: 14, weight: 800, color: U.T.gold });
-      G.text(c, `Việc vặt ~${Math.round(h.side * (1 + 0.1 * rk))} xu/ngày`, x + 166, y + 134, { size: 13, color: U.T.ok });
-      G.text(c, `Tay nghề ${Math.round(h.skill * 100)}% · may lại ${h.maxSeams} đường/áo`, x + 20, y + 196, { size: 13, weight: 700 });
+      G.text(c, `Việc vặt ~${hired ? G.staff.side() : Math.round(h.side * (1 + 0.1 * rk))} xu/ngày`, x + 166, y + 134, { size: 13, color: U.T.ok });
+      G.text(c, `Tay nghề ${Math.round((hired ? G.staff.skill() : h.skill) * 100)}% · may lại ${h.maxSeams} đường/áo`, x + 20, y + 196, { size: 13, weight: 700 });
+      // practice while the shop is shut: steps of skill, with the hours to the next one
+      if (hired) {
+        const S = G.staff, hrs = s.staff.hours || 0, k = S.step(), nx = S.STEPS[k], prev = S.STEPS[k - 1];
+        G.text(c, `Bậc tay nghề ${k}/${S.STEPS.length}`, x + 20, y + 322, { size: 14, weight: 800, color: U.T.accent });
+        for (let i = 0; i < S.STEPS.length; i++) { c.beginPath(); c.arc(x + 180 + i * 22, y + 322, 7, 0, 7); c.fillStyle = i < k ? U.T.gold : '#e4d6c0'; c.fill(); }
+        G.wrap(c, nx === undefined ? 'Đã lành nghề nhất.' : `Luyện tay khi bạn vắng: còn ${Math.ceil(nx - hrs)} giờ lên bậc ${k + 1} (+1% tay nghề, +10% việc vặt).`, x + 20, y + 344, w - 40, 17, { size: 12, color: U.T.soft, maxLines: 2 });
+        G.rr(c, x + 290, y + 316, 80, 10, 5); c.fillStyle = '#e4d6c0'; c.fill();
+        G.rr(c, x + 290, y + 316, Math.max(10, nx === undefined ? 80 : (80 * (hrs - prev)) / (nx - prev)), 10, 5); c.fillStyle = U.T.ok; c.fill();
+      }
       if (h.ironBonus) G.text(c, `Ủi áo giúp: +${h.ironBonus} chất lượng khi tiệm chưa có bàn ủi`, x + 20, y + 218, { size: 12, color: U.T.soft });
       G.wrap(c, '“' + h.hire + '”', x + 20, y + 244, w - 40, 20, { size: 14, font: G.SERIF, color: '#5a4a40' });
       if (hired) {

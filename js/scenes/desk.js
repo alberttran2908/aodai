@@ -114,6 +114,9 @@ G.scenes.desk = {
       if (G.story.unlocked('mail')) items.push({ id: 'mail', label: 'Hộp thư', icon: 'mail', cb: () => G.go('mail'), dot: G.mail.unread() > 0 });
       if (s.mode !== 'challenge') items.push({ id: 'challenges', label: 'Thử thách', icon: 'trophy', cb: () => { this.challenges = true; }, dot: !G.daily.played() });
       if (G.econ.on()) items.push({ id: 'ledger', label: 'Sổ sách', icon: 'ledger', cb: () => G.go('ledger'), dot: s.econ.debt > 0 });
+      // today's quests and this week's happening (red dot: a gift to claim / a week not yet read)
+      if (G.quests && G.quests.today()) items.push({ id: 'quests', label: 'Nhiệm vụ', icon: 'tasks', cb: () => { this.questsOpen = true; }, dot: G.quests.ready() > 0 });
+      if (G.week && G.week.current()) items.push({ id: 'week', label: 'Tin tuần', icon: 'lantern', cb: () => { this.weekOpen = true; s.weekSeen = G.week.num(); G.save(); }, dot: s.weekSeen !== G.week.num() });
       if (s.mode === 'challenge') items.push({ id: 'quit', label: 'Thoát', icon: 'exit', cb: () => G.go('title') });
     }
     G.UI.dock(c, items, 24, 68);
@@ -126,23 +129,10 @@ G.scenes.desk = {
     U.fitText(c, ch.title, 42, y + 24, 266, { size: 15, weight: 800, font: G.GAME, color: U.T.accent });
     goals.forEach((g, i) => U.fitText(c, `${g.done ? '✓' : '○'} ${g.t} (${g.have}/${g.n})`, 42, y + 48 + i * 22, 266, { size: 13, weight: 600, color: g.done ? U.T.ok : U.T.ink }));
   },
-  // today's three goals: a chip under the chapter card, opening a panel with progress and gifts
+  // the panels behind the dock's "Nhiệm vụ" (today's three goals) and "Tin tuần" (this week's happening)
   questChip(c) {
-    const Q = G.quests, t = Q && Q.today(); if (!t || G.state.isDaily) return;
-    const U = G.UI, st = G.state.story, ch = G.story.chapter();
-    const y = ch && st.phase === 'play' ? 158 + 48 + G.story.goals().length * 22 + 12 : 158;
-    const done = t.list.filter((q) => Q.done(q)).length, ready = Q.ready();
-    G.button(c, 'quests', `Nhiệm vụ hôm nay · ${done}/${t.list.length}`, 24, y, 300, 38, () => { this.questsOpen = true; }, { style: ready ? 'gold' : 'ghost', size: 14, r: 19 });
-    if (ready) U.badge(c, 316, y + 4, String(ready));
-    // this week's happening in the alley, under it
-    const wk = G.week && G.week.current();
-    if (wk) {
-      G.button(c, 'week', '', 24, y + 46, 300, 50, () => { this.weekOpen = true; }, { style: 'ghost', r: 16 });
-      U.icon(c, wk.icon, 50, y + 71, 26);
-      U.fitText(c, `Tin hẻm tuần này · ${G.week.leftText()}`, 72, y + 62, 236, { size: 12, weight: 700, color: U.T.soft });
-      U.fitText(c, wk.name, 72, y + 81, 236, { size: 15, weight: 800, color: U.T.accent });
-    }
-    if (this.questsOpen) this.questPanel(c, t);
+    const Q = G.quests, t = Q && Q.today(), wk = G.week && G.week.current();
+    if (this.questsOpen && t) this.questPanel(c, t);
     else if (this.weekOpen && wk) this.weekPanel(c, wk);
   },
   weekPanel(c, wk) {

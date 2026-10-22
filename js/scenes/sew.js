@@ -424,7 +424,7 @@ G.scenes.sew = {
     else G.button(c, 'go', `May “${asm.seams[this.sel].name}”`, x + 24, 432, 302, 50, () => this.startSeam(this.sel), { size: 17, r: 25 });
     // the helper re-sews a seam you already sewed (never instead of you)
     const h = G.staff.current(), left = G.staff.helpLeft(j);
-    if (h && sd && !sd.byHelper && left > 0 && sd.score < h.skill) {
+    if (h && sd && !sd.byHelper && left > 0 && sd.score < G.staff.skill()) {
       G.button(c, 'help', `🧑‍🔧 Nhờ ${h.name} may lại (còn ${left})`, x + 24, 486, 302, 40, () => {
         const score = G.staff.helpScore();
         this.sd[this.sel] = { stitches: sd.stitches, score, byHelper: true };
