@@ -46,6 +46,40 @@ G.scenes.title = {
     }, { style: 'gold', size: 15, r: 22 });
     G.text(c, 'Các nhân vật “người nổi tiếng” trong game là hư cấu, nhại vui, không liên quan tới người thật.', cx, 690, { size: 11, align: 'center', color: 'rgba(251,246,236,0.85)' });
     if (this.settings) this.settingsPanel(c);
+    if (this.transfer) this.transferPanel(c);
+  },
+  // Chuyển tiệm: send this shop (file / code) or take one in (asks before replacing; the old one is kept)
+  transferPanel(c) {
+    const U = G.UI, T = G.transfer, st = this.transfer, w = 640, h = 470, x = (G.W - w) / 2, y = (G.H - h) / 2;
+    c.fillStyle = 'rgba(43,29,24,0.5)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'tr_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.transfer = null; } });
+    U.card(c, x, y, w, h);
+    G.ui.hits.push({ id: 'tr_card', x, y, w, h, enabled: true, cb: () => {} });
+    U.ribbon(c, 'Chuyển tiệm sang máy khác', G.W / 2, y + 4, { size: 17 });
+    const take = (o) => { const info = T.check(o); st.incoming = info ? { o, info } : null; st.err = info ? '' : 'File hoặc mã này không phải tiệm may áo dài (hoặc bị hỏng).'; };
+    if (st.incoming) {
+      // the confirmation: what replaces what
+      const i = st.incoming.info;
+      G.text(c, 'Thay tiệm trên máy này bằng:', x + 40, y + 76, { size: 16, weight: 700 });
+      G.rr(c, x + 40, y + 96, w - 80, 92, 14); c.fillStyle = '#f7efe2'; c.fill();
+      U.fitText(c, i.shop, x + 64, y + 130, w - 128, { size: 24, font: G.SERIF, weight: 700, color: U.T.accent });
+      G.text(c, `Hạng ${i.rank} · ngày ${i.day} · ${Math.round(i.coins).toLocaleString('vi-VN')} xu${i.at ? ' · lưu lúc ' + new Date(i.at + 7 * 3600e3).toISOString().slice(0, 16).replace('T', ' ') : ''}`, x + 64, y + 164, { size: 14, color: U.T.soft });
+      G.wrap(c, `Tiệm hiện tại (“${G.state.shopName}”) sẽ được cất lại làm bản dự phòng, lấy lại được ở bảng này.`, x + 40, y + 222, w - 80, 20, { size: 14, maxLines: 2 });
+      G.button(c, 'tr_yes', 'Thay tiệm', x + 40, y + h - 76, 220, 48, () => T.apply(st.incoming.o), { style: 'green', size: 17, r: 24 });
+      G.button(c, 'tr_no', 'Huỷ', x + 276, y + h - 76, 140, 48, () => { st.incoming = null; }, { style: 'ghost', size: 16, r: 24 });
+      return;
+    }
+    G.text(c, 'Gửi tiệm này đi', x + 40, y + 70, { size: 16, weight: 800, color: U.T.accent });
+    G.button(c, 'tr_file', '💾 Lưu file tiệm', x + 40, y + 86, 270, 46, () => T.saveFile(), { style: 'primary', size: 16, r: 23 });
+    G.button(c, 'tr_code', '📋 Sao chép mã tiệm', x + 330, y + 86, 270, 46, () => { T.copyCode().catch(() => G.toast('Không sao chép được', G.C.red)); }, { style: 'ghost', size: 16, r: 23 });
+    G.wrap(c, 'File gồm cả vải tự thiết kế. Mã là một dòng chữ dài, dán qua Zalo/Messenger được, chỉ gồm tiệm.', x + 40, y + 154, w - 80, 18, { size: 13, color: U.T.soft, maxLines: 2 });
+    G.text(c, 'Nhận tiệm từ máy khác', x + 40, y + 216, { size: 16, weight: 800, color: U.T.accent });
+    G.button(c, 'tr_open', '📂 Mở file tiệm', x + 40, y + 232, 270, 46, () => T.openFile(take), { style: 'primary', size: 16, r: 23 });
+    G.button(c, 'tr_paste', '📥 Dán mã tiệm', x + 330, y + 232, 270, 46, () => { T.pasteCode().then(take); }, { style: 'ghost', size: 16, r: 23 });
+    if (st.err) G.wrap(c, st.err, x + 40, y + 300, w - 80, 18, { size: 14, weight: 700, color: U.T.bad, maxLines: 2 });
+    const bk = T.backup(), bi = bk && T.check(bk);
+    if (bi) G.button(c, 'tr_back', `↩ Lấy lại tiệm cũ “${bi.shop}”`, x + 40, y + h - 76, 330, 44, () => { st.incoming = { o: bk, info: bi }; }, { style: 'ghost', size: 14, r: 22 });
+    G.button(c, 'tr_close', 'Đóng', x + w - 140, y + h - 76, 100, 44, () => { this.transfer = null; }, { style: 'ghost', size: 15, r: 22 });
   },
   // the shop's lacquered signboard, hanging on two cords and swaying a touch
   sign(c, cx, y) {
@@ -77,8 +111,8 @@ G.scenes.title = {
     const U = G.UI, s = G.state, x = G.W - 470, y = 116, w = 440;
     c.fillStyle = 'rgba(43,29,24,0.25)'; c.fillRect(0, 0, G.W, G.H);
     G.ui.hits.push({ id: 'set_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.settings = false; this.confirm = false; } });
-    U.card(c, x, y, w, 366);
-    G.wrap(c, 'Mọi người chơi cùng một luật để so “Giá trị tiệm” và bảng xếp hạng công bằng.', x + 24, y + 314, w - 48, 18, { size: 12, color: U.T.soft });
+    U.card(c, x, y, w, 442);
+    G.wrap(c, 'Mọi người chơi cùng một luật để so “Giá trị tiệm” và bảng xếp hạng công bằng.', x + 24, y + 390, w - 48, 18, { size: 12, color: U.T.soft });
     U.title(c, 'Cài đặt', x + 24, y + 38, { size: 24 });
     const row = (i, label, value, cb, note) => {
       const ry = y + 76 + i * 76;
@@ -88,6 +122,7 @@ G.scenes.title = {
     };
     row(0, 'Âm thanh', s.muted ? 'Tắt' : 'Bật', () => { s.muted = !s.muted; G.save(); });
     row(2, 'Hướng dẫn của Bà Tư', s.tut && s.tut.on ? 'Đang bật' : 'Xem lại', () => { G.tut.start(); this.settings = false; G.toast('Bà Tư sẽ chỉ lại từ đơn kế tiếp'); }, 'Chỉ từng bước cho một đơn may');
+    if (G.transfer) row(3, 'Chuyển tiệm sang máy khác', 'Mở', () => { this.settings = false; this.transfer = { incoming: null, err: '' }; }, 'Bằng file hoặc mã, không cần tài khoản');
     if (!this.confirm) row(1, 'Mở tiệm mới', 'Bắt đầu lại', () => { this.confirm = true; }, 'Xoá tiệm hiện tại');
     else {
       const ry = y + 76 + 76;
