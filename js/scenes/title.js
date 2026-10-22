@@ -39,6 +39,11 @@ G.scenes.title = {
     G.button(c, 'enter', G.hasSave ? 'Vào tiệm' : 'Mở cửa tiệm', cx - 190, by, 380, 72, enter, { size: 28, r: 36 });
     if (G.hasSave) G.UI.outlined(c, `${G.state.shopName} · Hạng ${G.rank()} · ngày ${G.state.day}`, cx, by + 100, { size: 17, align: 'center' });
     G.button(c, 'gear', '⚙', G.W - 70, 64, 48, 44, () => { this.settings = !this.settings; this.confirm = false; }, { style: 'ghost', size: 22, r: 22 });
+    // the browser offers to install the game: an app icon on the home screen, full screen, playable offline
+    if (G.installPrompt) G.button(c, 'install', '📲 Cài game lên máy', G.W - 300, 64, 220, 44, () => {
+      const p = G.installPrompt; G.installPrompt = null;
+      p.prompt(); p.userChoice.then((ch) => { if (ch.outcome === 'accepted') G.toast('Đã cài! Mở game từ màn hình chính nhé.', G.C.green); }).catch(() => {});
+    }, { style: 'gold', size: 15, r: 22 });
     G.text(c, 'Các nhân vật “người nổi tiếng” trong game là hư cấu, nhại vui, không liên quan tới người thật.', cx, 690, { size: 11, align: 'center', color: 'rgba(251,246,236,0.85)' });
     if (this.settings) this.settingsPanel(c);
   },
