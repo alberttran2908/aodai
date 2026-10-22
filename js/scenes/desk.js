@@ -378,6 +378,7 @@ G.scenes.desk = {
     U.topbar(c, s.isDaily ? 'Đơn ngày ' + G.daily.label(s.dailyKey) : 'Quầy tiếp khách');
     if (G.idle && G.idle.pending && !(G.Dialog && G.Dialog.active)) this.awayCard(c);
     else if (G.idle && !(G.Dialog && G.Dialog.active) && !(G.tut && G.tut.active()) && G.idle.checkinDue()) this.checkinCard(c);
+    else if (this.NEWS && !s.isDaily && s.mode !== 'challenge' && s.newsSeen !== this.NEWS.id && !(s.tut && s.tut.on) && !(G.Dialog && G.Dialog.active) && !this.hubOpen) this.newsCard(c);
     // collected coins arc up into the purse in the top bar
     if (this.coinFx && this.coinFx.length) {
       const tx = G.W - 330, ty = 28;
@@ -388,6 +389,29 @@ G.scenes.desk = {
       }
       this.coinFx = this.coinFx.filter((f) => !f.done);
     }
+  },
+  // "Có gì mới ở tiệm": shown once per batch of new features, after the tutorial
+  NEWS: { id: 'idle1', lines: [
+    ['tasks', 'Ô “Hôm nay” trên thanh công cụ', 'Nhiệm vụ ngày, khách sang hẹn giờ, đơn shop, thành tựu, tin hẻm tuần này.'],
+    ['workshop', 'Tiệm chạy cả khi bạn vắng', 'Thợ phụ sửa đồ và may áo bán sẵn, tủ kính bán hàng, khách nhắn Zalo, khách quen ghé tặng quà.'],
+    ['album', 'Khoe cả tiệm với bạn bè', 'Album › “Khoe cả tiệm”: bạn bè mở link là ghé tiệm, đặt may y chang, nhận quà ghé thăm.'],
+    ['fabric', 'Cài game lên điện thoại', 'Thêm vào màn hình chính để chơi toàn màn hình, cả khi mất mạng. Chuyển tiệm sang máy khác ở ⚙ Cài đặt.']
+  ] },
+  newsCard(c) {
+    const U = G.UI, N = this.NEWS, w = 640, h = 150 + N.lines.length * 76, x = (G.W - w) / 2, y = (G.H - h) / 2;
+    const close = () => { G.state.newsSeen = N.id; G.save(); };
+    c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'n_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => {} });
+    U.card(c, x, y, w, h);
+    U.ribbon(c, 'Có gì mới ở tiệm', G.W / 2, y + 4, { size: 17 });
+    N.lines.forEach(([ic, t, d], i) => {
+      const ly = y + 52 + i * 76;
+      U.icon(c, ic, x + 56, ly + 30, 40);
+      U.fitText(c, t, x + 96, ly + 18, w - 130, { size: 17, weight: 800, color: U.T.accent });
+      G.wrap(c, d, x + 96, ly + 38, w - 130, 18, { size: 13, color: U.T.ink, maxLines: 2 });
+    });
+    G.button(c, 'n_hub', 'Xem ô “Hôm nay”', G.W / 2 - 230, y + h - 66, 260, 46, () => { close(); this.hubOpen = true; }, { style: 'green', size: 16, r: 23 });
+    G.button(c, 'n_ok', 'Để sau', G.W / 2 + 46, y + h - 66, 180, 46, close, { style: 'ghost', size: 16, r: 23 });
   },
   // daily check-in: seven gift boxes, today's one glowing; the ones already taken this streak are ticked
   checkinCard(c) {

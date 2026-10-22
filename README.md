@@ -111,7 +111,44 @@ Cân bằng hiện tại (simbot, chế độ Kinh doanh, sau 60 ngày):
 - Trung bình: khoảng 12.000–16.000 xu.
 - Ẩu: lên tới khoảng 6.000 xu quanh ngày 50, rồi trượt dần vì tiền thuê tăng theo hạng; Bà Tư cứu khoảng ngày 90, phá sản sau đó.
 
+## Tiệm chạy cả khi bạn vắng (idle)
+Theo giờ thật. Tính từ 5 phút vắng, tối đa 8 giờ; không cộng âm thầm. Lúc quay lại, quầy hiện thẻ **"Trong lúc bạn đi vắng"** để bấm nhận (`js/idle.js`). Có những gì:
+- **Thợ phụ:**
+  - Nhận sửa đồ lặt vặt theo giờ.
+  - Cứ 3 giờ may một áo bán sẵn từ vải trơn trong kho rồi treo lên sạp.
+  - Luyện tay nghề khi bạn vắng: 5 bậc, ở mốc 4/12/24/48 giờ, mỗi bậc khéo hơn 1% và tiền việc vặt tăng 10% (`js/staff.js`).
+- **Bán hàng:**
+  - Tủ kính có thể bán áo trên sạp cho khách qua đường, với giá 80%.
+  - **Đơn shop** (`js/contract.js`): shop online đặt 2–3 áo bán sẵn trong 24 giờ, trả khoảng 1,3 lần giá hội chợ.
+- **Khách:**
+  - Khách thấy tiệm đóng thì **nhắn Zalo** đặt ghế chờ, trả thêm 10%.
+  - Khách thân (từ "Khách quen") ghé **tặng quà**: tiền mừng, và 1 m vải ruột nếu là "Tri kỷ".
+  - **Khách sang hẹn giờ** (`js/vip.js`): mỗi ngày một khung 2 giờ; mở game đúng giờ để đón, khách trả gấp rưỡi.
+- **Vải:**
+  - **Đặt vải sỉ** 10 m, giảm 20%, xe giao sau 1 giờ.
+  - **Chậu nhuộm** ở Xưởng: 3 m vải trắng thành vải màu sau 2 giờ.
+- **Mỗi ngày (giờ Việt Nam):**
+  - Điểm danh nhận quà, chuỗi 7 ngày.
+  - **3 nhiệm vụ** giống nhau cho mọi người (`js/quests.js`).
+- **Mỗi tuần:** **Tin hẻm tuần này** (`js/week.js`). Mỗi tuần một sự kiện, giống nhau cho mọi người, xoay vòng 5 tuần:
+  - Chợ đêm
+  - Nắng ráo
+  - Xả kho vải
+  - Thợ chăm
+  - Mùa cưới
+- **Dài hạn:** **Thành tựu chủ tiệm**, 12 mốc có thưởng xu (`js/ach.js`).
+- **Ô "Hôm nay" trên thanh công cụ** gom nhiệm vụ, khách sang, đơn shop, thành tựu và tin tuần, mục nào cần xem có chấm đỏ.
+
+## Cài lên máy, chuyển máy
+- **Cài như ứng dụng (PWA):** có `manifest.webmanifest`, `sw.js` và `icons/`. Thêm vào màn hình chính là mở toàn màn hình, xoay ngang, chơi được khi mất mạng. Chrome Android có nút "📲 Cài game lên máy" ở màn tiêu đề.
+- **Chuyển tiệm sang máy khác** (⚙ Cài đặt, `js/transfer.js`):
+  - Lưu file tiệm (gồm cả vải tự thiết kế), hoặc sao chép mã tiệm khoảng 4 KB để gửi qua Zalo.
+  - Bên nhận được hỏi trước khi thay, và tiệm cũ được giữ làm bản dự phòng.
+
 ## Tính năng "online" không cần server
+- **Ghé tiệm bạn** (`scenes/visit.js`):
+  - Album › "Khoe cả tiệm" sao chép link `#s=…` gồm biển tiệm và 3 áo đẹp nhất.
+  - Bạn bè mở link thì được "Đặt may y chang", và nhận quà ghé thăm 30 xu (tối đa 3 tiệm mỗi ngày).
 - **Link chia sẻ áo** (`js/share.js`):
   - Cả chiếc áo được mã hoá trong đường link (`#d=…`). Ai mở link cũng xem được ở màn **Xem áo**.
   - Album có nút 🔗 sao chép link và 🖼 tải thẻ ảnh 1080×1350 kiểu trang báo.
