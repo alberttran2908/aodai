@@ -238,6 +238,8 @@ G.scenes.sketch = {
     c.translate(this.pv.ox, this.pv.oy); c.scale(z, z);
     G.art.garment(c, asm, G.jobFabs({ fabs }), { mannequin: true, cache: true, t: this.t });
     c.restore();
+    // the eye on the palette (with the hovered cloth), under the podium
+    if (this.tab === 'vai') U.flairPill(c, this.pv.ox, Math.min(G.H - 122, fy + 26), G.flair(Object.assign({}, j, { fabs })));
     const shaping = this.shaping();
     const reg = shaping ? null : this.regionAt(G.pointer);
     if (this.tab === 'vai') this.outlineRegion(c, this.slot, 'rgba(178,50,63,0.55)', true);

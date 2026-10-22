@@ -29,7 +29,8 @@ G.scenes.finish = {
     }
     const cl = G.client(j.com.client);
     // paid now (so closing the tab loses nothing), but the purse shows it only when she pays, after the photo
-    G.addCoins(r.pay + r.tip + r.trendPay); this.held = G.ui.coinHold = r.pay + r.tip + r.trendPay;
+    const paid = r.pay + r.tip + r.trendPay + (r.flairPay || 0);
+    G.addCoins(paid); this.held = G.ui.coinHold = paid;
     // the day ends (bills at month end use the rank the month was worked at), then reputation grows
     G.econ.advanceDay();
     if (G.quests) { if (r.success) G.quests.event('giao'); if (r.success && r.quality >= 90) G.quests.event('q90'); } // daily goals
@@ -43,6 +44,8 @@ G.scenes.finish = {
     if (s.collection.length > 60) s.collection.shift();
     this.bond = G.bond.onDelivery(r, j);
     if (this.bond && fm.bond) { G.bond.add(j.com.client, fm.bond); this.bond.gained += fm.bond; }
+    // she notices the eye behind the dress (flowers of Thẩm mỹ), happy with it or not
+    if (this.bond && r.flair && r.flair.pts) { G.bond.add(j.com.client, r.flair.pts); this.bond.gained += r.flair.pts; }
     this.arcRw = j.com.kind === 'arc' && r.success ? G.bond.arcDone(j) : [];
     this.press = G.press.onDelivery(r, j, this.snap.id);
     G.story.onDelivery(r, j, kim);
@@ -354,8 +357,16 @@ G.scenes.finish = {
       const got = Math.round(iron.bonus * (j.pressed === undefined ? 1 : j.pressed));
       G.text(c, got ? `${iron.name}: +${got} điểm chất lượng${got < iron.bonus ? ` (ủi chưa hết, tối đa +${iron.bonus})` : ''}` : 'Áo chưa được ủi', 724, y, { size: 12, weight: 700, color: got ? U.T.ok : U.T.soft }); y += 20;
     }
+    // the tailor's eye: never pass or fail, a tip and some friendship
+    const F = r.flair;
+    if (F) {
+      y += 4; G.text(c, 'Thẩm mỹ', 724, y, { size: 13, weight: 800 });
+      U.flowers(c, 800, y, F.pts, 8);
+      U.fitText(c, [F.color.note, F.place.note].filter(Boolean).join(' · '), 872, y, 360, { size: 12, weight: 600, color: U.T.soft });
+      y += 20;
+    }
     y += 4; c.fillStyle = U.T.line; c.fillRect(724, y, 508, 1.5); y += 20;
-    const extra = [r.tip ? `thưởng${r.quality >= 90 && G.week && G.week.is('cuoi') ? ' mùa cưới' : ''} +${r.tip}` : '', r.trendPay ? `hợp mốt +${r.trendPay}` : ''].filter(Boolean).join(' · ');
+    const extra = [r.tip ? `thưởng${r.quality >= 90 && G.week && G.week.is('cuoi') ? ' mùa cưới' : ''} +${r.tip}` : '', r.flairPay ? `thẩm mỹ +${r.flairPay}` : '', r.trendPay ? `hợp mốt +${r.trendPay}` : ''].filter(Boolean).join(' · ');
     const pk = G.easeOut((at - 0.8) / 0.8), payShown = Math.round(r.pay * pk);
     // she pays: the purse in the top bar counts up with a tick per handful of coins
     if (this.held) {

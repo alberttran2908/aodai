@@ -30,6 +30,14 @@ Sau đó mở http://localhost:8080. Mở thẳng file `index.html` sẽ không 
    - **Chất lượng** = 30% canh sợi + 20% vừa người + 50% đường may. Vải và trang trí chỉ ảnh hưởng đến điểm phong cách.
    - Đạt mọi yêu cầu: khách trả đủ, cộng 1 danh tiếng, và thưởng thêm 15% nếu chất lượng ≥ 90.
    - Không đạt: khách chỉ trả 60%, hoặc 40% nếu chất lượng cũng không đạt.
+   - **Thẩm mỹ** (0–3 bông hoa, `G.flair` trong `js/state.js`): không quyết định đạt hay trượt, chỉ cộng thưởng và thân tình.
+     - **Phối màu** (0–2 hoa): xét vải thân, tay, cổ, quần, viền và áo choàng. Trắng, đen, be, vàng kim là màu trung tính, hợp mọi màu. Màu chiếm nhiều vải nhất làm chủ đạo, mỗi màu khác được so độ lệch sắc với nó: gần nhau là hài hoà, đối nhau mà chỉ điểm xuyết là màu nhấn, lưng chừng là lệch tông.
+       - Một màu: 1 hoa. Quần khác màu không tính là phối.
+       - Hai màu trở lên trên chính áo mà hài hoà: 2 hoa.
+     - **Đặt hoa văn** (0–1 hoa): hoa văn phải nằm trên áo, không chồng lên nhau, và có chủ ý. Có chủ ý là một trong các cách sau: một cặp đối xứng, đa số đặt vào các chấm gợi ý, hoặc chỉ 1–2 điểm nhấn.
+     - **Thưởng**: mỗi hoa thêm 5% giá áo khi khách hài lòng, và +1 thân tình dù khách hài lòng hay không.
+     - **Hiện trực tiếp**: dòng "Thẩm mỹ" hiện ngay khi chọn vải và khi trang trí.
+   - **Nhận xét của khách** nói về chính thiết kế: chi tiết góp nhiều nhất cho gu khách muốn, hoặc nếu thiếu thì nên đổi chỗ nào.
 
 Đơn hàng luôn làm được ở hạng hiện tại: chỉ khách có gu mà người chơi đáp ứng được mới đến, và mức trần phong cách được kiểm tra bằng bộ giải `G.minCapped`.
 

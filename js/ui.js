@@ -246,6 +246,26 @@ G.UI = (function () {
     c.fillStyle = 'rgba(120,80,20,0.5)'; for (let i = -1; i <= 1; i++) for (let j = 0; j < 3; j++) c.fillRect(x + i * 3.4 - 0.6, y - 3 + j * 3.6, 1.2, 1.2);
   }
   // Madame Sa's rating: 1–5 needles (gold = earned)
+  // live Thẩm mỹ while designing: a small pill with the flowers and what the eye notices
+  function flairPill(c, cx, y, f) {
+    const note = [f.color.note, f.place.note].filter(Boolean).join(' · ');
+    c.font = `600 ${G.fs(12)}px ${G.FONT}`;
+    const w = 134 + c.measureText(note).width + 14, x = cx - w / 2;
+    G.rr(c, x, y, w, 28, 14); c.fillStyle = 'rgba(255,250,240,0.92)'; c.fill(); c.strokeStyle = 'rgba(94,58,36,0.25)'; c.lineWidth = 1.2; c.stroke();
+    G.text(c, 'Thẩm mỹ', x + 12, y + 14, { size: 12, weight: 800 });
+    flowers(c, x + 76, y + 14, f.pts, 7);
+    G.text(c, note, x + 134, y + 14, { size: 12, weight: 600, color: T.soft });
+  }
+  // Thẩm mỹ: three little flowers, the earned ones in bloom, the rest pale outlines
+  function flowers(c, x, y, n, r) {
+    r = r || 8;
+    for (let i = 0; i < 3; i++) {
+      const fx = x + r + i * r * 2.5;
+      if (i < n) G.art.flower(c, fx, y, r, '#d6698a');
+      else { c.save(); c.globalAlpha = 0.35; G.art.flower(c, fx, y, r, '#c9b8a6'); c.restore(); }
+    }
+    return r * 2.5 * 3;
+  }
   function needles(c, x, y, kim, sc) {
     sc = sc || 1;
     for (let i = 0; i < 5; i++) {
@@ -419,5 +439,5 @@ G.UI = (function () {
     lines.forEach((l, i) => G.text(c, l, x + 12, y + 5 + lh / 2 + i * lh, { size: 13, weight: i ? 500 : 700, color: i ? '#e9dccb' : '#fff' }));
   }
 
-  return { T, bg, card, tile, title, ribbon, outlined, badge, icon, dock, topbar, hint, primary, secondary, swatch, tagBar, commission, chip, ABBR, pills, fitText, tooltip, needles, thimble };
+  return { T, bg, card, tile, title, ribbon, outlined, badge, icon, dock, topbar, hint, primary, secondary, swatch, tagBar, commission, chip, ABBR, pills, fitText, tooltip, needles, flowers, flairPill, thimble };
 })();

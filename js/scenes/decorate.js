@@ -70,7 +70,8 @@ G.scenes.decorate = {
     const U = G.UI, C = G.CAT, j = G.job, rk = G.rank();
     U.bg(c);
     const design = G.jobDesign(), tags = G.computeTags(design, j.fabs, j.decor, j.part);
-    U.commission(c, 20, 66, 350, { tags, fabs: j.fabs, decor: j.decor });
+    const ch = U.commission(c, 20, 66, 350, { tags, fabs: j.fabs, decor: j.decor });
+    U.flairPill(c, 195, 66 + ch + 16, G.flair());
     // the dress
     const v = this.view(), asm = G.geo.build(design, G.jobScale(), false);
     c.save(); c.translate(v.ox, v.oy); c.scale(v.z, v.z);

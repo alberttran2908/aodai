@@ -145,6 +145,73 @@
     return { mats, cols };
   };
 
+  // ---------- Thẩm mỹ: the tailor's eye, 0–3 flowers ----------
+  // Never decides success: it only adds a tip and friendship. Two parts:
+  //  colour (0–2): the cloths, trim and cape read as one palette. Whites, blacks, beiges and gold count as
+  //   neutrals that go with anything; the strongest colour leads and every other colour is judged by its hue
+  //   distance to it (close = analogous, opposite in a small dose = an accent, in between = a clash).
+  //   One colour alone is safe (1); two or more on the áo itself (trousers aside) that hold together is a real
+  //   "phối" (2).
+  //  placement (0–1): placed motifs all on the dress, not piled on each other, not strewn about: a mirrored
+  //   pair, a few on the spots a tailor would choose, or one or two focal pieces.
+  G.flair = function (job) {
+    job = job || G.job;
+    const D = G.DATA, d = job.decor || {}, ST = D.style, out = { pts: 0, color: { pts: 0, note: '' }, place: { pts: 0, note: '' } };
+    const hsl = (hex) => {
+      const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b), ch = mx - mn;
+      let h = 0; if (ch) h = mx === r ? ((g - b) / ch) % 6 : mx === g ? (b - r) / ch + 2 : (r - g) / ch + 4;
+      return { h: (h * 60 + 360) % 360, ch, l: (mx + mn) / 2 };
+    };
+    // what the eye sees, weighted by how much of the outfit each takes
+    const ent = [];
+    for (const slot in C.SLOTS) { const f = C.FABRICS[job.fabs[slot]]; if (f && D.colors[f.color]) ent.push({ key: f.color, hex: D.colors[f.color].hex, w: C.SLOTS[slot].w, slot }); }
+    if (d.trim && ST.trim.opts[d.trim] && ST.trim.opts[d.trim].hex) ent.push({ key: 'trim_' + d.trim, hex: ST.trim.opts[d.trim].hex, w: 0.08, metal: d.trim === 'vang' });
+    if (d.cape && ST.cape.opts[d.cape] && ST.cape.opts[d.cape].hex) ent.push({ key: 'cape_' + d.cape, hex: ST.cape.opts[d.cape].hex, w: 0.12, metal: d.cape === 'vang' });
+    const neutral = (e) => e.metal || ['trang', 'den', 'be', 'champagne', 'mutat'].includes(e.key) || hsl(e.hex).ch < 0.16;
+    // (the trousers alone don't make a palette: a red áo over white trousers is the plain default)
+    const chroma = ent.filter((e) => !neutral(e)), keys = new Set(ent.filter((e) => e.slot !== 'quan').map((e) => e.key.replace(/^(trim|cape)_/, '')));
+    let harm = 1;
+    if (chroma.length) {
+      // the leading colour: the most cloth
+      const by = {}; for (const e of chroma) by[e.key] = (by[e.key] || 0) + e.w;
+      const lead = Object.keys(by).sort((a, b) => by[b] - by[a])[0], H0 = hsl(chroma.find((e) => e.key === lead).hex).h;
+      const tot = chroma.reduce((a, e) => a + e.w, 0); let sum = 0, wsum = 0;
+      for (const e of chroma) {
+        if (e.key === lead) continue;
+        let dh = Math.abs(hsl(e.hex).h - H0); if (dh > 180) dh = 360 - dh;
+        const dose = e.w / tot;
+        const v = dh <= 35 ? 1 : dh >= 150 ? (dose <= 0.35 ? 0.95 : 0.6) : dh >= 100 ? 0.7 : 0.4;
+        sum += v * e.w; wsum += e.w;
+      }
+      if (wsum) harm = sum / wsum;
+    }
+    const many = keys.size >= 2;
+    out.color.pts = harm < 0.6 ? 0 : many && harm >= 0.8 ? 2 : 1;
+    out.color.note = harm < 0.6 ? 'màu hơi lệch tông' : !many ? 'một màu, an toàn' : harm >= 0.8 ? 'phối màu hài hoà' : 'phối màu tạm ổn';
+    // placement
+    const items = d.items || [];
+    if (items.length) {
+      const a = job.asm || G.geo.build(G.jobDesign(job), G.jobScale(job), false), s = a.s, inP = G.geo.pointInPoly;
+      const onDress = (q) => inP(q, a.body) || (a.sleeveR && inP(q, a.sleeveR)) || (a.sleeveL && inP(q, a.sleeveL));
+      let score = 1, off = 0, piled = 0;
+      for (const it of items) if (!onDress(it)) { off++; score -= 0.4; }
+      for (let i = 0; i < items.length; i++) for (let k = i + 1; k < items.length; k++) {
+        const p = items[i], q = items[k];
+        if (Math.hypot(p.x - q.x, p.y - q.y) < (p.size + q.size) * 0.35) { piled++; score -= 0.4; }
+      }
+      if (items.length > 6) score -= 0.1 * (items.length - 6);
+      const mirrored = items.every((it) => Math.abs(it.x) < 2 * s || items.some((o) => o !== it && o.group === it.group && o.id === it.id && Math.hypot(o.x + it.x, o.y - it.y) < 3 * s));
+      const spots = G.scenes.decorate && G.job === job && G.scenes.decorate.snaps ? G.scenes.decorate.snaps() : [];
+      const onSpot = items.filter((it) => spots.some((q) => Math.hypot(q.x - it.x, q.y - it.y) < 1.5 * s)).length;
+      const intent = mirrored || items.length <= 2 || onSpot / items.length >= 0.6;
+      out.place.pts = score >= 0.75 && intent ? 1 : 0;
+      out.place.note = off ? 'hoa văn lọt ra ngoài áo' : piled ? 'hoa văn chồng lên nhau' : !intent || score < 0.75 ? 'hoa văn hơi rối' : mirrored && items.length > 1 ? 'hoa văn cân đối' : 'điểm nhấn gọn gàng';
+    }
+    out.pts = out.color.pts + out.place.pts;
+    return out;
+  };
+
   // best value a player of this rank could reach for one style tag (keeps commissions solvable)
   // part options / decorations this rank has unlocked that suit the client (men's or women's)
   // the options of one part a client of this rank/sex can be given, for the garment being priced (G._garment,
@@ -612,7 +679,9 @@
     const offer = com.baseBudget || com.budget;
     const pay = success ? com.budget : Math.round(offer * (qualOk ? (biz ? 0.45 : 0.6) : biz ? 0.2 : 0.4));
     const streak = success && G.haggle ? Math.round(com.budget * G.haggle.streakTip()) : 0;
-    return { grain, sew, fit, quality, qualOk, tags, checks, success, exceeded, trendHit,
+    // the tailor's eye: a tip of 5% of the price per flower, only from a happy client (it never decides success)
+    const flair = G.flair(j), flairPay = success ? Math.round(com.budget * 0.05 * flair.pts) : 0;
+    return { grain, sew, fit, quality, qualOk, tags, checks, success, exceeded, trendHit, flair, flairPay,
       pay, trendPay: success && trendHit ? Math.round(com.budget * 0.1) : 0, tip: (success && quality >= 90 ? Math.round(com.budget * (G.week && G.week.is('cuoi') ? 0.3 : 0.15)) : 0) + streak };
   };
 
