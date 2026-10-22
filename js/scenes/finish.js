@@ -289,7 +289,7 @@ G.scenes.finish = {
       G.text(c, `${ck.ok ? '✓' : '✗'} ${G.reqText(ck.r)}${extra}`, 724, y, { size: 13, weight: 600, color: ck.ok ? U.T.ok : U.T.bad }); y += 21;
     }
     y += 4; c.fillStyle = U.T.line; c.fillRect(724, y, 508, 1.5); y += 20;
-    const extra = [r.tip ? `thưởng +${r.tip}` : '', r.trendPay ? `hợp mốt +${r.trendPay}` : ''].filter(Boolean).join(' · ');
+    const extra = [r.tip ? `thưởng${r.quality >= 90 && G.week && G.week.is('cuoi') ? ' mùa cưới' : ''} +${r.tip}` : '', r.trendPay ? `hợp mốt +${r.trendPay}` : ''].filter(Boolean).join(' · ');
     const payShown = Math.round(r.pay * G.easeOut((at - 0.8) / 0.8));
     G.art.coin(c, 732, y, 9);
     G.text(c, `Tiền công +${payShown} xu${extra ? ' · ' + extra : ''}${r.success ? '' : ` (khách trả ${Math.round((r.pay / j.com.budget) * 100)}%)`}`, 748, y, { size: 16, weight: 800, font: G.GAME, color: U.T.gold }); y += 24;

@@ -14,6 +14,7 @@ G.idle = {
     if (away < this.MIN_AWAY) return;
     const s = G.state, hours = Math.min(away, this.CAP) / 3600e3, lines = [];
     let coins = 0;
+    const W = G.week || { is: () => false };
     // the cloth van came while you were out (already put on the roll)
     for (const o of this.deliver(Date.now())) {
       const f = G.CAT.FABRICS[o.fid];
@@ -21,7 +22,7 @@ G.idle = {
     }
     // the helper's alterations: hems, zips, taking in a waist — a share of a day's odd jobs per hour
     if (G.staff.working()) {
-      const h = G.staff.current(), n = Math.round((G.staff.side() / 3) * hours);
+      const h = G.staff.current(), n = Math.round((G.staff.side() / 3) * hours * (W.is('tho') ? 2 : 1));
       if (n > 0) { coins += n; lines.push({ icon: 'needle', text: `${h.name} nhận sửa đồ lặt vặt`, coins: n }); }
     }
     // the helper also sews plain ready-to-wear áo dài from cloth on the roll (3 m each, one every 3 hours)
@@ -29,7 +30,7 @@ G.idle = {
     const made = [];
     if (G.staff.working()) {
       const h = G.staff.current(), C = G.CAT, left = Object.assign({}, s.roll);
-      let n = Math.min(G.fair.rackSize() - s.rack.filter((it) => !it.sold).length, Math.floor(hours / 3));
+      let n = Math.min(G.fair.rackSize() - s.rack.filter((it) => !it.sold).length, Math.floor(hours / (W.is('tho') ? 2 : 3)));
       while (n-- > 0) {
         const fid = Object.keys(left).filter((id) => C.FABRICS[id] && C.FABRICS[id].print === 'tron' && left[id] >= 320).sort((a, b) => left[b] - left[a])[0];
         if (!fid) break;
@@ -39,12 +40,13 @@ G.idle = {
       if (made.length) lines.push({ icon: 'dress', text: `${h.name} may ${made.length} áo bán sẵn, treo lên sạp`, coins: 0, note: 'lên sạp' });
     }
     // the window: each dress on the rack has a small chance per hour of catching a passer-by's eye
-    const sold = [];
+    // (the night market week: twice as likely, at 90%)
+    const sold = [], night = W.is('cho');
     for (const it of s.rack) {
-      if (it.sold || sold.length >= 2) continue;
-      if (Math.random() < 1 - Math.pow(0.95, hours)) { const p = Math.round(G.fair.value(it) * 0.8); sold.push({ it, p }); }
+      if (it.sold || sold.length >= (night ? 3 : 2)) continue;
+      if (Math.random() < 1 - Math.pow(night ? 0.9 : 0.95, hours)) { const p = Math.round(G.fair.value(it) * (night ? 0.9 : 0.8)); sold.push({ it, p }); }
     }
-    for (const x of sold) { coins += x.p; lines.push({ icon: 'dress', text: 'Tủ kính bán một áo cho khách qua đường', coins: x.p }); }
+    for (const x of sold) { coins += x.p; lines.push({ icon: 'dress', text: night ? 'Chợ đêm bán một áo trên sạp' : 'Tủ kính bán một áo cho khách qua đường', coins: x.p }); }
     // an empty report ("nobody minded the shop") is a tip, shown at most once a day
     if (!lines.length) { if (Date.now() - (s.idleTipAt || 0) < 24 * 3600e3) return; s.idleTipAt = Date.now(); }
     // kept in the save until collected, so closing the tab again does not lose it
@@ -80,11 +82,16 @@ G.idle = {
       tags: G.computeTags(design, fabIds, { items: [] }, part), price: 0, age: 0, sold: false });
   },
   // ---------- wholesale cloth: 10 m at 20% off, delivered by the van an hour later (real time) ----------
-  BULK_CM: 1000, BULK_OFF: 0.2, BULK_ETA: 3600e3, BULK_MAX: 3,
+  // (the clearance-sale week: 35% off, four vans at a time; the sunny week: dye in an hour, no dye fee)
+  BULK_CM: 1000, BULK_ETA: 3600e3,
+  get BULK_OFF() { return G.week && G.week.is('xakho') ? 0.35 : 0.2; },
+  get BULK_MAX() { return G.week && G.week.is('xakho') ? 4 : 3; },
   orders() { const s = G.state; return (s.orders = s.orders || []); },
   bulkPrice(fid) { return Math.round(((G.econ.price(fid) * this.BULK_CM) / 100) * (1 - this.BULK_OFF)); },
   // ---------- dye vats: 3 m of plain white cloth + a little dye → the same cloth in a colour, 2 real hours later ----------
-  DYE_CM: 300, DYE_COST: 15, DYE_ETA: 2 * 3600e3, VATS: 2,
+  DYE_CM: 300, VATS: 2,
+  get DYE_COST() { return G.week && G.week.is('nang') ? 0 : 15; },
+  get DYE_ETA() { return (G.week && G.week.is('nang') ? 1 : 2) * 3600e3; },
   dyeing() { return this.orders().filter((o) => o.kind === 'dye'); },
   // plain white bolts on the roll with enough cloth for a batch
   dyeSources() { const s = G.state, C = G.CAT; return Object.keys(s.roll).filter((id) => C.FABRICS[id] && C.FABRICS[id].color === 'trang' && C.FABRICS[id].print === 'tron' && s.roll[id] >= this.DYE_CM); },
@@ -93,10 +100,10 @@ G.idle = {
     const s = G.state, to = this.dyeTarget(src, color);
     if (!to || (s.roll[src] || 0) < this.DYE_CM) return false;
     if (this.dyeing().length >= this.VATS) { G.toast('Cả hai chậu đang nhuộm', G.C.red); return false; }
-    if (!G.spend(this.DYE_COST)) return false;
+    if (this.DYE_COST && !G.spend(this.DYE_COST)) return false;
     s.roll[src] -= this.DYE_CM; if (s.roll[src] < 10) delete s.roll[src];
     this.orders().push({ fid: to, cm: this.DYE_CM, eta: Date.now() + this.DYE_ETA, kind: 'dye' });
-    G.toast('Đã ngâm vải vào chậu nhuộm — 2 giờ nữa xong'); G.save();
+    G.toast(`Đã ngâm vải vào chậu nhuộm — ${this.DYE_ETA / 3600e3} giờ nữa xong`); G.save();
     if (G.quests) G.quests.event('nhuom');
     return true;
   },

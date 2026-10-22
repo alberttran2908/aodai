@@ -41,7 +41,8 @@ G.scenes.workshop = {
     if (!srcs.includes(this.dyeSrc)) this.dyeSrc = srcs[0] || null;
     U.card(c, 40, 130, 760, 470);
     U.title(c, 'Nhuộm vải', 64, 168, { size: 24 });
-    G.wrap(c, `Ngâm ${I.DYE_CM / 100} m vải trắng trơn vào chậu cùng màu nhuộm (${I.DYE_COST} xu). Hai giờ sau — kể cả khi bạn tắt game — được ${I.DYE_CM / 100} m vải màu, rẻ hơn mua sẵn.`, 64, 186, 712, 20, { size: 14, color: U.T.soft, maxLines: 3 });
+    const hrs = I.DYE_ETA / 3600e3, fee = I.DYE_COST ? `${I.DYE_COST} xu` : 'miễn phí';
+    G.wrap(c, `Ngâm ${I.DYE_CM / 100} m vải trắng trơn vào chậu cùng màu nhuộm (${fee}). ${hrs === 1 ? 'Một' : 'Hai'} giờ sau — kể cả khi bạn tắt game — được ${I.DYE_CM / 100} m vải màu, rẻ hơn mua sẵn.${G.week.is('nang') ? ' (Tuần nắng ráo)' : ''}`, 64, 186, 712, 20, { size: 14, color: U.T.soft, maxLines: 3 });
     G.text(c, 'Vải trắng trong kho', 64, 262, { size: 15, weight: 800, color: U.T.accent });
     if (!srcs.length) G.wrap(c, `Chưa có cây vải trắng trơn nào từ ${I.DYE_CM / 100} m. Mua lụa, voan hay đũi trắng ở cửa hàng vải.`, 64, 280, 700, 20, { size: 14, color: U.T.soft, maxLines: 2 });
     let x = 64;
@@ -61,7 +62,7 @@ G.scenes.workshop = {
       });
       const to = this.dyeCol && I.dyeTarget(this.dyeSrc, this.dyeCol), busy = I.dyeing().length >= I.VATS;
       if (to) U.fitText(c, `→ ${G.CAT.FABRICS[to].name} (giá mua sẵn ${G.econ.price(to) * 3} xu / 3 m)`, 64, 470, 712, { size: 14, weight: 700 });
-      G.button(c, 'dyego', busy ? 'Cả hai chậu đang nhuộm' : `Nhuộm ${I.DYE_CM / 100} m · ${I.DYE_COST} xu · xong sau 2 giờ`, 64, 520, 420, 52, () => I.dye(this.dyeSrc, this.dyeCol), { style: 'green', size: 17, r: 26, enabled: !!to && !busy });
+      G.button(c, 'dyego', busy ? 'Cả hai chậu đang nhuộm' : `Nhuộm ${I.DYE_CM / 100} m · ${fee} · xong sau ${hrs} giờ`, 64, 520, 420, 52, () => I.dye(this.dyeSrc, this.dyeCol), { style: 'green', size: 17, r: 26, enabled: !!to && !busy });
     }
     // the two vats: dye liquid swirling while a batch soaks, a countdown above
     U.card(c, 820, 130, 420, 470, { fill: '#fffaf0' });

@@ -134,7 +134,31 @@ G.scenes.desk = {
     const done = t.list.filter((q) => Q.done(q)).length, ready = Q.ready();
     G.button(c, 'quests', `Nhiệm vụ hôm nay · ${done}/${t.list.length}`, 24, y, 300, 38, () => { this.questsOpen = true; }, { style: ready ? 'gold' : 'ghost', size: 14, r: 19 });
     if (ready) U.badge(c, 316, y + 4, String(ready));
+    // this week's happening in the alley, under it
+    const wk = G.week && G.week.current();
+    if (wk) {
+      G.button(c, 'week', '', 24, y + 46, 300, 50, () => { this.weekOpen = true; }, { style: 'ghost', r: 16 });
+      U.icon(c, wk.icon, 50, y + 71, 26);
+      U.fitText(c, `Tin hẻm tuần này · ${G.week.leftText()}`, 72, y + 62, 236, { size: 12, weight: 700, color: U.T.soft });
+      U.fitText(c, wk.name, 72, y + 81, 236, { size: 15, weight: 800, color: U.T.accent });
+    }
     if (this.questsOpen) this.questPanel(c, t);
+    else if (this.weekOpen && wk) this.weekPanel(c, wk);
+  },
+  weekPanel(c, wk) {
+    const U = G.UI, W = G.week, w = 560, h = 300, x = (G.W - w) / 2, y = (G.H - h) / 2, nx = W.next();
+    c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'w_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.weekOpen = false; } });
+    U.card(c, x, y, w, h);
+    G.ui.hits.push({ id: 'w_card', x, y, w, h, enabled: true, cb: () => {} });
+    U.ribbon(c, 'Tin hẻm tuần này', G.W / 2, y + 4, { size: 17 });
+    G.rr(c, x + 24, y + 56, w - 48, 128, 14); c.fillStyle = '#f7efe2'; c.fill();
+    U.icon(c, wk.icon, x + 62, y + 98, 40);
+    U.fitText(c, wk.name, x + 98, y + 88, w - 150, { size: 22, weight: 800, font: G.GAME, color: U.T.accent });
+    G.wrap(c, wk.text, x + 98, y + 114, w - 150, 20, { size: 14, color: U.T.ink, maxLines: 3 });
+    G.text(c, `Cả hẻm cùng một tin · đổi vào thứ Hai (giờ Việt Nam) · ${W.leftText()}`, G.W / 2, y + 208, { size: 13, align: 'center', color: U.T.soft });
+    U.fitText(c, `Tuần sau: ${nx.name}`, G.W / 2, y + 234, w - 60, { size: 14, weight: 700, align: 'center', color: '#8a6d4b' });
+    G.button(c, 'w_close', 'Đóng', x + w - 104, y + h - 46, 80, 32, () => { this.weekOpen = false; }, { style: 'ghost', size: 14, r: 16 });
   },
   questPanel(c, t) {
     const U = G.UI, Q = G.quests, w = 620, h = 120 + t.list.length * 84, x = (G.W - w) / 2, y = (G.H - h) / 2;

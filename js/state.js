@@ -523,7 +523,7 @@
     const pay = success ? com.budget : Math.round(offer * (qualOk ? (biz ? 0.45 : 0.6) : biz ? 0.2 : 0.4));
     const streak = success && G.haggle ? Math.round(com.budget * G.haggle.streakTip()) : 0;
     return { grain, sew, fit, quality, qualOk, tags, checks, success, exceeded, trendHit,
-      pay, trendPay: success && trendHit ? Math.round(com.budget * 0.1) : 0, tip: (success && quality >= 90 ? Math.round(com.budget * 0.15) : 0) + streak };
+      pay, trendPay: success && trendHit ? Math.round(com.budget * 0.1) : 0, tip: (success && quality >= 90 ? Math.round(com.budget * (G.week && G.week.is('cuoi') ? 0.3 : 0.15)) : 0) + streak };
   };
 
   G.snapshot = function (design, fabs, extra) {
