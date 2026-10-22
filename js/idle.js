@@ -107,6 +107,7 @@ G.idle = {
     for (const g of P.gifts || []) if (G.CAT.FABRICS[g.fid]) G.state.roll[g.fid] = (G.state.roll[g.fid] || 0) + g.cm;
     for (const com of P.calls || []) G.state.bench.seats.push({ com, patience: G.bench.patience() + 1, arrived: G.state.day, phone: true });
     if (P.coins) { G.addCoins(P.coins); G.sfx.coin(); }
+    if (G.ach) { if (P.coins) G.ach.count('idlecoins', P.coins); if ((P.calls || []).length) G.ach.count('zalo', P.calls.length); if (G.staff.current()) G.ach.count('thobac', G.staff.step(), true); }
     if (G.staff.current() && G.state.staff) G.state.staff.earned += P.lines.filter((l) => l.icon === 'needle').reduce((a, l) => a + l.coins, 0);
     this.pending = null; this.stamp(); G.save();
   },
@@ -208,6 +209,7 @@ G.idle = {
     if (g.coins) G.addCoins(g.coins);
     if (g.fabric && G.CAT.FABRICS[g.fabric]) s.roll[g.fabric] = (s.roll[g.fabric] || 0) + g.cm;
     s.checkin = { last: G.dateKeyVN(), streak: d.day };
+    if (G.ach && d.day === 7) G.ach.count('checkin7');
     G.sfx.coin(); G.toast(`Quà ngày ${d.day}: ${this.giftText(g)}`, G.C.green); G.save();
   },
   awayText(ms) {

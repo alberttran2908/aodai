@@ -68,7 +68,7 @@ G.scenes.visit = {
     });
     // a visitor's gift, once per shop per day
     const gs = this.giftState(), bx = 24, by = G.H - 66;
-    if (gs === 'ready') G.button(c, 'vgift', `Nhận quà ghé thăm · ${this.GIFT} xu`, bx, by, 300, 50, () => { this.gifts().shops.push(this.sh.shop); G.addCoins(this.GIFT); G.sfx.coin(); G.toast(`Quà ghé thăm “${this.sh.shop}”: +${this.GIFT} xu`, G.C.green); G.save(); }, { style: 'gold', size: 15, r: 25 });
+    if (gs === 'ready') G.button(c, 'vgift', `Nhận quà ghé thăm · ${this.GIFT} xu`, bx, by, 300, 50, () => { this.gifts().shops.push(this.sh.shop); G.addCoins(this.GIFT); if (G.ach) G.ach.count('ghe'); G.sfx.coin(); G.toast(`Quà ghé thăm “${this.sh.shop}”: +${this.GIFT} xu`, G.C.green); G.save(); }, { style: 'gold', size: 15, r: 25 });
     else if (gs !== 'none') G.text(c, { own: 'Đây là tiệm của bạn — gửi link cho bạn bè ghé nhé!', taken: '✓ Hôm nay đã nhận quà ghé tiệm này', full: `Hôm nay đã nhận đủ quà ghé ${this.PER_DAY} tiệm` }[gs], bx, by + 25, { size: 14, weight: 700, color: gs === 'taken' ? U.T.ok : U.T.soft });
     G.button(c, 'vslink', 'Sao chép link', G.W - 476, G.H - 66, 196, 50, () => G.share.copy(location.href), { style: 'ghost', size: 15, r: 25 });
     U.primary(c, 'home', 'Mở tiệm của bạn', () => this.leave());

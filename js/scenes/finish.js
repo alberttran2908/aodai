@@ -32,6 +32,7 @@ G.scenes.finish = {
     // the day ends (bills at month end use the rank the month was worked at), then reputation grows
     G.econ.advanceDay();
     if (G.quests) { if (r.success) G.quests.event('giao'); if (r.success && r.quality >= 90) G.quests.event('q90'); } // daily goals
+    if (G.ach && r.success && j.com.flags && j.com.flags.vip) G.ach.count('vip');
     this.gain = (r.success ? 1 : 0.25) + ((j.com.kind === 'story' || j.com.kind === 'arc') && r.success ? 0.5 : 0);
     s.prestige += this.gain;
     s.served++;

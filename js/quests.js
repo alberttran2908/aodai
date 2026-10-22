@@ -29,6 +29,7 @@ G.quests = {
   done(q) { return q.prog >= this.def(q.id).n; },
   // the game reports something (a delivery, a perfect seam…); n = how many at once
   event(ev, n) {
+    if (G.ach) G.ach.count(ev, n); // the same events feed the long goals
     const t = this.today(); if (!t) return;
     for (const q of t.list) {
       const d = this.def(q.id); if (d.ev !== ev || this.done(q)) continue;
@@ -44,6 +45,7 @@ G.quests = {
     q.claimed = true;
     if (d.gift.coins) G.addCoins(d.gift.coins);
     if (d.gift.fabric && G.CAT.FABRICS[d.gift.fabric]) s.roll[d.gift.fabric] = (s.roll[d.gift.fabric] || 0) + d.gift.cm;
+    if (G.ach) G.ach.count('quest');
     G.sfx.coin(); G.save();
   }
 };

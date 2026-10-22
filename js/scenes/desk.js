@@ -143,6 +143,10 @@ G.scenes.desk = {
     if (vs) rows.push({ id: 'h_v', icon: 'mail', title: vs.title, sub: vs.sub, dot: vs.dot, open: () => { this.hubOpen = false; } });
     const o = K && K.on() && K.st().offer;
     if (o) rows.push({ id: 'h_k', icon: 'box', title: `Đơn shop: ${o.shop}`, sub: `${K.matching().length}/${o.n} áo hợp đơn · ${K.leftText()}`, dot: !K.st().seen || K.ready(), open: () => { this.contractOpen = true; K.st().seen = true; G.save(); } });
+    if (G.ach && G.ach.on()) {
+      const A = G.ach, rd = A.ready();
+      rows.push({ id: 'h_a', icon: 'trophy', title: 'Thành tựu chủ tiệm', sub: `${A.got()}/${A.LIST.length} đã nhận${rd ? ` · ${rd} quà chờ nhận` : ''}`, dot: rd > 0, open: () => { this.achOpen = true; } });
+    }
     if (wk) rows.push({ id: 'h_w', icon: 'lantern', title: `Tin tuần: ${wk.name}`, sub: W.leftText(), dot: s.weekSeen !== W.num(), open: () => { this.weekOpen = true; s.weekSeen = W.num(); G.save(); } });
     return rows;
   },
@@ -153,8 +157,29 @@ G.scenes.desk = {
     if (this.questsOpen && t) this.questPanel(c, t);
     else if (this.weekOpen && wk) this.weekPanel(c, wk);
     else if (this.contractOpen && o) this.contractPanel(c, o);
+    else if (this.achOpen && G.ach) this.achPanel(c);
     else if (this.hubOpen) { this.contractOpen = false; this.hubPanel(c); }
     else this.contractOpen = false;
+  },
+  // Thành tựu: two columns of long goals, each with its progress and gift
+  achPanel(c) {
+    const U = G.UI, A = G.ach, s = A.st(), w = 1000, rh = 74, h = 120 + 6 * rh, x = (G.W - w) / 2, y = (G.H - h) / 2;
+    c.fillStyle = 'rgba(43,29,24,0.45)'; c.fillRect(0, 0, G.W, G.H);
+    G.ui.hits.push({ id: 'a_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.achOpen = false; } });
+    U.card(c, x, y, w, h);
+    G.ui.hits.push({ id: 'a_card', x, y, w, h, enabled: true, cb: () => {} });
+    U.ribbon(c, `Thành tựu chủ tiệm · ${A.got()}/${A.LIST.length}`, G.W / 2, y + 4, { size: 17 });
+    A.LIST.forEach((a, i) => {
+      const cx = x + 24 + (i % 2) * ((w - 48) / 2 + 0), cw = (w - 48) / 2 - 12, ry = y + 46 + Math.floor(i / 2) * rh, done = A.done(a), got = !!s.achGot[a.id];
+      G.rr(c, cx, ry, cw, rh - 10, 12); c.fillStyle = got ? '#eef6ea' : done ? '#fff1d6' : '#f7efe2'; c.fill();
+      U.fitText(c, a.text, cx + 16, ry + 22, cw - 140, { size: 14, weight: 800, color: got ? U.T.ok : U.T.ink });
+      G.rr(c, cx + 16, ry + 38, cw - 270, 10, 5); c.fillStyle = '#e4d6c0'; c.fill();
+      G.rr(c, cx + 16, ry + 38, Math.max(10, ((cw - 270) * A.val(a)) / a.n), 10, 5); c.fillStyle = done ? U.T.ok : U.T.gold; c.fill();
+      G.text(c, a.max ? `bậc ${A.val(a)}/${a.n}` : `${A.val(a).toLocaleString('vi-VN')}/${a.n.toLocaleString('vi-VN')}`, cx + cw - 128, ry + 43, { size: 12, weight: 700, align: 'right', color: U.T.soft });
+      if (got) G.text(c, '✓ đã nhận', cx + cw - 62, ry + 32, { size: 13, weight: 800, align: 'center', color: U.T.ok });
+      else G.button(c, 'ac' + i, `+${a.coins} xu`, cx + cw - 112, ry + 14, 100, 36, () => A.claim(a), { style: 'green', size: 14, r: 18, enabled: done });
+    });
+    G.button(c, 'a_close', 'Đóng', x + w - 104, y + h - 46, 80, 32, () => { this.achOpen = false; }, { style: 'ghost', size: 14, r: 16 });
   },
   hubPanel(c) {
     const U = G.UI, rows = this.hubRows(), rh = 78, w = 560, h = 104 + rows.length * (rh + 10), x = (G.W - w) / 2, y = (G.H - h) / 2;
