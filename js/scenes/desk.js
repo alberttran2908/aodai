@@ -351,13 +351,13 @@ G.scenes.desk = {
       G.wrap(c, 'Tiệm đóng cửa, chưa có ai trông. ' + G.idle.idleTip(), x + 30, ly - 12, w - 60, 20, { size: 14, color: U.T.ink, maxLines: 3 });
     }
     for (const l of P.lines) {
-      U.icon(c, l.icon === 'dress' ? 'album' : l.icon === 'fabric' ? 'fabric' : 'workshop', x + 44, ly, 28);
+      U.icon(c, { dress: 'album', fabric: 'fabric', mail: 'mail' }[l.icon] || 'workshop', x + 44, ly, 28);
       U.fitText(c, l.text, x + 70, ly, w - 200, { size: 15, weight: 600 });
       if (l.coins) { G.art.coin(c, x + w - 98, ly, 9); G.text(c, `+${l.coins}`, x + w - 84, ly, { size: 16, weight: 800, font: G.GAME, color: U.T.gold }); }
       else G.text(c, l.note || '', x + w - 30, ly, { size: 14, weight: 800, align: 'right', color: U.T.ok });
       ly += 40;
     }
-    if (P.lines.length) { c.fillStyle = U.T.line; c.fillRect(x + 30, ly - 14, w - 60, 1.5); G.text(c, `Tổng: +${P.coins} xu`, x + w - 30, ly + 8, { size: 18, weight: 800, font: G.GAME, align: 'right', color: U.T.gold }); }
+    if (P.coins) { c.fillStyle = U.T.line; c.fillRect(x + 30, ly - 14, w - 60, 1.5); G.text(c, `Tổng: +${P.coins} xu`, x + w - 30, ly + 8, { size: 18, weight: 800, font: G.GAME, align: 'right', color: U.T.gold }); }
     G.button(c, 'away_ok', P.coins ? `Nhận ${P.coins} xu` : 'Mở cửa tiệm', G.W / 2 - 110, y + h - 62, 220, 46, () => {
       if (P.coins) { this.coinFx = []; for (let k = 0; k < 14; k++) this.coinFx.push({ sx: G.W / 2 + G.rand(-80, 80), sy: y + h - 40 + G.rand(-10, 10), t: -k * 0.05 }); }
       G.idle.collect();
@@ -399,7 +399,7 @@ G.scenes.desk = {
       const hov = G.inRect(G.pointer, card) || G.inRect(G.pointer, body), urgent = !st.appt && st.patience <= 1;
       G.ui.hits.push({ id: 'seatf' + i, x: body.x, y: body.y, w: body.w, h: body.h, enabled: true, cb: () => this.callIn(i) });
       this.waiter(c, cl, fx, top - (hov ? 8 : 0) + Math.sin(this.t * 2 + i * 1.3) * 1.5, st.com.measures.bust, hov);
-      if (urgent || st.appt) this.bubble(c, fx + 46, top + 4, urgent ? '⌛' : '📌', urgent);
+      if (urgent || st.appt || st.phone) this.bubble(c, fx + 46, top + 4, urgent ? '⌛' : st.appt ? '📌' : '📱', urgent);
     });
     seats.slice(0, 4).forEach((st, i) => {
       const com = st.com, cl = G.client(com.client), x = 24 + i * 262, y = 536, w = 250, h = 112;
@@ -414,7 +414,7 @@ G.scenes.desk = {
       G.text(c, `Đề nghị ${com.budget} xu`, x + 90, yy + 62, { size: 13, weight: 800, color: U.T.gold });
       const r0 = com.reqs[0];
       U.fitText(c, r0 ? G.reqText(r0) + (com.reqs.length > 1 ? ` +${com.reqs.length - 1}` : '') : 'Tuỳ em may', x + 90, yy + 80, w - 100, { size: 12 });
-      G.text(c, st.appt ? '📌 Hẹn trước' : `⌛ chờ thêm ${st.patience} ngày`, x + 90, yy + 98, { size: 12, weight: 700, color: urgent ? U.T.bad : U.T.soft });
+      G.text(c, st.appt ? '📌 Hẹn trước' : `${st.phone ? '📱 Zalo · ' : '⌛ '}chờ thêm ${st.patience} ngày`, x + 90, yy + 98, { size: 12, weight: 700, color: urgent ? U.T.bad : U.T.soft });
       if (com.title) { G.rr(c, x + w - 84, yy - 10, 78, 20, 10); c.fillStyle = { arc: '#d6698a', event: '#c9952e', story: '#b23a48', copy: '#6b5bb8' }[com.kind] || U.T.accent; c.fill(); U.fitText(c, { arc: 'Tâm sự', event: 'Sự kiện', story: 'Truyện', copy: 'Y chang' }[com.kind] || '', x + w - 45, yy, 70, { size: 10, weight: 800, align: 'center', color: '#fff' }); }
     });
     if (!seats.length) G.text(c, 'Hôm nay không còn ai chờ. Đóng cửa để sang ngày mới.', 640, 590, { size: 17, weight: 700, align: 'center', color: '#fbe9cf' });

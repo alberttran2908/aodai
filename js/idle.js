@@ -47,10 +47,22 @@ G.idle = {
       if (Math.random() < 1 - Math.pow(night ? 0.9 : 0.95, hours)) { const p = Math.round(G.fair.value(it) * (night ? 0.9 : 0.8)); sold.push({ it, p }); }
     }
     for (const x of sold) { coins += x.p; lines.push({ icon: 'dress', text: night ? 'Chợ đêm bán một áo trên sạp' : 'Tủ kính bán một áo cho khách qua đường', coins: x.p }); }
+    // clients who found the shop shut leave a Zalo message and book a seat on the bench (one per two hours
+    // away, at most two, while the bench has room); they pay 10% more for being fitted in
+    const calls = [];
+    if (G.bench && G.bench.on() && s.bench && !(s.tut && s.tut.on)) {
+      let n = Math.min(4 - s.bench.seats.length, 2, Math.floor((hours + 1) / 2));
+      for (let guard = 0; n > 0 && guard < 8; guard++) {
+        const com = this.phoneCom();
+        if (!com || s.bench.seats.some((x) => x.com.client === com.client) || calls.some((x) => x.client === com.client)) continue;
+        calls.push(com); n--;
+        lines.push({ icon: 'mail', text: `${G.client(com.client).name} nhắn Zalo đặt may`, coins: 0, note: 'ghế chờ' });
+      }
+    }
     // an empty report ("nobody minded the shop") is a tip, shown at most once a day
     if (!lines.length) { if (Date.now() - (s.idleTipAt || 0) < 24 * 3600e3) return; s.idleTipAt = Date.now(); }
     // kept in the save until collected, so closing the tab again does not lose it
-    s.idlePending = { away, capped: away > this.CAP, lines, coins, made, sold: sold.map((x) => ({ i: s.rack.indexOf(x.it), p: x.p })) };
+    s.idlePending = { away, capped: away > this.CAP, lines, coins, made, calls, sold: sold.map((x) => ({ i: s.rack.indexOf(x.it), p: x.p })) };
   },
   get pending() { return G.state && G.state.idlePending; },
   set pending(v) { if (G.state) G.state.idlePending = v; },
@@ -58,9 +70,20 @@ G.idle = {
     const P = this.pending; if (!P) return;
     for (const x of P.sold) { const it = G.state.rack[x.i]; if (it && !it.sold) { it.sold = true; it.soldFor = x.p; it.price = x.p; } }
     for (const m of P.made || []) this.hangMade(m);
+    for (const com of P.calls || []) G.state.bench.seats.push({ com, patience: G.bench.patience() + 1, arrived: G.state.day, phone: true });
     if (P.coins) { G.addCoins(P.coins); G.sfx.coin(); }
     if (G.staff.current() && G.state.staff) G.state.staff.earned += P.lines.filter((l) => l.icon === 'needle').reduce((a, l) => a + l.coins, 0);
     this.pending = null; this.stamp(); G.save();
+  },
+  // a walk-in drawn without putting them at the counter, at 10% over their usual offer
+  phoneCom() {
+    const s = G.state, keep = s.commission, last = s.lastClient;
+    const com = G.newCommission({ starChance: 0, noTheme: true });
+    s.commission = keep; s.lastClient = last;
+    if (!com) return null;
+    com.budget = com.baseBudget = Math.round((com.baseBudget || com.budget) * 1.1 / 10) * 10;
+    com.phone = true;
+    return com;
   },
   // a helper-made dress: a simple áo dài (stand collar, long sleeves, floor-length) in one plain cloth,
   // into the album (so the fair can show it) and onto the rack
