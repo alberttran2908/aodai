@@ -112,10 +112,14 @@ G.scenes.decorate = {
     U.card(c, 840, 62, 420, 560);
     // the groups as an even 4 × 2 grid of short labels
     const SHORT = { theu: 'Thêu', tranh: 'Tranh thêu', vien: 'Viền', cuc: 'Cúc áo', dinh: 'Đính kết', dau: 'Đội đầu', choang: 'Choàng', va: 'Vá & sờn' };
-    C.DECOR_ORDER.forEach((g, i) => {
+    // patches and wear are for the odd costume order: the tab only shows when a brief asks for it
+    const wantVa = j.com.reqs.some((r) => r.type === 'decor' && r.group === 'va') || (j.decor.items || []).some((it) => it.group === 'va');
+    const groups = C.DECOR_ORDER.filter((g) => g !== 'va' || wantVa);
+    if (!groups.includes(this.group)) this.group = 'theu';
+    groups.forEach((g, i) => {
       U.chip(c, 'g' + g, SHORT[g] || C.DECOR[g].name, 856 + (i % 4) * 98, 76 + Math.floor(i / 4) * 36, this.group === g, () => { this.group = g; this.tool = null; }, { w: 92 });
     });
-    const gy = 76 + Math.ceil(C.DECOR_ORDER.length / 4) * 36 + 12; // item grid below the group chips
+    const gy = 76 + Math.ceil(groups.length / 4) * 36 + 12; // item grid below the group chips
     const male = !!j.com.male;
     // the wedding áo dài already has its khăn đóng, wound from the collar cloth
     const ownHead = this.group === 'dau' && C.GARMENTS[j.garment] && C.GARMENTS[j.garment].head;
@@ -142,7 +146,7 @@ G.scenes.decorate = {
       G.text(c, lock ? `Hạng ${it.rank}` : `${it.price} xu`, cx + 62, cy + 93, { size: 11, weight: 700, align: 'center', color: lock ? U.T.bad : U.T.gold });
     });
     const cost = this.cost();
-    G.text(c, `Chi phí trang trí: ${cost} xu`, 1050, 638, { size: 15, weight: 800, font: G.GAME, align: 'center', color: U.T.accent });
+    G.text(c, `Trang trí thêm ${cost} xu`, 1050, 638, { size: 14, weight: 700, align: 'center', color: U.T.soft });
     U.primary(c, 'done', `Hoàn thành áo`, () => {
       if (cost && !G.spend(cost)) return;
       if (G.quests && (j.decor.items || []).length >= 3) G.quests.event('trangtri', 3);

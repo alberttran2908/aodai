@@ -251,8 +251,8 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
     // story dialog on top of everything; its full-screen hit area swallows clicks meant for the scene
     if (G.Dialog && G.Dialog.active) { G.Dialog.update(dt); G.Dialog.draw(ctx); }
     else if (G.tut && G.state) G.tut.draw(ctx, dt); // first-order coaching from Bà Tư
-    // toasts: bottom centre, stacking upwards (the top rows hold navigation)
-    let ty = G.H - 200;
+    // toasts: top centre just under the beam, stacking downwards (the bottom row holds the main buttons)
+    let ty = 64;
     G.toasts = G.toasts.filter((t) => (t.t += dt) < 2.4);
     for (const t of G.toasts) {
       const a = t.t < 0.2 ? t.t / 0.2 : t.t > 2 ? (2.4 - t.t) / 0.4 : 1, pop = 0.7 + 0.3 * G.easeBack(t.t / 0.3);
@@ -267,7 +267,7 @@ G.inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y 
       ctx.strokeStyle = G.INK; ctx.lineWidth = 2.2; ctx.stroke();
       G.text(ctx, t.msg, G.W / 2, ty + 22, { align: 'center', size: 19, weight: 700, font: G.GAME, color: t.color });
       ctx.restore();
-      ty -= 48;
+      ty += 48;
     }
     if (G.fade > 0) {
       ctx.fillStyle = `rgba(43,29,24,${G.fade})`;

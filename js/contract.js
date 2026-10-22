@@ -6,7 +6,7 @@ G.contract = {
   SHOPS: ['Shop Áo Dài Mây', 'Lụa Là Online', 'Tiệm Cô Dâu Nhỏ', 'Boutique Hoa Sen', 'Áo Dài Phố Cổ', 'Shop Mẹ Bắp'],
   MATS: ['lua', 'voan', 'dui'],
   LASTS: 24 * 3600e3, GAP: 4 * 3600e3,
-  on() { const s = G.state; return !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge' && G.hasSave && !(s.tut && s.tut.on); },
+  on() { const s = G.state; return !G.CFG.focus && !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge' && G.hasSave && !(s.tut && s.tut.on); },
   st() { const s = G.state; return (s.contract = s.contract || { offer: null, nextAt: 0, seen: false }); },
   // a new order when the gap is over; an order past its time lapses. Returns the new offer, if one came.
   tick(now) {

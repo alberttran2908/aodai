@@ -3,7 +3,7 @@
 G.scenes.desk = {
   DISCLAIMER: 'Các nhân vật “người nổi tiếng” trong game là hư cấu, nhại vui tên và phong cách sân khấu, không đại diện và không liên quan tới người thật. Có thể tắt họ trong phần Cài đặt ở màn hình chính.',
   enter() {
-    this.t = 0; this.walk = G.state.commission ? 1 : 0; this.gift = false; this.cameoId = null; this.cameoWalk = 1;
+    G.ui.coinHold = 0; this.t = 0; this.walk = G.state.commission ? 1 : 0; this.gift = false; this.cameoId = null; this.cameoWalk = 1;
     this.seenIssues = this.seenIssues || G.state.press.issues.length;
     if (G.state.econ.fairPending !== null && G.state.econ.fairPending !== undefined && G.scenes.fair) { G.go('fair'); return; }
     // a new day: whoever ran out of patience went to Kevin's; empty seats fill up
@@ -103,26 +103,46 @@ G.scenes.desk = {
     G.art.garment(c, asm, look.fab, { mannequin: true, cache: true, t: this.t });
     c.restore();
   },
-  // top-left toolbar of icon tiles; red badges for news
+  // top-left toolbar: the three places a tailor goes all day (cloth, past work, clients), and "Tiệm" for the rest
   nav(c) {
     const s = G.state, daily = s.isDaily;
     const items = [{ id: 'shop', label: 'Chợ vải', icon: 'fabric', cb: () => G.go('emporium', { back: 'desk' }) }, { id: 'album', label: 'Album', icon: 'album', cb: () => G.go('gallery') }];
     if (!daily) {
-      items.push({ id: 'workshop', label: 'Xưởng', icon: 'workshop', cb: () => G.go('workshop') });
       items.push({ id: 'clients', label: 'Sổ khách', icon: 'clients', cb: () => G.go('clients') });
-      if (G.story.unlocked('paper')) items.push({ id: 'paper', label: 'Báo', icon: 'paper', cb: () => G.go('paper'), dot: s.press.unread > 0 });
-      if (G.story.unlocked('mail')) items.push({ id: 'mail', label: 'Hộp thư', icon: 'mail', cb: () => G.go('mail'), dot: G.mail.unread() > 0 });
-      if (s.mode !== 'challenge') items.push({ id: 'challenges', label: 'Thử thách', icon: 'trophy', cb: () => { this.challenges = true; }, dot: !G.daily.played() });
-      if (G.econ.on()) items.push({ id: 'ledger', label: 'Sổ sách', icon: 'ledger', cb: () => G.go('ledger'), dot: s.econ.debt > 0 });
-      // "Hôm nay": one tile for today's quests, a boutique's order and this week's happening (a toolbar of eleven
-      // tiles was too cramped to read or tap on a phone); red dot when any of them wants a look
       if (G.contract && G.contract.on()) G.contract.tick();
       if (G.vip && G.vip.tick() === 'came') { const cl = G.client(s.vip.client); G.toast(`${cl ? cl.name : 'Khách sang'} tới đúng hẹn, đang chờ ở ghế!`, G.C.green); G.sfx.bell(); }
-      // (not while the first-day tutorial is running: one thing at a time for a new player)
-      if (!(s.tut && s.tut.on) && this.hubRows().length) items.push({ id: 'today', label: 'Hôm nay', icon: 'tasks', cb: () => { this.hubOpen = true; }, dot: this.hubRows().some((r) => r.dot) });
       if (s.mode === 'challenge') items.push({ id: 'quit', label: 'Thoát', icon: 'exit', cb: () => G.go('title') });
+      else { const m = this.menuItems(); items.push({ id: 'menu', label: 'Tiệm ▾', icon: 'lantern', cb: () => { this.menuOpen = !this.menuOpen; }, dot: m.some((r) => r.dot) }); }
     }
     G.UI.dock(c, items, 24, 68);
+  },
+  // everything else about running the shop, one tap away instead of seven tiles wide
+  menuItems() {
+    const s = G.state, out = [{ id: 'workshop', label: 'Xưởng', icon: 'workshop', cb: () => G.go('workshop') }];
+    if (G.econ.on()) out.push({ id: 'ledger', label: 'Sổ sách', icon: 'ledger', cb: () => G.go('ledger'), dot: s.econ.debt > 0 });
+    if (G.story.unlocked('paper')) out.push({ id: 'paper', label: 'Báo', icon: 'paper', cb: () => G.go('paper'), dot: s.press.unread > 0 });
+    if (G.story.unlocked('mail')) out.push({ id: 'mail', label: 'Hộp thư', icon: 'mail', cb: () => G.go('mail'), dot: G.mail.unread() > 0 });
+    if (G.ach && G.ach.on()) out.push({ id: 'ach', label: 'Thành tựu', icon: 'trophy', cb: () => { this.achOpen = true; }, dot: G.ach.ready() > 0 });
+    // (the "Hôm nay" hub only has rows when the daily extras are switched on, see G.CFG.focus)
+    const hub = this.hubRows().filter((r) => r.id !== 'h_a');
+    if (!(s.tut && s.tut.on) && hub.length) out.push({ id: 'today', label: 'Hôm nay', icon: 'tasks', cb: () => { this.hubOpen = true; }, dot: hub.some((r) => r.dot) });
+    out.push({ id: 'challenges', label: 'Thử thách', icon: 'tasks', cb: () => { this.challenges = true; } });
+    return out;
+  },
+  shopMenu(c) {
+    const U = G.UI, items = this.menuItems(), x = 246, y = 150, w = 210, rh = 46, h = 16 + items.length * rh;
+    G.ui.hits.push({ id: 'menu_bg', x: 0, y: 0, w: G.W, h: G.H, enabled: true, cb: () => { this.menuOpen = false; } });
+    U.card(c, x, y, w, h, { r: 14 });
+    // a little tab pointing up at the "Tiệm" tile
+    c.fillStyle = '#fbf6ec'; c.beginPath(); c.moveTo(x + 22, y + 1); c.lineTo(x + 31, y - 9); c.lineTo(x + 40, y + 1); c.fill();
+    items.forEach((it, i) => {
+      const ry = y + 8 + i * rh, hov = G.inRect(G.pointer, { x: x + 6, y: ry, w: w - 12, h: rh - 4 });
+      if (hov) { G.rr(c, x + 6, ry, w - 12, rh - 4, 10); c.fillStyle = 'rgba(178,50,63,0.08)'; c.fill(); }
+      U.icon(c, it.icon, x + 30, ry + (rh - 4) / 2, 26);
+      G.text(c, it.label, x + 54, ry + (rh - 4) / 2, { size: 15, weight: 700 });
+      if (it.dot) U.badge(c, x + w - 24, ry + (rh - 4) / 2 - 6);
+      G.ui.hits.push({ id: 'm_' + it.id, x: x + 6, y: ry, w: w - 12, h: rh - 4, enabled: true, cb: () => { this.menuOpen = false; G.sfx.click(); it.cb(); } });
+    });
   },
   chapterCard(c) {
     const st = G.state.story, ch = G.story.chapter();
@@ -281,16 +301,14 @@ G.scenes.desk = {
     }
     if (G.econ.on()) {
       // next bill and this month's market, so money pressure is always visible
-      const b = G.econ.bill(), m = G.econ.market(), left = G.econ.daysLeft();
-      const ww = 250, x = cx - 14 - ww, y = 66, late = s.econ.debt > 0, short = s.coins < b.total;
-      c.save(); c.translate(x + ww / 2, y + 40); c.rotate(-0.012); c.translate(-x - ww / 2, -y - 40);
-      U.card(c, x, y, ww, 80, { r: 6, fill: late ? '#fde8e6' : '#fff6dc', stroke: late ? U.T.bad : U.T.edge, stitch: false });
-      c.fillStyle = 'rgba(214,180,120,0.55)'; c.fillRect(x + ww / 2 - 22, y - 6, 44, 13);
-      G.text(c, `Tiền nhà sau ${left} ngày`, x + 14, y + 22, { size: 15, weight: 800, font: G.GAME, color: short || late ? U.T.bad : G.INK });
-      G.art.coin(c, x + 22, y + 46, 9);
-      G.text(c, `khoảng ${b.total + (s.econ.debt || 0)} xu`, x + 36, y + 47, { size: 15, weight: 700, font: G.GAME, color: short || late ? U.T.bad : G.INK });
-      U.fitText(c, `Chợ: ${m.name}`, x + 14, y + 67, ww - 28, { size: 12, color: U.T.soft });
-      c.restore();
+      // (this month's market is in the ledger and the paper; the desk keeps to the one date that matters)
+      const b = G.econ.bill(), left = G.econ.daysLeft(), due = b.total + (s.econ.debt || 0);
+      const ww = 176, x = cx - 12 - ww, y = 72, warn = s.econ.debt > 0 || s.coins < due;
+      G.rr(c, x, y, ww, 52, 10); c.fillStyle = warn ? 'rgba(253,232,230,0.95)' : 'rgba(255,250,240,0.9)'; c.fill();
+      c.strokeStyle = warn ? U.T.bad : 'rgba(94,58,36,0.35)'; c.lineWidth = 1.5; c.stroke();
+      G.text(c, `Tiền nhà · còn ${left} ngày`, x + 12, y + 17, { size: 13, weight: 700, color: warn ? U.T.bad : U.T.soft });
+      G.art.coin(c, x + 19, y + 36, 7);
+      G.text(c, `${due} xu`, x + 31, y + 37, { size: 15, weight: 800, font: G.GAME, color: warn ? U.T.bad : G.INK });
       if (s.mode === 'challenge') U.outlined(c, `Thử thách tuần: còn ${Math.max(0, s.endDay - s.day + 1)} ngày`, G.W - 24, 178, { size: 14, align: 'right', color: U.T.ok });
     }
   },
@@ -371,14 +389,17 @@ G.scenes.desk = {
     this.chapterCard(c);
     this.calendarChip(c);
     if (!(G.idle && (G.idle.pending || G.idle.checkinDue()))) this.questChip(c);
+    if (this.menuOpen) this.shopMenu(c);
     if (this.gift && com) this.giftPanel(c);
     if (this.quote && com) this.quotePanel(c);
     if (this.challenges) this.challengePanel(c);
     if (this.boards) this.boardPanel(c);
     U.topbar(c, s.isDaily ? 'Đơn ngày ' + G.daily.label(s.dailyKey) : 'Quầy tiếp khách');
-    if (G.idle && G.idle.pending && !(G.Dialog && G.Dialog.active)) this.awayCard(c);
+    // focus: no cards on arrival; what the shop did while you were away is a line and a shower of coins
+    if (G.CFG.focus && G.idle && G.idle.pending && !(G.Dialog && G.Dialog.active)) this.collectAway();
+    else if (G.idle && G.idle.pending && !(G.Dialog && G.Dialog.active)) this.awayCard(c);
     else if (G.idle && !(G.Dialog && G.Dialog.active) && !(G.tut && G.tut.active()) && G.idle.checkinDue()) this.checkinCard(c);
-    else if (this.NEWS && !s.isDaily && s.mode !== 'challenge' && s.newsSeen !== this.NEWS.id && !(s.tut && s.tut.on) && !(G.Dialog && G.Dialog.active) && !this.hubOpen) this.newsCard(c);
+    else if (this.NEWS && !G.CFG.focus && !s.isDaily && s.mode !== 'challenge' && s.newsSeen !== this.NEWS.id && !(s.tut && s.tut.on) && !(G.Dialog && G.Dialog.active) && !this.hubOpen) this.newsCard(c);
     // collected coins arc up into the purse in the top bar
     if (this.coinFx && this.coinFx.length) {
       const tx = G.W - 330, ty = 28;
@@ -463,6 +484,14 @@ G.scenes.desk = {
       G.idle.collect();
     }, { style: P.coins ? 'green' : 'primary', size: 17, r: 23 });
   },
+  collectAway() {
+    const P = G.idle.pending, top = P.lines.find((l) => l.coins) || P.lines[0];
+    if (P.coins) {
+      this.coinFx = []; for (let k = 0; k < 12; k++) this.coinFx.push({ sx: G.W / 2 + G.rand(-80, 80), sy: 420 + G.rand(-10, 10), t: -k * 0.05 });
+      G.toast(`Trong lúc bạn vắng, tiệm thu ${P.coins} xu${top ? ' · ' + top.text : ''}`, G.C.green);
+    } else if (top) G.toast(top.text);
+    G.idle.collect();
+  },
   // Thử thách: the daily order (same client for everyone today) and the weekly 30-day business challenge
   challengePanel(c) {
     const U = G.UI, s = G.state;
@@ -543,11 +572,14 @@ G.scenes.desk = {
       G.Dialog.portrait(c, com.client, x + 8, yy + 8, 72, 96);
       U.fitText(c, cl.name, x + 90, yy + 22, w - 100, { size: 15, weight: 800, color: U.T.accent });
       const lvl = G.bond.get(com.client).lvl;
-      G.text(c, '♥'.repeat(lvl) + '♡'.repeat(5 - lvl), x + 90, yy + 42, { size: 11, color: '#d6698a' });
-      G.text(c, `Đề nghị ${com.budget} xu`, x + 90, yy + 62, { size: 13, weight: 800, color: U.T.gold });
-      const r0 = com.reqs[0];
-      U.fitText(c, r0 ? G.reqText(r0) + (com.reqs.length > 1 ? ` +${com.reqs.length - 1}` : '') : 'Tuỳ em may', x + 90, yy + 80, w - 100, { size: 12 });
-      G.text(c, st.appt ? '📌 Hẹn trước' : `${st.phone ? '📱 Zalo · ' : '⌛ '}chờ thêm ${st.patience} ngày`, x + 90, yy + 98, { size: 12, weight: 700, color: urgent ? U.T.bad : U.T.soft });
+      G.text(c, '♥'.repeat(lvl) + '♡'.repeat(5 - lvl), x + 90, yy + 40, { size: 10, color: '#d6698a' });
+      // what she came for first (the occasion, or the garment), then one wish in words; numbers last
+      const GM = G.CAT.GARMENTS[com.garment || 'aodai'], r0 = com.reqs[0];
+      U.fitText(c, com.title || (GM ? 'May ' + GM.name.toLowerCase() : 'May áo dài'), x + 90, yy + 60, w - 100, { size: 13, weight: 800 });
+      U.fitText(c, r0 ? G.reqText(r0) + (com.reqs.length > 1 ? ` · +${com.reqs.length - 1} ý` : '') : 'Tuỳ em may', x + 90, yy + 78, w - 100, { size: 12, color: U.T.soft });
+      G.art.coin(c, x + 96, yy + 97, 6);
+      G.text(c, `${com.budget}`, x + 106, yy + 98, { size: 13, weight: 800, font: G.GAME, color: U.T.gold });
+      U.fitText(c, st.appt ? 'hẹn trước' : `${st.phone ? 'Zalo · ' : ''}chờ ${st.patience} ngày`, x + w - 10, yy + 98, 110, { size: 12, weight: 700, align: 'right', color: urgent ? U.T.bad : U.T.soft });
       const tk = st.vip ? 'vip' : com.kind, rb = !st.vip && G.comRibbon(com);
       if (com.title) { G.rr(c, x + w - 84, yy - 10, 78, 20, 10); c.fillStyle = rb ? rb[0] : { arc: '#d6698a', event: '#c9952e', story: '#b23a48', copy: '#6b5bb8', vip: '#b8862a' }[tk] || U.T.accent; c.fill(); U.fitText(c, rb ? rb[1] : { arc: 'Tâm sự', event: 'Sự kiện', story: 'Truyện', copy: 'Y chang', vip: 'Khách sang' }[tk] || '', x + w - 45, yy, 70, { size: 10, weight: 800, align: 'center', color: '#fff' }); }
     });

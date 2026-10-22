@@ -227,6 +227,14 @@ G.scenes.sketch = {
     const z = Math.min(500 / (asm.botY - asm.topY), 3.1);
     this.pv = { asm, z, ox: G.W * 0.33 + 200, oy: 80 - asm.topY * z };
     c.save(); c.beginPath(); c.rect(G.W * 0.33 + 2, 66, 400, G.H - 158); c.clip();
+    // a soft pool of shade behind the figure (a white dress on white paper vanished) and a round podium
+    const fy = this.pv.oy + (asm.floorY || 152 * asm.s) * z, my = this.pv.oy + (asm.topY + 70 * asm.s) * z;
+    const bk = c.createRadialGradient(this.pv.ox, my, 30, this.pv.ox, my + 40, 300);
+    bk.addColorStop(0, 'rgba(196,168,136,0.32)'); bk.addColorStop(0.6, 'rgba(196,168,136,0.14)'); bk.addColorStop(1, 'rgba(196,168,136,0)');
+    c.fillStyle = bk; c.fillRect(G.W * 0.33, 66, 404, G.H - 158);
+    const pg = c.createLinearGradient(0, fy - 6, 0, fy + 16); pg.addColorStop(0, '#d9c3a3'); pg.addColorStop(1, '#a98a66');
+    c.beginPath(); c.ellipse(this.pv.ox, fy + 6, 92, 13, 0, 0, 7); c.fillStyle = pg; c.fill();
+    c.beginPath(); c.ellipse(this.pv.ox, fy, 92, 11, 0, 0, 7); c.fillStyle = '#efe2cd'; c.fill(); c.strokeStyle = 'rgba(94,58,36,0.35)'; c.lineWidth = 1.2; c.stroke();
     c.translate(this.pv.ox, this.pv.oy); c.scale(z, z);
     G.art.garment(c, asm, G.jobFabs({ fabs }), { mannequin: true, cache: true, t: this.t });
     c.restore();
@@ -370,17 +378,37 @@ G.scenes.sketch = {
     }
     // style filter, Dressmaker-like: show only the options that add to one style, strongest first
     const TK = C.TAG_KEYS, want = new Set(G.job.com.reqs.filter((r) => r.type === 'min').map((r) => r.tag));
+    // the styles by name (a tap filters, a second tap shows everything again); ★ = she asked for it
+    const labels = TK.map((tk) => C.TAGS[tk].name + (want.has(tk) ? ' ★' : ''));
+    let fs = 12; c.font = `600 ${G.fs(fs)}px ${G.FONT}`;
+    const pad = 24, widths = () => labels.map((l) => c.measureText(l).width + pad);
+    let ws = widths(); if (ws.reduce((a, b) => a + b, 0) + 4 * 5 > 404) { fs = 11; c.font = `600 ${G.fs(fs)}px ${G.FONT}`; ws = widths(); }
     let fx = x0;
-    fx += U.chip(c, 'tfall', 'Tất cả', fx, 154, !this.tagFilter, () => { this.tagFilter = null; }, { w: 66 }) + 5;
-    for (const tk of TK) {
-      const on = this.tagFilter === tk, w = 58;
-      fx += U.chip(c, 'tf' + tk, '   ' + U.ABBR[tk] + (want.has(tk) ? '★' : ''), fx, 154, on, () => { this.tagFilter = on ? null : tk; }, { w }) + 5;
-      c.beginPath(); c.arc(fx - w - 5 + 11, 169, 4, 0, 7); c.fillStyle = C.TAGS[tk].col; c.fill();
-    }
+    TK.forEach((tk, i) => {
+      const on = this.tagFilter === tk, w = ws[i];
+      G.button(c, 'tf' + tk, '', fx, 154, w, 30, () => { this.tagFilter = on ? null : tk; }, { style: on ? 'primary' : 'ghost', r: 15 });
+      c.beginPath(); c.arc(fx + 11, 169, 4, 0, 7); c.fillStyle = C.TAGS[tk].col; c.fill();
+      G.text(c, labels[i], fx + 19, 169, { size: fs, weight: 700, color: on ? '#fff6e6' : U.T.ink });
+      fx += w + 5;
+    });
     let keys = this.options(this.part);
     if (this.tagFilter) keys = keys.filter((k) => (C.PARTS[this.part].opts[k].tags[this.tagFilter] || 0) > 0).sort((a, b) => C.PARTS[this.part].opts[b].tags[this.tagFilter] - C.PARTS[this.part].opts[a].tags[this.tagFilter]);
     if (!keys.length) G.text(c, 'Không có kiểu nào thuộc phong cách này', x0 + 205, 260, { size: 14, align: 'center', color: U.T.soft });
+    // what's open first; the locked ones fold into one row underneath instead of half-hiding the choices
+    const isLock = (k) => C.optRank(C.PARTS[this.part].opts[k], j.garment) > rk;
+    const locked = keys.filter(isLock); keys = keys.filter((k) => !isLock(k));
+    // ★ only on the options that do the most for her wishes (a star on everything said nothing)
+    const wv = (k) => [...want].reduce((a, tk) => a + (C.PARTS[this.part].opts[k].tags[tk] || 0), 0);
+    const tops = [...new Set(keys.map(wv))].filter((v) => v > 0).sort((a, b) => b - a).slice(0, 2);
     const cw = 130, chh = 104;
+    if (locked.length) {
+      const ly = 194 + Math.ceil(keys.length / 3) * (chh + 8), ranks = locked.map((k) => C.PARTS[this.part].opts[k].rank);
+      const lo = Math.min(...ranks), hi = Math.max(...ranks);
+      G.rr(c, x0, ly, 412, 40, 12); c.fillStyle = 'rgba(94,58,36,0.07)'; c.fill();
+      G.art.lock(c, x0 + 20, ly + 20, 7);
+      U.fitText(c, `${locked.length} kiểu nữa mở ở hạng ${lo === hi ? lo : lo + '–' + hi}`, x0 + 36, ly + 20, 190, { size: 13, weight: 700, color: U.T.soft });
+      locked.slice(0, 4).forEach((k, i) => { const tx = x0 + 228 + i * 46; c.save(); c.globalAlpha = 0.5; this.thumb(c, this.part, k, tx, ly + 4, 42, 32); c.restore(); });
+    }
     keys.forEach((k, i) => {
       const o = C.PARTS[this.part].opts[k], cx = x0 + (i % 3) * (cw + 11), cy = 194 + Math.floor(i / 3) * (chh + 8);
       const lock = C.optRank(o, j.garment) > rk, sel = j.part[this.part] === k, hov = G.inRect(G.pointer, { x: cx, y: cy, w: cw, h: chh });
@@ -391,7 +419,7 @@ G.scenes.sketch = {
       U.fitText(c, this.optName(this.part, k), cx + cw / 2, cy + 72, cw - 10, { size: 12, weight: 700, align: 'center' });
       U.pills(c, o.tags, cx + 6, cy + 90, cw - 12);
       // a gold star when this option adds to a style the client asked for
-      if (!lock && [...want].some((tk) => (o.tags[tk] || 0) > 0)) {
+      if (!lock && tops.includes(wv(k))) {
         c.beginPath(); c.arc(cx + 14, cy + 14, 10, 0, 7); c.fillStyle = '#f6cd6a'; c.fill(); c.strokeStyle = G.INK; c.lineWidth = 1.6; c.stroke();
         G.text(c, '★', cx + 14, cy + 15, { size: 12, align: 'center', color: '#7a5420' });
       }
@@ -401,7 +429,7 @@ G.scenes.sketch = {
         G.text(c, `Hạng ${o.rank}`, cx + cw / 2, cy + 52, { size: 12, weight: 800, align: 'center', color: U.T.bad });
       }
     });
-    if (this.part === 'dang') this.drawSkins(c, x0, 194 + Math.ceil(keys.length / 3) * (chh + 8) + 16);
+    if (this.part === 'dang') this.drawSkins(c, x0, 194 + Math.ceil(keys.length / 3) * (chh + 8) + (locked.length ? 48 : 0) + 16);
   },
 
   // "Ảnh dáng của bạn": the player's own picture of the dress; it only changes the look —
@@ -463,30 +491,43 @@ G.scenes.sketch = {
     else if (this.filter !== 'all') ids = ids.filter((id) => C.FABRICS[id].mat === this.filter);
     const score = (id) => { const f = C.FABRICS[id]; return (R.mat && f.mat === R.mat ? 0 : 2) + (s.roll[id] > 0 ? 0 : 1) + (R.avoid && f.colors.includes(R.avoid) ? 4 : 0); };
     ids.sort((a, b) => score(a) - score(b) || C.FABRICS[a].price - C.FABRICS[b].price);
+    // the fabric studio is one tap from the grid: design your own bolt for this dress
+    if (this.filter === 'all' || this.filter === 'own') ids.unshift('__studio');
     const per = 16, pages = Math.max(1, Math.ceil(ids.length / per));
     this.page = G.clamp(this.page, 0, pages - 1);
     if (pages > 1) {
-      G.button(c, 'fp', '‹', x0 + 330, 74, 30, 30, () => this.page--, { style: 'ghost', size: 16, r: 15, enabled: this.page > 0 });
-      G.text(c, `${this.page + 1}/${pages}`, x0 + 377, 89, { size: 12, weight: 700, align: 'center', color: U.T.soft });
+      G.button(c, 'fp', '‹', x0 + 306, 74, 30, 30, () => this.page--, { style: 'ghost', size: 16, r: 15, enabled: this.page > 0 });
+      G.text(c, `${this.page + 1}/${pages}`, x0 + 359, 89, { size: 12, weight: 700, align: 'center', color: U.T.soft });
       G.button(c, 'fn', '›', x0 + 382, 74, 30, 30, () => this.page++, { style: 'ghost', size: 16, r: 15, enabled: this.page < pages - 1 });
     }
-    if (!ids.length) G.wrap(c, this.filter === 'own' ? 'Kho chưa có vải. Chọn “Tất cả” để xem vải có thể mua ngay.' : 'Chưa mở khoá loại vải này.', x0, 290, 400, 20, { size: 14, color: U.T.soft });
+    if (!ids.filter((id) => id !== '__studio').length) G.wrap(c, this.filter === 'own' ? 'Kho chưa có vải. Chọn “Tất cả” để xem vải có thể mua ngay.' : 'Chưa mở khoá loại vải này.', ids.length ? x0 + 112 : x0, 290, ids.length ? 300 : 400, 20, { size: 14, color: U.T.soft });
     const mult = C.SLOTS[this.slot].w * 14;
     ids.slice(this.page * per, this.page * per + per).forEach((id, i) => {
-      const f = C.FABRICS[id], cx = x0 + (i % 4) * 105, cy = 270 + Math.floor(i / 4) * 92, cw = 97, chh = 86;
-      const sel = j.fabs[this.slot] === id, hov = G.inRect(G.pointer, { x: cx, y: cy, w: cw, h: chh });
+      const cx = x0 + (i % 4) * 105, cy = 270 + Math.floor(i / 4) * 92, cw = 97, chh = 86;
+      const hov = G.inRect(G.pointer, { x: cx, y: cy, w: cw, h: chh });
+      if (id === '__studio') {
+        G.ui.hits.push({ id: 'mystudio', x: cx, y: cy, w: cw, h: chh, enabled: true, cb: () => { G.sfx.click(); G.go('studio', { back: 'sketch' }); } });
+        G.rr(c, cx, cy, cw, chh, 10); c.fillStyle = hov ? 'rgba(178,50,63,0.1)' : 'rgba(178,50,63,0.04)'; c.fill();
+        c.setLineDash([5, 4]); c.strokeStyle = U.T.accent; c.lineWidth = 1.6; c.stroke(); c.setLineDash([]);
+        G.text(c, '+', cx + cw / 2, cy + 30, { size: 30, weight: 700, align: 'center', color: U.T.accent });
+        G.text(c, 'Vải của tôi', cx + cw / 2, cy + 58, { size: 13, weight: 800, align: 'center', color: U.T.accent });
+        G.text(c, 'tự thiết kế', cx + cw / 2, cy + 74, { size: 11, align: 'center', color: U.T.soft });
+        return;
+      }
+      const f = C.FABRICS[id], sel = j.fabs[this.slot] === id;
       const avoid = R.avoid && f.colors.includes(R.avoid);
       this.fabTiles.push({ id, x: cx, y: cy, w: cw, h: chh }); // click to use, or drag onto a part of the dress
       if (hov && !sel) this.hover = { kind: 'fab', id };
       U.tile(c, cx, cy, cw, chh, { sel, hov, r: 10 });
-      U.swatch(c, id, cx + 6, cy + 6, cw - 12, 40, 7);
+      U.swatch(c, id, cx + 6, cy + 6, cw - 12, 30, 7);
       if (avoid) {
-        G.rr(c, cx + 6, cy + 6, cw - 12, 40, 7); c.fillStyle = 'rgba(184,50,63,0.35)'; c.fill();
-        G.text(c, 'Khách tránh màu này', cx + cw / 2, cy + 26, { size: 10, weight: 800, align: 'center', color: '#fff' });
+        G.rr(c, cx + 6, cy + 6, cw - 12, 30, 7); c.fillStyle = 'rgba(184,50,63,0.35)'; c.fill();
+        G.text(c, 'Khách tránh màu này', cx + cw / 2, cy + 21, { size: 10, weight: 800, align: 'center', color: '#fff' });
       }
+      U.fitText(c, f.name, cx + 6, cy + 46, cw - 12, { size: 11, weight: 700 });
       const have = s.roll[id] || 0;
-      G.text(c, have ? `${(have / 100).toFixed(1)} m` : G.econ.priceLabel(id), cx + 6, cy + 58, { size: 11, weight: 800, color: have ? U.T.ok : U.T.gold });
-      U.pills(c, f.tags, cx + 6, cy + 75, cw - 12, mult);
+      G.text(c, have ? `${(have / 100).toFixed(1)} m` : G.econ.priceLabel(id), cx + 6, cy + 61, { size: 11, weight: 800, color: have ? U.T.ok : U.T.gold });
+      U.pills(c, f.tags, cx + 6, cy + 76, cw - 12, mult);
     });
   }
 };

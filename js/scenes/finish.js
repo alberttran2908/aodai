@@ -28,7 +28,8 @@ G.scenes.finish = {
       return;
     }
     const cl = G.client(j.com.client);
-    G.addCoins(r.pay + r.tip + r.trendPay);
+    // paid now (so closing the tab loses nothing), but the purse shows it only when she pays, after the photo
+    G.addCoins(r.pay + r.tip + r.trendPay); this.held = G.ui.coinHold = r.pay + r.tip + r.trendPay;
     // the day ends (bills at month end use the rank the month was worked at), then reputation grows
     G.econ.advanceDay();
     if (G.quests) { if (r.success) G.quests.event('giao'); if (r.success && r.quality >= 90) G.quests.event('q90'); } // daily goals
@@ -59,7 +60,53 @@ G.scenes.finish = {
     // an occasion is answered about that occasion: the beach wedding, meeting the in-laws, the night of the contest…
     const oc = j.com.occasion && G.OCCASIONS && G.OCCASIONS[j.com.occasion];
     if (oc && !th) this.say = r.success ? G.pick(oc.win) : !r.qualOk ? oc.lose.q || this.say : (miss && oc.lose[miss.r.type]) || this.say;
+    // …and then she talks about the design itself
+    if (this.kind !== 'tang' && r.qualOk) { const note = this.comment(r, j); if (note) this.say += ' ' + note; }
     G.sfx.good();
+  },
+  // What the client says about the design: the choice that did most for the style she wanted, or, when a
+  // wish fell short, where more of it could have come from. Built from the same numbers as the tags.
+  comment(r, j) {
+    const C = G.CAT, com = j.com, sk = G.scenes.sketch, tn = (k) => C.TAGS[k].name.toLowerCase();
+    const mins = com.reqs.filter((q) => q.type === 'min').sort((a, b) => b.val - a.val);
+    const missed = r.checks.find((ck) => !ck.ok && ck.r.type === 'min');
+    if (!r.success && !missed) return ''; // unhappy about something else (the cloth, a colour): no praise
+    const tag = missed ? missed.r.tag : mins.length ? mins[0].tag : C.TAG_KEYS.slice().sort((a, b) => (r.tags[b] || 0) - (r.tags[a] || 0))[0];
+    if (!tag) return '';
+    if (missed) {
+      // the biggest gain on offer: a different part, or a different cloth for the body
+      const g = j.garment || com.garment || 'aodai', rk = G.rank(), male = !!com.male;
+      let best = null;
+      for (const p of C.PART_ORDER) {
+        const cur = (C.PARTS[p].opts[j.part[p]] || { tags: {} }).tags[tag] || 0;
+        for (const k of Object.keys(C.PARTS[p].opts)) {
+          const o = C.PARTS[p].opts[k];
+          if (C.optRank(o, g) > rk || !C.partFits(o, male) || !C.garmentAllows(p, k, o, g)) continue;
+          const v = (o.tags[tag] || 0) - cur; if (!best || v > best.v) best = { v, what: C.PARTS[p].name.toLowerCase() };
+        }
+      }
+      const fc = C.FABRICS[j.fabs.than], w = C.SLOTS.than.w * 14, fcur = fc ? (fc.tags[tag] || 0) * w : 0;
+      const ftop = Math.max(...Object.values(C.FABRICS).filter((f) => f.rank <= rk).map((f) => (f.tags[tag] || 0) * w));
+      if (ftop - fcur > (best ? best.v : 0)) best = { v: ftop - fcur, what: 'vải thân' };
+      return best && best.v > 0 ? `Giá mà ${best.what} ${tn(tag)} hơn chút…` : '';
+    }
+    const cand = [];
+    for (const p of C.PART_ORDER) {
+      const o = C.PARTS[p].opts[j.part[p]]; if (!o || !o.tags[tag]) continue;
+      let n = sk.optName(p, j.part[p]).toLowerCase(); if (p === 'dang' && !/^(dáng|ngũ)/.test(n)) n = 'dáng ' + n;
+      cand.push({ v: o.tags[tag], what: 'cái ' + n });
+    }
+    for (const slot in C.SLOTS) { const f = C.FABRICS[j.fabs[slot]]; if (f && f.tags[tag]) cand.push({ v: f.tags[tag] * C.SLOTS[slot].w * 14, what: 'tấm ' + f.name.toLowerCase() }); }
+    const D = j.decor || {};
+    for (const gk of C.DECOR_ORDER) {
+      const grp = C.DECOR[gk];
+      const ids = grp.kind === 'one' ? [D[grp.field]] : (D.items || []).filter((it) => it.group === gk).map((it) => it.id);
+      for (const id of ids) { const it = id && grp.items[id]; if (it && it.tags && it.tags[tag]) cand.push({ v: it.tags[tag], what: it.name.toLowerCase() }); }
+    }
+    if (!cand.length) return '';
+    cand.sort((a, b) => b.v - a.v);
+    const what = cand[0].what, What = what[0].toUpperCase() + what.slice(1);
+    return G.pick([`${What} làm áo ${tn(tag)} hẳn lên, đúng gu mình.`, `Mình thích nhất ${what}: ${tn(tag)} mà không cầu kỳ.`, `${What} đó là ý hay đó em!`]);
   },
   update(dt) {
     this.t += dt;
@@ -95,15 +142,25 @@ G.scenes.finish = {
     if (B.id) return this.scene(c, B.id);
     const sw = c.createRadialGradient(330, 620, 40, 330, 620, 520); sw.addColorStop(0, `rgba(255,255,255,${B.name === 'Đêm' ? 0.08 : 0.55})`); sw.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = sw; c.fillRect(0, 0, 700, G.H);
-    for (const [x, flip] of [[52, 1], [612, -1]]) {
-      c.fillStyle = '#3a3330'; c.fillRect(x + 18 * flip - 2, 250, 4, 400);
-      c.save(); c.translate(x, 170); c.rotate(0.12 * flip);
-      G.rr(c, -34, -46, 68, 92, 6); c.fillStyle = '#2b2624'; c.fill();
-      const lg = c.createLinearGradient(0, -40, 0, 40); lg.addColorStop(0, '#fffdf6'); lg.addColorStop(1, '#f1e6d2');
-      G.rr(c, -28, -40, 56, 80, 4); c.fillStyle = lg; c.fill();
+    // two softboxes on light stands, turned in toward the dress: a lit diffuser in a dark cone, a halo of light
+    for (const [x, flip] of [[58, 1], [606, -1]]) {
+      const cy = 176, foot = 646, metal = '#2f2a28';
+      c.strokeStyle = metal; c.lineCap = 'round';
+      c.lineWidth = 3.2; c.beginPath(); c.moveTo(x, cy + 30); c.lineTo(x, foot - 34); c.stroke();
+      c.lineWidth = 2.4; for (const dx of [-30, 0, 30]) { c.beginPath(); c.moveTo(x, foot - 36); c.lineTo(x + dx, foot + (dx ? 0 : 6)); c.stroke(); }
+      c.beginPath(); c.ellipse(x, foot + 2, 36, 5, 0, 0, 7); c.fillStyle = 'rgba(40,25,15,0.12)'; c.fill();
+      c.save(); c.translate(x, cy); c.rotate(0.18 * flip); c.scale(-flip, 1);
+      // the box seen a little from the side: a dark tapered back, then the glowing face
+      c.beginPath(); c.moveTo(-6, -14); c.lineTo(-30, -52); c.lineTo(-30, 52); c.lineTo(-6, 14); c.closePath();
+      const bk = c.createLinearGradient(-30, 0, -6, 0); bk.addColorStop(0, '#1d1a19'); bk.addColorStop(1, '#3a3431'); c.fillStyle = bk; c.fill();
+      c.fillStyle = metal; G.rr(c, -12, -10, 10, 20, 3); c.fill();
+      const face = c.createRadialGradient(-26, 0, 4, -26, 0, 58); face.addColorStop(0, '#ffffff'); face.addColorStop(0.6, '#fff8ea'); face.addColorStop(1, '#efe2c8');
+      c.beginPath(); c.ellipse(-30, 0, 9, 54, 0, 0, 7); c.fillStyle = face; c.fill();
+      c.strokeStyle = 'rgba(30,25,22,0.75)'; c.lineWidth = 2; c.stroke();
       c.restore();
-      const glow = c.createRadialGradient(x, 170, 10, x, 170, 140); glow.addColorStop(0, `rgba(255,250,235,${B.name === 'Đêm' ? 0.22 : 0.5})`); glow.addColorStop(1, 'rgba(255,250,235,0)');
-      c.fillStyle = glow; c.fillRect(x - 140, 30, 280, 280);
+      const dim = B.dark ? 0.26 : 0.5;
+      const glow = c.createRadialGradient(x + 22 * flip, cy, 6, x + 60 * flip, cy + 30, 210); glow.addColorStop(0, `rgba(255,250,235,${dim})`); glow.addColorStop(1, 'rgba(255,250,235,0)');
+      c.fillStyle = glow; c.fillRect(x - 240, cy - 200, 480, 460);
     }
   },
   // the themed sets, drawn behind the dress (the photo area is x 0–700)
@@ -224,12 +281,17 @@ G.scenes.finish = {
     let x = 744; this.LIGHTS.forEach((n, i) => { x += U.chip(c, 'pl' + i, n, x, 334, P.light === i, () => { P.light = i; }, { w: 150 }) + 8; });
     G.text(c, 'Khung hình', 744, 402, { size: 14, weight: 800, font: G.GAME });
     x = 744; this.FRAMES.forEach((n, i) => { x += U.chip(c, 'pf' + i, n, x, 418, P.frame === i, () => { P.frame = i; }, { w: 150 }) + 8; });
-    G.button(c, 'shoot', '📸  Chụp', 744, 500, 472, 66, () => {
-      this.phase = 'done'; this.t = 0; G.sfx.paper(); G.sfx.click();
+    G.button(c, 'shoot', 'Chụp', 744, 500, 472, 66, () => {
+      this.phase = 'done'; this.t = 0; G.sfx.shutter();
       if (this.snap) { this.snap.photo = { bg: P.bg, light: P.light, frame: P.frame }; G.save(); }
-    }, { size: 24, r: 20 });
-    U.hint(c, 'Chọn phông, ánh sáng và khung hình rồi bấm Chụp');
+    }, { size: 24, r: 20, icon: (cc, ix, iy) => this.cameraIcon(cc, ix - 52, iy) });
     U.topbar(c, 'Chụp ảnh');
+  },
+  cameraIcon(c, x, y) {
+    c.save(); c.translate(x, y); c.fillStyle = '#fff6e6'; c.strokeStyle = '#fff6e6'; c.lineWidth = 2;
+    G.rr(c, -15, -9, 30, 20, 4); c.fill(); c.fillRect(-6, -13, 12, 5);
+    c.beginPath(); c.arc(0, 1, 6.5, 0, 7); c.fillStyle = '#b2323f'; c.fill(); c.beginPath(); c.arc(0, 1, 3.5, 0, 7); c.fillStyle = '#fff6e6'; c.fill();
+    c.restore();
   },
   draw(c) {
     const U = G.UI, r = this.r;
@@ -266,8 +328,13 @@ G.scenes.finish = {
     G.text(c, happy ? '♥' : '…', 0, 1, { size: 15, weight: 800, align: 'center', color: happy ? '#d6457a' : U.T.soft }); c.restore();
     G.text(c, cl.name, 800, 100, { size: 20, weight: 800, font: G.GAME, color: U.T.accent });
     G.text(c, r.success ? 'Hài lòng' : 'Chưa hài lòng', 1232, 100, { size: 15, weight: 800, font: G.GAME, align: 'right', color: r.success ? U.T.ok : U.T.bad });
-    G.wrap(c, '“' + this.say + '”', 800, 118, 432, 20, { size: 14 });
-    let y = 172;
+    let y = 118 + G.wrap(c, '“' + this.say + '”', 800, 118, 432, 20, { size: 14, maxLines: 4 }) + 20;
+    // her wishes first (that is what she judges), then the craft, then the money
+    for (const ck of r.checks) {
+      const extra = ['min', 'max', 'mat', 'gc', 'cols', 'cheap', 'qmax'].includes(ck.r.type) ? ` (đạt ${ck.value})` : '';
+      G.text(c, `${ck.ok ? '✓' : '✗'} ${G.reqText(ck.r)}${extra}`, 724, y, { size: 14, weight: 700, color: ck.ok ? U.T.ok : U.T.bad }); y += 22;
+    }
+    y += 2; c.fillStyle = U.T.line; c.fillRect(724, y, 508, 1.5); y += 20;
     // scores count up one after another, like a judge reading them out
     const at = Math.max(0, this.t - 1.6);
     // a "poorly made" costume turns the scale around: rough work is what was ordered
@@ -287,14 +354,15 @@ G.scenes.finish = {
       const got = Math.round(iron.bonus * (j.pressed === undefined ? 1 : j.pressed));
       G.text(c, got ? `${iron.name}: +${got} điểm chất lượng${got < iron.bonus ? ` (ủi chưa hết, tối đa +${iron.bonus})` : ''}` : 'Áo chưa được ủi', 724, y, { size: 12, weight: 700, color: got ? U.T.ok : U.T.soft }); y += 20;
     }
-    y += 4; c.fillStyle = U.T.line; c.fillRect(724, y, 508, 1.5); y += 18;
-    for (const ck of r.checks) {
-      const extra = ['min', 'max', 'mat', 'gc', 'cols', 'cheap', 'qmax'].includes(ck.r.type) ? ` (đạt ${ck.value})` : '';
-      G.text(c, `${ck.ok ? '✓' : '✗'} ${G.reqText(ck.r)}${extra}`, 724, y, { size: 13, weight: 600, color: ck.ok ? U.T.ok : U.T.bad }); y += 21;
-    }
     y += 4; c.fillStyle = U.T.line; c.fillRect(724, y, 508, 1.5); y += 20;
     const extra = [r.tip ? `thưởng${r.quality >= 90 && G.week && G.week.is('cuoi') ? ' mùa cưới' : ''} +${r.tip}` : '', r.trendPay ? `hợp mốt +${r.trendPay}` : ''].filter(Boolean).join(' · ');
-    const payShown = Math.round(r.pay * G.easeOut((at - 0.8) / 0.8));
+    const pk = G.easeOut((at - 0.8) / 0.8), payShown = Math.round(r.pay * pk);
+    // she pays: the purse in the top bar counts up with a tick per handful of coins
+    if (this.held) {
+      const hold = Math.round(this.held * (1 - pk));
+      if (hold !== G.ui.coinHold && (this.tickAt || 0) < this.t - 0.06) { this.tickAt = this.t; G.sfx.tick(); }
+      G.ui.coinHold = hold; if (!hold) this.held = 0;
+    }
     G.art.coin(c, 732, y, 9);
     G.text(c, `Tiền công +${payShown} xu${extra ? ' · ' + extra : ''}${r.success ? '' : ` (khách trả ${Math.round((r.pay / j.com.budget) * 100)}%)`}`, 748, y, { size: 16, weight: 800, font: G.GAME, color: U.T.gold }); y += 24;
     if (this.arcRw.length) { G.text(c, `Quà đơn tâm sự: ${this.arcRw.join(' · ')}`, 724, y, { size: 13, weight: 700, color: '#d6698a' }); y += 21; }
@@ -315,9 +383,8 @@ G.scenes.finish = {
       U.needles(c, 724, y + 2, this.press.kim, 0.6);
       G.text(c, `Tí Flash vừa chụp ảnh · đón đọc Báo Trà Đá số ${this.press.issue.no}`, 834, y, { size: 13, weight: 700, color: U.T.soft });
     }
-    U.primary(c, 'next', 'Về quầy  →', () => { G.job = null; G.go('desk'); });
+    U.primary(c, 'next', 'Về quầy  →', () => { G.job = null; this.held = G.ui.coinHold = 0; G.go('desk'); });
     U.secondary(c, 'sharelink', 'Chia sẻ áo', () => G.share.copyLink(this.snap));
-    U.hint(c, 'Áo đã được lưu vào album · “Chia sẻ áo” sao chép đường link để bạn bè xem');
     U.topbar(c, 'Giao áo');
   },
   drawDaily(c) {

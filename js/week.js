@@ -9,7 +9,7 @@ G.week = {
     { id: 'tho', icon: 'workshop', name: 'Tuần thợ chăm', text: 'Thợ phụ được thưởng nên chăm: nhận sửa đồ gấp đôi, may áo bán sẵn 2 giờ một chiếc.' },
     { id: 'cuoi', icon: 'mail', name: 'Mùa cưới hỏi', text: 'Nhà nhà làm đám, khách rộng tay: áo đẹp (từ 90 điểm) được boa gấp đôi.' }
   ],
-  on() { const s = G.state; return !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge'; },
+  on() { const s = G.state; return !G.CFG.focus && !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge'; },
   // weeks counted from Monday 29 Dec 1969 in Vietnam time (day 0 of the epoch was a Thursday)
   num(ms) { return Math.floor((Math.floor(((ms || Date.now()) + 7 * 3600e3) / 864e5) + 3) / 7); },
   // every five weeks bring all five happenings once, shuffled; a block never opens with the one that closed the last

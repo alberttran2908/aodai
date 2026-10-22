@@ -156,6 +156,10 @@ G.sfx = (function () {
     bad() { tone(196, 0.2, 'triangle', 0.08, 0, 0.75); },
     good() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.25, 'sine', 0.09, i * 0.08)); },
     done() { [659, 784].forEach((f, i) => tone(f, 0.18, 'sine', 0.09, i * 0.07)); },
-    stamp() { noise(0.08, 0.1, 500, 1); tone(400, 0.08, 'sine', 0.08, 0, 1.6); }
+    stamp() { noise(0.08, 0.1, 500, 1); tone(400, 0.08, 'sine', 0.08, 0, 1.6); },
+    // a camera: the mirror flips up and the shutter falls, two short clacks
+    shutter() { noise(0.025, 0.22, 3200, 0.9); noise(0.04, 0.16, 1700, 0.9, 0.06); },
+    // one handful of coins counted into the purse
+    tick() { tone(1568, 0.035, 'sine', 0.045); }
   };
 })();

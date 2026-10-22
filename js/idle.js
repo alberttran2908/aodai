@@ -193,7 +193,7 @@ G.idle = {
   ],
   // the gift waiting today (or null if already taken): { day: 1..7, gift }
   checkinDue() {
-    if (!this.on()) return null;
+    if (!this.on() || G.CFG.focus) return null;
     const s = G.state, c = s.checkin || {}, today = G.dateKeyVN(), yesterday = G.dateKeyVN(Date.now() - 864e5);
     if (c.last === today) return null;
     const streak = c.last === yesterday ? (c.streak || 0) % 7 + 1 : 1;

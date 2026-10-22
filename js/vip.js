@@ -5,7 +5,7 @@ G.vip = {
   SLOT: 2 * 3600e3,
   LINES: ['Chị đặt lịch rồi nha, tới là may liền, chị không chờ lâu được đâu.', 'Tôi nghe đồn tiệm khéo tay. Đúng hẹn thì tôi tới, đẹp thì tôi trả hậu.',
     'Tối nay có tiệc, sáng mai đi ăn cưới. Em may kịp thì chị bo thêm.', 'Bạn chị giới thiệu tiệm. Chị muốn một bộ thật sang, tiền không thành vấn đề.'],
-  on() { const s = G.state; return !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge' && G.hasSave && !(s.tut && s.tut.on) && G.rank() >= 2 && G.bench && G.bench.on(); },
+  on() { const s = G.state; return !G.CFG.focus && !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge' && G.hasSave && !(s.tut && s.tut.on) && G.rank() >= 2 && G.bench && G.bench.on(); },
   // Vietnam clock hour of a moment, for "19:00–21:00"
   hm(ms) { const d = new Date(ms + 7 * 3600e3); return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`; },
   // today's booking: made on the first look of the day, starting 2–5 hours later on the hour (not past 22:00)

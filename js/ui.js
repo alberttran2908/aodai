@@ -222,7 +222,7 @@ G.UI = (function () {
     const cx = G.W - 330;
     G.rr(c, cx, 12, 124, 28, 14); c.fillStyle = 'rgba(30,14,6,0.5)'; c.fill(); c.strokeStyle = 'rgba(255,220,170,0.25)'; c.lineWidth = 1.5; c.stroke();
     G.art.coin(c, cx + 4, 26, 15);
-    G.text(c, String(s.coins), cx + 70, 27, { size: 21, weight: 800, font: G.GAME, align: 'center', color: '#ffe08a' });
+    G.text(c, String(s.coins - (G.ui.coinHold || 0)), cx + 70, 27, { size: 21, weight: 800, font: G.GAME, align: 'center', color: '#ffe08a' });
     if (s.econ && s.econ.debt > 0) G.text(c, `Nợ ${s.econ.debt}`, cx - 18, 27, { size: 16, weight: 800, font: G.GAME, align: 'right', color: '#ff9a8f' });
     // rank: gold medallion + progress to the next rank
     const rk = G.rank(), frac = G.rankProgress ? G.rankProgress() : s.prestige - Math.floor(s.prestige), mx = G.W - 176;

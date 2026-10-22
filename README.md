@@ -111,8 +111,13 @@ Cân bằng hiện tại (simbot, chế độ Kinh doanh, sau 60 ngày):
 - Trung bình: khoảng 12.000–16.000 xu.
 - Ẩu: lên tới khoảng 6.000 xu quanh ngày 50, rồi trượt dần vì tiền thuê tăng theo hạng; Bà Tư cứu khoảng ngày 90, phá sản sau đó.
 
+## Chế độ tập trung (`G.CFG.focus`, mặc định bật)
+Game xoay quanh việc may đồ. Trong `js/config.js`, `focus: true` tắt các phần chạy theo giờ thật: nhiệm vụ ngày, tin tuần, đơn shop, khách sang hẹn giờ, quà điểm danh, thẻ "Có gì mới". Code vẫn còn, đặt `false` là bật lại.
+- **Không còn thẻ bật lên khi vào quầy.** Tiền tiệm kiếm được lúc bạn vắng hiện thành một dòng thông báo kèm mưa xu.
+- **Thanh công cụ** chỉ còn Chợ vải, Album, Sổ khách và **Tiệm ▾**. Bấm "Tiệm ▾" mở danh sách: Xưởng, Sổ sách, Báo, Hộp thư, Thành tựu, Thử thách.
+
 ## Tiệm chạy cả khi bạn vắng (idle)
-Theo giờ thật. Tính từ 5 phút vắng, tối đa 8 giờ; không cộng âm thầm. Lúc quay lại, quầy hiện thẻ **"Trong lúc bạn đi vắng"** để bấm nhận (`js/idle.js`). Có những gì:
+Theo giờ thật. Tính từ 5 phút vắng, tối đa 8 giờ; không cộng âm thầm. Lúc quay lại, quầy hiện thẻ **"Trong lúc bạn đi vắng"** để bấm nhận (`js/idle.js`); ở chế độ tập trung thì nhận ngay, kèm một dòng thông báo. Có những gì:
 - **Thợ phụ:**
   - Nhận sửa đồ lặt vặt theo giờ.
   - Cứ 3 giờ may một áo bán sẵn từ vải trơn trong kho rồi treo lên sạp.

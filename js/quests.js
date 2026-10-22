@@ -13,7 +13,7 @@ G.quests = {
     { id: 'khoe', ev: 'khoe', n: 1, text: 'Khoe tiệm với bạn bè (Album › Khoe cả tiệm)', gift: { coins: 50 }, needs: () => G.state.collection.some((it) => it.success && G.share.canShare(it)) },
     { id: 'donshop', ev: 'donshop', n: 1, text: 'Giao một đơn hàng shop', gift: { coins: 100 }, needs: () => !!(G.contract && G.contract.on() && G.contract.st().offer) }
   ],
-  on() { const s = G.state; return !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge'; },
+  on() { const s = G.state; return !G.CFG.focus && !!s && G.slot === 'main' && !s.isDaily && s.mode !== 'challenge'; },
   // today's three, picked from the date so everyone gets the same ones (skipping goals this shop cannot do yet)
   today() {
     if (!this.on()) return null;
