@@ -55,6 +55,8 @@ G.idle = {
       const sum = sold.reduce((a, x) => a + x.p, 0), one = sold.length === 1 ? 'một áo' : `${sold.length} áo`;
       coins += sum; lines.push({ icon: 'dress', text: night ? `Chợ đêm bán ${one} trên sạp` : `Tủ kính bán ${one} cho khách qua đường`, coins: sum });
     }
+    // a booked VIP whose slot came and went while the shop was shut
+    if (G.vip && G.vip.tick() === 'missed') { const v = s.vip, cl = G.client(v.client); lines.push({ icon: 'mail', text: `${cl ? cl.name : 'Khách sang'} tới lúc ${G.vip.hm(v.start)}, tiệm đóng cửa`, coins: 0, note: 'lỡ hẹn' }); }
     // a boutique's order came in (or an old one lapsed) while you were out
     const offer = G.contract && G.contract.tick();
     if (offer) lines.push({ icon: 'mail', text: `${offer.shop} đặt ${offer.n} áo bán sẵn`, coins: 0, note: 'đơn mới' });
@@ -226,6 +228,8 @@ G.idle = {
     setInterval(() => {
       if (!this.on() || document.hidden) return;
       for (const o of this.deliver(Date.now())) { const f = G.CAT.FABRICS[o.fid]; G.toast(`${o.kind === 'dye' ? 'Nhuộm xong!' : 'Xe vải tới!'} +${(o.cm / 100).toFixed(0)} m ${f ? f.name : ''}`, G.C.green); G.sfx.bell(); }
+      // the booked VIP walks in while you are working (whatever the scene)
+      if (G.vip && !this.pending && G.vip.tick() === 'came') { const cl = G.client(G.state.vip.client); G.toast(`${cl ? cl.name : 'Khách sang'} tới đúng hẹn, đang chờ ở ghế!`, G.C.green); G.sfx.bell(); }
     }, 5e3);
     document.addEventListener('visibilitychange', () => {
       if (!this.on()) return;

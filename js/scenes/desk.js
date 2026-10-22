@@ -117,6 +117,7 @@ G.scenes.desk = {
       // "Hôm nay": one tile for today's quests, a boutique's order and this week's happening (a toolbar of eleven
       // tiles was too cramped to read or tap on a phone); red dot when any of them wants a look
       if (G.contract && G.contract.on()) G.contract.tick();
+      if (G.vip && G.vip.tick() === 'came') { const cl = G.client(s.vip.client); G.toast(`${cl ? cl.name : 'Khách sang'} tới đúng hẹn, đang chờ ở ghế!`, G.C.green); G.sfx.bell(); }
       if (this.hubRows().length) items.push({ id: 'today', label: 'Hôm nay', icon: 'tasks', cb: () => { this.hubOpen = true; }, dot: this.hubRows().some((r) => r.dot) });
       if (s.mode === 'challenge') items.push({ id: 'quit', label: 'Thoát', icon: 'exit', cb: () => G.go('title') });
     }
@@ -137,6 +138,8 @@ G.scenes.desk = {
       const done = t.list.filter((q) => Q.done(q)).length, ready = Q.ready();
       rows.push({ id: 'h_q', icon: 'tasks', title: 'Nhiệm vụ hôm nay', sub: ready ? `${done}/${t.list.length} xong · ${ready} quà chờ nhận` : `${done}/${t.list.length} xong`, dot: ready > 0, open: () => { this.questsOpen = true; } });
     }
+    const vs = G.vip && G.vip.status();
+    if (vs) rows.push({ id: 'h_v', icon: 'mail', title: vs.title, sub: vs.sub, dot: vs.dot, open: () => { this.hubOpen = false; } });
     const o = K && K.on() && K.st().offer;
     if (o) rows.push({ id: 'h_k', icon: 'box', title: `Đơn shop: ${o.shop}`, sub: `${K.matching().length}/${o.n} áo hợp đơn · ${K.leftText()}`, dot: !K.st().seen || K.ready(), open: () => { this.contractOpen = true; K.st().seen = true; G.save(); } });
     if (wk) rows.push({ id: 'h_w', icon: 'lantern', title: `Tin tuần: ${wk.name}`, sub: W.leftText(), dot: s.weekSeen !== W.num(), open: () => { this.weekOpen = true; s.weekSeen = W.num(); G.save(); } });
@@ -495,7 +498,8 @@ G.scenes.desk = {
       const r0 = com.reqs[0];
       U.fitText(c, r0 ? G.reqText(r0) + (com.reqs.length > 1 ? ` +${com.reqs.length - 1}` : '') : 'Tuỳ em may', x + 90, yy + 80, w - 100, { size: 12 });
       G.text(c, st.appt ? '📌 Hẹn trước' : `${st.phone ? '📱 Zalo · ' : '⌛ '}chờ thêm ${st.patience} ngày`, x + 90, yy + 98, { size: 12, weight: 700, color: urgent ? U.T.bad : U.T.soft });
-      if (com.title) { G.rr(c, x + w - 84, yy - 10, 78, 20, 10); c.fillStyle = { arc: '#d6698a', event: '#c9952e', story: '#b23a48', copy: '#6b5bb8' }[com.kind] || U.T.accent; c.fill(); U.fitText(c, { arc: 'Tâm sự', event: 'Sự kiện', story: 'Truyện', copy: 'Y chang' }[com.kind] || '', x + w - 45, yy, 70, { size: 10, weight: 800, align: 'center', color: '#fff' }); }
+      const tk = st.vip ? 'vip' : com.kind;
+      if (com.title) { G.rr(c, x + w - 84, yy - 10, 78, 20, 10); c.fillStyle = { arc: '#d6698a', event: '#c9952e', story: '#b23a48', copy: '#6b5bb8', vip: '#b8862a' }[tk] || U.T.accent; c.fill(); U.fitText(c, { arc: 'Tâm sự', event: 'Sự kiện', story: 'Truyện', copy: 'Y chang', vip: 'Khách sang' }[tk] || '', x + w - 45, yy, 70, { size: 10, weight: 800, align: 'center', color: '#fff' }); }
     });
     if (!seats.length) G.text(c, 'Hôm nay không còn ai chờ. Đóng cửa để sang ngày mới.', 640, 590, { size: 17, weight: 700, align: 'center', color: '#fbe9cf' });
     U.primary(c, 'close', 'Đóng cửa sớm', () => this.closeDay());
