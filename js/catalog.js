@@ -176,6 +176,9 @@ G.CAT = (function () {
       allow: { co: ['cup', 'thuyen', 'tim', 'vuong', 'yem', 'trevai', 'lechvai'], dang: ['dam'], tay: ['damkhong', 'voan', 'canhtien', 'ngan', 'dai'], ta: ['dam_xoe', 'dam_duoica'], quan: ['chanvay', 'tuyn'] },
       def: { co: 'cup', dang: 'dam', tay: 'damkhong', ta: 'dam_xoe', quan: 'chanvay' } }
   };
+  // the rank an option opens at: a garment other than the áo dài comes whole with its order — every option it
+  // allows is open (a tứ thân needs its skirt even at rank 2, a gown its open necklines)
+  const optRank = (o, garment) => (GARMENTS[garment] && garment !== 'aodai' ? 1 : o.rank);
   const garmentAllows = (part, key, o, garment) => {
     const g = GARMENTS[garment] ? garment : 'aodai';
     return g === 'aodai' ? !o.garment : (GARMENTS[g].allow[part] || []).includes(key);
@@ -284,5 +287,5 @@ G.CAT = (function () {
   const partFits = (o, male) => wear(o.sex || 'f', male);
   const decorFits = (it, male) => wear(it.sex || 'mf', male);
 
-  return { TAGS, TAG_KEYS, MATS, COLOR_TAGS, PRINTS, FABRICS, PARTS, PART_ORDER, GARMENTS, garmentAllows, SLOTS, DECOR, DECOR_ORDER, CLIENTS, AVOID_COLORS, sumTags, partFits, decorFits };
+  return { TAGS, TAG_KEYS, MATS, COLOR_TAGS, PRINTS, FABRICS, PARTS, PART_ORDER, GARMENTS, garmentAllows, optRank, SLOTS, DECOR, DECOR_ORDER, CLIENTS, AVOID_COLORS, sumTags, partFits, decorFits };
 })();

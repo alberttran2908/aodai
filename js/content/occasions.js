@@ -42,7 +42,7 @@ G.OCCASIONS = {
   tet: { title: 'Áo mới đón Tết', sex: 'mf', ribbon: ['#c2414f', 'Dịp mặc'],
     lines: ['Tết năm nay cả nhà chụp hình chung, may giùm bộ màu Tết thật rực, đỏ hay vàng gì cũng được.',
       'Ba mươi Tết về quê, mặc áo mới đi chúc Tết ông bà. Màu phải đỏ, vàng cho hên!'],
-    reqs: [['cols', ['do', 'vang', 'hongsen', 'cam', 'ruou'], 60, 'màu Tết đỏ, vàng, hồng'], ['min', 'truyenthong', 'auto']],
+    reqs: [['cols', ['do', 'vang', 'hongsen', 'cam', 'ruou'], 60, 'Tết: đỏ, vàng, hồng'], ['min', 'truyenthong', 'auto']],
     win: ['Ông bà khen “năm nay con mặc đẹp quá”, lì xì thêm cho một bao!', 'Đỏ rực, lên hình Tết ai cũng xuýt xoa.'],
     lose: { cols: 'Tết mà màu này nhìn buồn quá, mẹ bảo không hên…', min: 'Đẹp mà chưa ra không khí Tết…', q: 'Áo Tết mà bung chỉ thì cả năm xui…' } },
   mungtho: { title: 'Mừng thọ mẹ 60', sex: 'f', ribbon: ['#8a4a6a', 'Dịp mặc'],
@@ -154,7 +154,7 @@ Object.assign(G.OCCASIONS, {
   prom: { title: 'Prom cuối cấp', sex: 'f', garment: 'dam', minRank: 2, ribbon: ['#6a2a4a', 'Đầm dạ hội'],
     lines: ['Prom cuối cấp của trường em! Em muốn đầm màu pastel, voan bay bay, trẻ trung mà vẫn điệu.',
       'Đêm prom chia tay lớp mười hai, em cần bộ đầm hiện đại màu nhạt, nhảy được nha chị.'],
-    reqs: [['min', 'hiendai', 'auto'], ['cols', ['hongphan', 'champagne', 'thien', 'hoaca', 'be', 'trang'], 60, 'màu pastel']],
+    reqs: [['min', 'hiendai', 'auto'], ['cols', ['hongphan', 'champagne', 'thien', 'hoaca', 'be', 'trang'], 60, 'pastel']],
     win: ['Em được bầu “nữ hoàng prom”! Cả lớp vỗ tay rần rần.', 'Xoay một vòng là váy xoè như hoa, bạn bè quay clip quá trời.'],
     lose: { cols: 'Màu này đậm quá, nhìn như đi tiệc của người lớn…', min: 'Hơi cũ, bạn bè mặc trẻ trung hơn nhiều…', q: 'Đang nhảy mà sợ bung chỉ quá…' } }
 });

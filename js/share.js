@@ -129,13 +129,14 @@ G.share = {
     const v = this.view(pl), C = G.CAT;
     const top = C.TAG_KEYS.slice().sort((a, b) => v.tags[b] - v.tags[a]).slice(0, 2);
     const mat = C.FABRICS[pl.fabs.than].mat;
-    G.state.story.queue.unshift({ kind: 'copy', shop: pl.shop, reqs: top.map((t) => ['min', t, Math.round(v.tags[t] * 0.8)]).concat([['mat', mat, 50]]) });
+    // (the copy is the same kind of garment: a friend's bà ba asks for a bà ba)
+    G.state.story.queue.unshift({ kind: 'copy', shop: pl.shop, garment: v.design.garment || 'aodai', reqs: top.map((t) => ['min', t, Math.round(v.tags[t] * 0.8)]).concat([['mat', mat, 50]]) });
     G.save();
   },
   copyCommission(q) {
     const pool = G.CAT.CLIENTS.filter((c) => !c.star && !c.male);
     const cl = G.pickClient({ pool, starChance: 0 });
-    return G.makeCommission({ client: cl.id, kind: 'copy', title: 'May y chang', reqs: q.reqs, budgetMul: 1.15,
+    return G.makeCommission({ client: cl.id, kind: 'copy', title: 'May y chang', reqs: q.reqs, budgetMul: 1.15, garment: q.garment,
       line: `Bạn tôi khoe cái áo may ở “${q.shop}” trên mạng. Em may cho tôi một cái na ná được không?`, flags: { copyOf: q.shop } });
   }
 };

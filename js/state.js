@@ -150,7 +150,7 @@
   // the options of one part a client of this rank/sex can be given, for the garment being priced (G._garment,
   // set while an order is made, so a bà ba brief only asks for what a bà ba can reach)
   G.partOpts = (p, rank, male, garment) => Object.entries(C.PARTS[p].opts)
-    .filter(([k, o]) => o.rank <= rank && C.partFits(o, male) && C.garmentAllows(p, k, o, garment || G._garment)).map(([, o]) => o);
+    .filter(([k, o]) => C.optRank(o, garment || G._garment) <= rank && C.partFits(o, male) && C.garmentAllows(p, k, o, garment || G._garment)).map(([, o]) => o);
   G.maxTag = function (tag, rank, noDecor, male) {
     let v = 0;
     for (const p of C.PART_ORDER) v += Math.max(0, ...G.partOpts(p, rank, male).map((o) => o.tags[tag] || 0));
@@ -272,14 +272,68 @@
 
   // ---------- commissions ----------
   // random style requirements from what a client likes, always solvable at this rank
+  // the best a player of this rank could do for a brief's style wishes with one cloth (and half the help
+  // decorations could give):
+  // >= 1 means every minimum can be met together while staying under every maximum. Tries the cloths that
+  // obey the brief's cloth rules (the ten strongest for the wanted styles), each with a few rounds of picking
+  // the best option part by part.
+  G.bestFor = function (reqs, rank, male, garment) {
+    const mins = reqs.filter((r) => r.type === 'min'), maxes = reqs.filter((r) => r.type === 'max');
+    if (!mins.length) return 9;
+    const opts = {};
+    for (const p of C.PART_ORDER) opts[p] = Object.keys(C.PARTS[p].opts).filter((k) => { const o = C.PARTS[p].opts[k]; return C.optRank(o, garment) <= rank && C.partFits(o, male) && C.garmentAllows(p, k, o, garment); });
+    const ok = (id) => {
+      const f = C.FABRICS[id];
+      for (const r of reqs) {
+        if (r.type === 'mat' && f.mat !== r.mat) return false;
+        if (r.type === 'avoid' && f.color === r.color) return false;
+        if (r.type === 'cols' && !r.colors.includes(f.color)) return false;
+        if (r.type === 'cheap' && G.econ && G.econ.price(id) > r.val) return false;
+      }
+      return f.rank <= rank;
+    };
+    const fabs = Object.keys(C.FABRICS).filter(ok).sort((a, b) => mins.reduce((s, m) => s + (C.FABRICS[b].tags[m.tag] || 0) - (C.FABRICS[a].tags[m.tag] || 0), 0)).slice(0, 10);
+    // decorations may top up a minimum by half of what they could add at most
+    const dec = {}; for (const m of mins) dec[m.tag] = (G.maxTag(m.tag, rank, false, male) - G.maxTag(m.tag, rank, true, male)) * 0.5;
+    const com = { male, garment }, score = (part, f) => {
+      const t = G.computeTags(G.jobDesign({ com, part, decor: { items: [] } }), { than: f, tay: f, co: f, quan: f }, { items: [] }, part);
+      let v = Math.min(...mins.map((m) => (t[m.tag] + dec[m.tag]) / m.val));
+      for (const m of maxes) if (t[m.tag] > m.val) v -= (t[m.tag] - m.val) / Math.max(1, m.val);
+      return v;
+    };
+    let best = -9;
+    for (const f of fabs) {
+      const part = {}; for (const p of C.PART_ORDER) part[p] = opts[p][0];
+      if (C.PART_ORDER.some((p) => !part[p])) continue;
+      let cur = score(part, f);
+      for (let pass = 0; pass < 3; pass++) for (const p of C.PART_ORDER) for (const k of opts[p]) {
+        const keep = part[p]; part[p] = k; const v = score(part, f);
+        if (v > cur) cur = v; else part[p] = keep;
+      }
+      best = Math.max(best, cur);
+    }
+    return best;
+  };
+  // lower the style minimums of a brief until a player could meet them (decorations are a bonus on top)
+  G.keepSolvable = function (reqs, rank, male, garment) {
+    for (let i = 0; i < 4; i++) {
+      const b = G.bestFor(reqs, rank, male, garment);
+      if (b >= 1) return;
+      const k = Math.max(0.5, b * 0.97);
+      for (const r of reqs) if (r.type === 'min') r.val = Math.max(10, Math.floor(r.val * k));
+    }
+  };
+  // a material can be asked for only once some cloth of it is on sale at this rank (gấm opens at rank 2 as a
+  // material, but its bolts only from rank 3)
+  G.matOnSale = (mat, rank) => Object.values(C.FABRICS).some((f) => f.mat === mat && f.rank <= rank);
+  // how much of a style a brief asks for: a share of the most this garment can reach at this rank without
+  // decorations (65–77% at rank 1, up to ~90% later), so the default cut in any cloth is not enough by itself
+  const wishVal = (tag, rank, male, rng) => Math.round(G.maxTag(tag, rank, true, male) * Math.min(0.9, 0.62 + 0.03 * rank + rng() * 0.12));
   function autoReqs(cl, rank, rng) {
     const male = !!cl.male, reqs = [], pick = (a) => G.rpick(rng, a);
     const want = rank >= 3 && rng() < 0.5 ? 2 : 1;
     const likes = cl.likes.filter((tag) => G.maxTag(tag, rank, false, male) * 0.6 >= 15).sort(() => rng() - 0.5).slice(0, want);
-    for (const tag of likes) {
-      const cap = Math.floor(G.maxTag(tag, rank, false, male) * 0.6);
-      reqs.push({ type: 'min', tag, val: Math.min(cap, 22 + rank * 3 + Math.round(rng() * 8)) });
-    }
+    for (const tag of likes) reqs.push({ type: 'min', tag, val: wishVal(tag, rank, male, rng) });
     if (!reqs.length) { const tag = C.TAG_KEYS.slice().sort((a, b) => G.maxTag(b, rank, false, male) - G.maxTag(a, rank, false, male))[0]; reqs.push({ type: 'min', tag, val: Math.floor(G.maxTag(tag, rank, false, male) * 0.5) }); }
     if (rng() < 0.35) {
       // a cap on a tag they dislike, only if it can be kept that low while meeting the minimums
@@ -288,7 +342,7 @@
       const val = Math.max(30 + Math.round(rng() * 10), floor + 8);
       if (val <= 50) reqs.push({ type: 'max', tag, val });
     }
-    const unlockedMats = cl.mats.filter((m) => C.MATS[m].rank <= rank);
+    const unlockedMats = cl.mats.filter((m) => G.matOnSale(m, rank));
     if (unlockedMats.length && rng() < 0.6) reqs.push({ type: 'mat', mat: pick(unlockedMats), val: 50 });
     if (rng() < 0.35) reqs.push({ type: 'avoid', color: pick(C.AVOID_COLORS) });
     if (rank >= 2 && rng() < 0.4) reqs.push({ type: 'decor', group: pick(['theu', 'dau', 'cuc']) });
@@ -301,9 +355,8 @@
     for (const r of list.filter((x) => x[0] === 'min')) {
       let tag = r[1];
       if (tag === 'auto' || tag === '@like0') tag = cl.likes.slice().sort((a, b) => G.maxTag(b, rank, false, male) - G.maxTag(a, rank, false, male))[0];
-      const cap = Math.floor(G.maxTag(tag, rank, false, male) * 0.65);
-      let val = r[2] === 'auto' ? 22 + rank * 3 + Math.round(rng() * 8) : r[2];
-      val = Math.min(val, cap);
+      // hand-written numbers (story orders) stay as written, within reach; 'auto' asks for a real share of the best
+      const val = r[2] === 'auto' ? wishVal(tag, rank, male, rng) : Math.min(r[2], Math.floor(G.maxTag(tag, rank, false, male) * 0.65));
       if (val >= 10 && !out.some((o) => o.tag === tag)) out.push({ type: 'min', tag, val });
     }
     for (const r of list) {
@@ -313,7 +366,7 @@
         if (val <= 50) out.push({ type: 'max', tag: r[1], val });
       } else if (r[0] === 'mat') {
         let mat = r[1] === '@mat0' ? cl.mats[0] : r[1];
-        if (C.MATS[mat].rank > rank) mat = cl.mats.find((m) => C.MATS[m].rank <= rank);
+        if (!G.matOnSale(mat, rank)) mat = cl.mats.find((m) => G.matOnSale(m, rank));
         if (mat) out.push({ type: 'mat', mat, val: r[2] || 50 });
       } else if (r[0] === 'avoid') out.push({ type: 'avoid', color: r[1] });
       else if (r[0] === 'decor') out.push({ type: 'decor', group: decorOk(r[1]) ? r[1] : 'theu' });
@@ -336,7 +389,10 @@
     const kind = spec.kind || 'normal', flags = spec.flags || {}, garment = C.GARMENTS[spec.garment] ? spec.garment : 'aodai';
     const was = G._garment; G._garment = garment;
     let reqs;
-    try { reqs = spec.reqs ? resolveReqs(spec.reqs, cl, rank, rng) : autoReqs(cl, rank, rng); } finally { G._garment = was; }
+    try {
+      reqs = spec.reqs ? resolveReqs(spec.reqs, cl, rank, rng) : autoReqs(cl, rank, rng);
+      G.keepSolvable(reqs, rank, !!cl.male, garment);
+    } finally { G._garment = was; }
     const b = G.bond ? G.bond.get(cl.id) : { lvl: 0 };
     let bonus = 0;
     if (kind !== 'daily') {

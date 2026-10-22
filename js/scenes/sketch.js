@@ -293,9 +293,10 @@ G.scenes.sketch = {
   pastDesigns() {
     const male = !!G.job.com.male;
     const C = G.CAT, rk = G.rank();
-    // every part still exists and is unlocked at this rank
-    const ok = (part) => Object.keys(part).every((p) => { const o = C.PARTS[p] && C.PARTS[p].opts[part[p]]; return o && o.rank <= rk; });
-    return (G.state.collection || []).filter((x) => x.part && x.design && !!x.male === male && ok(x.part)).slice(-8).reverse();
+    // the same garment, and every part still exists, belongs to it and is unlocked at this rank
+    const g = G.job.garment || 'aodai';
+    const ok = (part) => Object.keys(part).every((p) => { const o = C.PARTS[p] && C.PARTS[p].opts[part[p]]; return o && C.optRank(o, g) <= rk && C.garmentAllows(p, part[p], o, g); });
+    return (G.state.collection || []).filter((x) => x.part && x.design && !!x.male === male && (x.design.garment || 'aodai') === g && ok(x.part)).slice(-8).reverse();
   },
   reuseThumb(snap) {
     this.reuseCache = this.reuseCache || {};
@@ -382,7 +383,7 @@ G.scenes.sketch = {
     const cw = 130, chh = 104;
     keys.forEach((k, i) => {
       const o = C.PARTS[this.part].opts[k], cx = x0 + (i % 3) * (cw + 11), cy = 194 + Math.floor(i / 3) * (chh + 8);
-      const lock = o.rank > rk, sel = j.part[this.part] === k, hov = G.inRect(G.pointer, { x: cx, y: cy, w: cw, h: chh });
+      const lock = C.optRank(o, j.garment) > rk, sel = j.part[this.part] === k, hov = G.inRect(G.pointer, { x: cx, y: cy, w: cw, h: chh });
       G.ui.hits.push({ id: 'o' + k, x: cx, y: cy, w: cw, h: chh, enabled: !lock, cb: () => { j.part[this.part] = k; G.sfx.click(); } });
       if (hov && !lock && !sel) this.hover = { kind: 'part', part: this.part, key: k };
       U.tile(c, cx, cy, cw, chh, { sel, hov, lock });

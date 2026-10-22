@@ -254,6 +254,11 @@ Những thứ không đưa lên web:
   - Đờn ca tài tử, chợ nổi, dẫn khách du lịch (áo bà ba).
   - Lễ cưới theo lễ xưa, lễ ăn hỏi (áo cưới, từ hạng 2). Chụp ảnh ở Đại Nội, diễu hành Festival Huế, đóng phim cổ trang (Nhật Bình, từ hạng 3). Hát quan họ hội Lim, hội làng đầu xuân, chụp ảnh ở làng cổ Đường Lâm (tứ thân, từ hạng 2). Phỏng vấn xin việc, làm phù dâu phù rể (vest). Dạ tiệc cuối năm, prom cuối cấp (đầm, từ hạng 2), thảm đỏ ra mắt phim (đầm, từ hạng 3).
   - Yêu cầu của đơn đi theo dịp. Khi nhận áo, khách khen hoặc chê đúng chuyện của dịp đó.
+- **Độ khó yêu cầu phong cách:**
+  - Mức "từ X" của đơn là 65–90% mức cao nhất mà loại đồ đó đạt được ở hạng hiện tại, chưa tính trang trí (hạng càng cao càng gắt). Dùng kiểu mặc định với một loại vải bất kỳ thì chỉ đạt khoảng 30% đơn.
+  - Mỗi đơn được kiểm tra trước (`G.bestFor`, `G.keepSolvable`): nếu kể cả cách chọn tốt nhất cũng không đạt thì hạ yêu cầu xuống.
+  - Đơn chỉ đòi một chất liệu khi đã có vải chất đó để mua.
+- **Chơi thử tự động** (`tools/autoplay.js`, nạp vào trang bằng `eval`): đi thật qua sổ phác thảo, phòng cắt, máy may, bàn ủi, trang trí và màn chụp ảnh, có chế độ tự chọn kiểu và vải tốt nhất cho đơn.
 - **5 phong cách**: Truyền thống, Thanh lịch, Sang trọng, Rực rỡ, Hiện đại
 - **Các phần áo**: 11 kiểu cổ, 3 dáng, 9 kiểu tay, 7 kiểu tà (gồm cả độ dài), 4 kiểu quần/váy. Mỗi lựa chọn mang điểm phong cách và mở theo hạng.
 - **8 chất liệu chuẩn**: đũi, voan, lụa, nhung, gấm, ren, tơ tằm, kim sa. Có giá theo mét và hạng mở khoá.
